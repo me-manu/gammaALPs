@@ -1,27 +1,26 @@
-ebltable
-========
+gammaALPs
+=========
 
-Python packages to read in and interpolate tables for the photon density
-of the Extragalactic Background Light (EBL) and the resulting opacity
-for high energy gamma rays.
+Python packages to calculate the conversion probabiltiy between photons and axions / axionlike particles in various astrophysical magnetic fields.
 
 Prerequisites
 -------------
 
-Python 2.7 and newest versions of the following packages: 
+Python 2.7 and newest versions of the following packages 
     - numpy 
     - scipy
     - astropy
+    - ebltable
 
 Installation
 ------------
 
 You can use pip to install the package:: 
 
-    pip install ebltable
+    pip install gammaALPs 
 
 Example scripts and notebooks are provided on the github page in the
-example/ and notebooks/ folder, https://github.com/me-manu/ebltable
+example/ and notebooks/ folder, https://github.com/me-manu/gammaALPs
 
 License
 -------
