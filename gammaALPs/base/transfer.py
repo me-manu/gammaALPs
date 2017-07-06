@@ -268,7 +268,7 @@ class GammaALPTransfer(object):
 
     @Delta.setter
     def Delta(self, Delta):
-	if type(Gamma) == u.Quantity:
+	if type(Delta) == u.Quantity:
 	    self._Delta = Delta.to('kpc**-1')
 	else:
 	    self._Delta = Delta
