@@ -400,30 +400,30 @@ class ModuleList(object):
 
     def add_disp_abs(self,EGeV, r_kpc, disp, module_id, type_matrix = 'dispersion'):
 	    """
-	    Add dispersion of absorption to a propagation module using 
+	    Add dispersion, absorption, or extra momentum difference term to a propagation module using 
 	    interpolation of of a 2d dispersion / absorption matrix
 
 	    Parameters
 	    ----------
 	    EGeV: `~numpy.ndarray` 
-		n-dim array with gamma-ray energies in GeV at which dispersion/absorption matrix
+		n-dim array with gamma-ray energies in GeV at which dispersion/absorption/momentum difference matrix
 		is calculated
 
 	    r_kpc: `~numpy.ndarray` 
-		m-dim array with distnaces in kpc at which dispersion/absorption matrix
+		m-dim array with distnaces in kpc at which dispersion/absorption/momentum difference matrix
 		is calculated
 
 
 	    disp: `~numpy.ndarray`
-		n x m-dim array with dispersion (unitless) / absorption (in kpc^-1)
+		n x m-dim array with dispersion (unitless) / absorption (in kpc^-1) / momentum difference (in kpc^-1)
 
 	    module_id: int
-	    id of module to which dispersion / absorption is added
+	    id of module to which dispersion / absorption /momentum difference is added
 
 	    kwargs
 	    ------
 	    type_matrix: str
-		either 'dispersion' or 'absorption', specifies type of matrix disp
+		either 'dispersion', 'absorption', or 'Delta', specifies type of matrix disp
 	    """
 	    if module_id >= len(self.modules):
 		raise ValueError("requested module id is out of range")
@@ -439,8 +439,10 @@ class ModuleList(object):
 		self.modules[module_id].chi = new_disp
 	    elif type_matrix == 'absorption':
 		self.modules[module_id].Gamma = new_disp
+	    elif type_matrix == 'Delta':
+		self.modules[module_id].Delta = new_disp
 	    else:
-		raise ValueError("type_matrix must either be 'dispersion' or 'absorption'")
+		raise ValueError("type_matrix must either be 'dispersion', 'absorption' or 'Delta'")
 	    return
 
 	

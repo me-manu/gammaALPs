@@ -95,7 +95,7 @@ class MixIGMFCell(trans.GammaALPTransfer):
 	    Gamma = dt.T / dL
 	    # init the transfer function with absorption
 	    super(MixIGMFCell,self).__init__(kwargs['EGeV'], B, psi, self._nel, 
-						dL, alp, Gamma = Gamma, chi = None)
+						dL, alp, Gamma = Gamma, chi = None, Delta = None)
 	    self._ee *= (1. + self._zmean) # transform energies to comoving frame
 	else:
 	    dL, self._zstep = trafo.cosmo_cohlength(z,kwargs['L0'] * u.kpc, cosmo = self._cosmo)
@@ -105,7 +105,8 @@ class MixIGMFCell(trans.GammaALPTransfer):
 					    filepath = kwargs['restore_path'],
 					    )
 	    super(MixIGMFCell,self).__init__(tra.EGeV, tra.B, tra.psin, 
-			tra.nel, tra.dL, tra.alp, Gamma = tra.Gamma, chi = tra.chi, m = tra.m, g = tra.g)
+			tra.nel, tra.dL, tra.alp, Gamma = tra.Gamma, chi = tra.chi,
+			Delta = tra.Delta)
 	return
 
 class MixICMCell(trans.GammaALPTransfer):
@@ -200,12 +201,13 @@ class MixICMCell(trans.GammaALPTransfer):
 			    
 	    # init the transfer function with absorption
 	    super(MixICMCell,self).__init__(kwargs['EGeV'], B, psi, self._nel(self._r), 
-						dL, alp, Gamma = None, chi = None)
+						dL, alp, Gamma = None, chi = None, Delta = None)
 	else:
 	    tra = super(MixICMCell,self).readEnviron(kwargs['restore'], alp,
 						filepath = kwargs['restore_path'])
 	    super(MixICMCell,self).__init__(tra.EGeV, tra.B, tra.psin, 
-			tra.nel, tra.dL, tra.alp, Gamma = tra.Gamma, chi = tra.chi)
+			tra.nel, tra.dL, tra.alp, Gamma = tra.Gamma,
+			chi = tra.chi, Delta = tra.Delta)
 	return
 
 class MixICMGaussTurb(trans.GammaALPTransfer):
@@ -321,12 +323,13 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 			    
 	    # init the transfer function with absorption
 	    super(MixICMGaussTurb,self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r), 
-						dL, alp, Gamma = None, chi = None)
+						dL, alp, Gamma = None, chi = None, Delta = None)
 	else:
 	    tra = super(MixICMGaussTurb,self).readEnviron(kwargs['restore'], alp, 
 						filepath = kwargs['restore_path'])
 	    super(MixICMGaussTurb,self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel, 
-						tra.dL, tra.alp, Gamma = tra.Gamma, chi = tra.chi)
+						tra.dL, tra.alp, Gamma = tra.Gamma,
+						chi = tra.chi, Delta = tra.Delta)
 	return
 
 class MixJet(trans.GammaALPTransfer):
@@ -463,7 +466,7 @@ class MixJet(trans.GammaALPTransfer):
 			    
 	    # init the transfer function with absorption
 	    super(MixJet,self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r) * 1e3, 
-						dL * 1e-3, alp, Gamma = None, chi = None)
+						dL * 1e-3, alp, Gamma = None, chi = None, Delta = None)
 
 	    # transform energies to stationary frame
 	    self._ee /= self.source._doppler
@@ -471,7 +474,8 @@ class MixJet(trans.GammaALPTransfer):
 	    tra = super(MixJet,self).readEnviron(kwargs['restore'],alp,
 					    filepath = kwargs['restore_path'])
 	    super(MixJet,self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel, 
-						tra.dL, tra.alp, Gamma = tra.Gamma, chi = tra.chi)
+						tra.dL, tra.alp, Gamma = tra.Gamma,
+						chi = tra.chi, Delta = tra.Delta)
 	return
 
 	
@@ -643,12 +647,13 @@ class MixGMF(trans.GammaALPTransfer):
 
 	    # init the transfer function with absorption
 	    super(MixGMF,self).__init__(kwargs['EGeV'], B, psi, self._nelgmf, 
-						dL, alp, Gamma = None, chi = None)
+						dL, alp, Gamma = None, chi = None, Delta = None)
 	else:
 	    tra = super(MixGMF,self).readEnviron(kwargs['restore'], alp,
 						filepath = kwargs['restore_path'])
 	    super(MixGMF,self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel, 
-						tra.dL, tra.alp, Gamma = tra.Gamma, chi = tra.chi)
+						tra.dL, tra.alp, Gamma = tra.Gamma,
+						chi = tra.chi, Delta = tra.Delta)
 	return
 
     @property
@@ -793,10 +798,11 @@ class MixFromFile(trans.GammaALPTransfer):
 			    
 	    # init the transfer function 
 	    super(MixFromFile,self).__init__(kwargs['EGeV'], Btrans, psi, n, 
-						dL, alp, Gamma = None, chi = None)
+						dL, alp, Gamma = None, chi = None, Delta = None)
 	else:
 	    tra = super(MixFromFile,self).readEnviron(kwargs['restore'], alp, 
 						filepath = kwargs['restore_path'])
 	    super(MixFromFile,self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel, 
-						tra.dL, tra.alp, Gamma = tra.Gamma, chi = tra.chi)
+						tra.dL, tra.alp, Gamma = tra.Gamma,
+						chi = tra.chi, Delta = tra.Delta)
 	return

@@ -51,7 +51,7 @@ class GammaALPTransfer(object):
     Unit conversion is done through astropy.units module
     """
 
-    def __init__(self, EGeV, B, psi, nel, dL, alp, Gamma = None, chi = None):
+    def __init__(self, EGeV, B, psi, nel, dL, alp, Gamma = None, chi = None, Delta = None):
 	"""
 	Initialize the transfer base class
 
@@ -87,6 +87,13 @@ class GammaALPTransfer(object):
 	    If None, no absorption is included.
 	    Default is None. 
 
+	Delta: `~numpy.ndarray` or None
+	    (n x m)-dim numpy array with additional momentum difference term for 0,0 and 1,1 
+	    components of mixing matrix at energy E and distance L. 
+	    In kpc^-1.
+	    If None, no additional term is included.
+	    Default is None. 
+
 	chi: `~numpy.ndarray` or None
 	    (n x m)-dim numpy array with photon dispersion rate at energy E and distance L. 
 	    If None, no dispersion is included.
@@ -102,6 +109,7 @@ class GammaALPTransfer(object):
 	self._nel = nel
 	self._dL = dL
 	self._Gamma = Gamma
+	self._Delta = Delta
 	self._chi = chi
 	self._alp = alp
 
@@ -164,6 +172,10 @@ class GammaALPTransfer(object):
     @property
     def chi(self):
 	return self._chi
+
+    @property
+    def Delta(self):
+	return self._Delta
 
     @property
     def alp(self):
@@ -254,6 +266,14 @@ class GammaALPTransfer(object):
 	    self._Gamma = Gamma
 	return
 
+    @Delta.setter
+    def Delta(self, Delta):
+	if type(Gamma) == u.Quantity:
+	    self._Delta = Delta.to('kpc**-1')
+	else:
+	    self._Delta = Delta
+	return
+
     @chi.setter
     def chi(self, chi):
 	self._chi = chi
@@ -292,15 +312,17 @@ class GammaALPTransfer(object):
 
 	# add additional terms if absorption rate or dispersion are defined
 	# absorption
-	if not self._Gamma == None:
+	if type(self._Gamma) == np.ndarray:
 	    self._Dperp += 0.5j * self._Gamma
 	    self._Dpar += 0.5j * self._Gamma
 
-	if not self._chi == None:
-	    #self._Dperp += Delta_CMB(self._ee) / chiCMB * self._chi
-	    #self._Dpar += Delta_CMB(self._ee) / chiCMB * self._chi
-	    self._Dperp += self._chi
-	    self._Dpar += self._chi
+	if type(self._chi) == np.ndarray:
+	    self._Dperp += Delta_CMB(self._ee) / chiCMB * self._chi
+	    self._Dpar += Delta_CMB(self._ee) / chiCMB * self._chi
+
+	if type(self._Delta) == np.ndarray:
+	    self._Dperp += self._Delta
+	    self._Dpar += self._Delta
 
 	self._Dosc	= np.sqrt((self._Dpar - self._Da)**2. + 4.*self._Dag**2.)
 
@@ -402,10 +424,12 @@ class GammaALPTransfer(object):
 	    np.save(path.join(filepath,name) + '_B.npy', self.B)
 	    np.save(path.join(filepath,name) + '_psi.npy', self.psin)
 	     
-	if not self._Gamma == None:
+	if type(self._Gamma) == np.ndarray:
 	    np.save(path.join(filepath,name) + '_Gamma.npy', self._Gamma)
-	if not self._chi == None:
+	if type(self._chi) == np.ndarray:
 	    np.save(path.join(filepath,name) + '_chi.npy', self._chi)
+	if type(self._Delta) == np.ndarray:
+	    np.save(path.join(filepath,name) + '_Delta.npy', self._Delta)
 	return path.join(filepath,name) + '*.npy'
 
     @staticmethod
@@ -447,8 +471,13 @@ class GammaALPTransfer(object):
 	    chi = np.load(path.join(filepath,name) + '_chi.npy')
 	else:
 	    chi = None
+	if path.isfile(path.join(filepath,name) + '_Delta.npy'):
+	    Delta = np.load(path.join(filepath,name) + '_Delta.npy')
+	else:
+	    Delta = None
 
-	return GammaALPTransfer(EGeV, B, psi, nel, dL, alp, Gamma = Gamma, chi = chi)
+	return GammaALPTransfer(EGeV, B, psi, nel, dL, alp, Gamma = Gamma,
+				chi = chi, Delta = Delta)
 
     def __setTransferMatrices(self, nsim = -1):
 	"""Set the transfer matrices"""
