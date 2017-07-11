@@ -77,7 +77,7 @@ class MixIGMFCell(trans.GammaALPTransfer):
 
 	if kwargs['restore'] == None:
 	    self._b = cell.Bcell(kwargs['B0'],kwargs['L0'])
-	    B, psi, dL, self._zstep = self._b.new_Bcosmo(self.source.z, 
+	    B, psi, dL, self._zstep = self._b.new_Bcosmo(self._source.z, 
 				cosmo = kwargs['cosmo'], nsim = kwargs['nsim']) 
 	    if not kwargs['dL'].lower() == 'none':
 		if type(kwargs['dL']) == list or type(kwargs['dL']) == np.ndarray:
@@ -636,7 +636,8 @@ class MixGMF(trans.GammaALPTransfer):
 	self._rbounds = kwargs['rbounds']
 
 	self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
-	dL = self._rbounds[1:] - self._rbounds[:-1]
+	dL = self._rbounds[:-1] - self._rbounds[1:] # use other way round since we are beginning from 
+							# max distance and propagate to Earth
 
 	# NE2001 code missing!
 	self._nelgmf = kwargs['n0'] * np.ones(self._r.shape)
