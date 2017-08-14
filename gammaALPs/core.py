@@ -398,7 +398,7 @@ class ModuleList(object):
 	    raise ValueError("Unkwon Environment chosen")
 	return
 
-    def add_disp_abs(self,EGeV, r_kpc, disp, module_id, type_matrix = 'dispersion'):
+    def add_disp_abs(self,EGeV, r_kpc, disp, module_id, type_matrix = 'dispersion', **kwargs):
 	    """
 	    Add dispersion, absorption, or extra momentum difference term to a propagation module using 
 	    interpolation of of a 2d dispersion / absorption matrix
@@ -431,7 +431,7 @@ class ModuleList(object):
 		raise RuntimeError("dispersion / absorption cannot be applied to EBL only module")
 
 	    # interpolate matrix
-	    intp = Interp2D(np.log10(EGeV), r_kpc, disp)
+	    intp = Interp2D(np.log10(EGeV), r_kpc, disp, **kwargs)
 	    # cast to values used for propagation
 	    new_disp = intp(np.log10(self.modules[module_id].EGeV), self.modules[module_id]._r)
 
@@ -502,7 +502,7 @@ class ModuleList(object):
 		    T = []
 		    for i in range(m.nsim):
 			T.append(m.calcTransfer(nsim = i, nprocess=1))
-		self._Tenv.append(T)
+		self._Tenv.append(np.array(T))
 	# check if we have simple EBL absorption present
 	# in which case we calculate separately the mixing in the source,
 	# the EBL absorption, and the mixing near the observer.
@@ -512,8 +512,10 @@ class ModuleList(object):
 
 	self._px_final, self._py_final, self._pa_final = [],[],[]
 	if OptDepth in [type(t) for t in self.modules]:
+	    # get the index of the EBL module
 	    idx = [type(t) for t in self.modules].index(OptDepth)
 	    self._px_src, self._py_src, self._pa_src = [], [], []
+	    # step through the simulations of random B fields
 	    for n in range(self.__nsim_max):
 		# mutliply all matrices for source environment
 		Tsrc = self._multiply_env(0,idx,n)

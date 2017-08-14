@@ -92,8 +92,12 @@ class Bcell(object):
 	"""
 	# determine number of crossed domains, no expansion assumed
 
-	Psin = np.squeeze(self.new_random_numbers(Nd,nsim = nsim))
-	B = np.ones(Nd) * self._B
+	Psin = self.new_random_numbers(Nd,nsim = nsim)
+	if nsim == 1:
+	    Psin = np.squeeze(Psin)
+	    B = np.ones(Nd) * self._B
+	else:
+	    B = np.ones(Psin.shape) * self._B
 	if np.isscalar(Bscale) or type(Bscale) == np.ndarray:
 	    B *= Bscale
 

@@ -145,10 +145,12 @@ class GMF(object):
 	# phi.shape = p
 	# then result is given as (8,p)-dim array, each row stands for one rx
 
+
 	result = np.tensordot(self.rx , np.exp((phi - 3.*pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0)
 	result = np.vstack((result, np.tensordot(self.rx , np.exp((phi - pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0) ))
 	result = np.vstack((result, np.tensordot(self.rx , np.exp((phi + pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0) ))
-	return np.vstack((result, np.tensordot(self.rx , np.exp((phi + 3.*pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0) ))
+	result = np.vstack((result, np.tensordot(self.rx , np.exp((phi + 3.*pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0) ))
+	return result
 
     def Bdisk(self,rho,phi,z):
 	"""
@@ -181,6 +183,9 @@ class GMF(object):
 	m_center	= (rho >= 3.) & (rho < 5.1)
 	m_disk		= (rho >= 5.1) & (rho <= 20.)
 
+	m_center	= (rho >= 3.) & (rho < 5.)
+	m_disk		= (rho >= 5.) & (rho <= 20.)
+
 	Bdisk[1,m_center] = self.bring
 
 	# Determine in which arm we are
@@ -188,8 +193,10 @@ class GMF(object):
 	if np.sum(m_disk):
 	    rls = self.r_log_spiral(phi[m_disk])
 
-	    rls = np.abs(rls - rho[m_disk])
-	    narm = np.argmin(rls, axis = 0) % 8
+	    #rls = np.abs(rls - rho[m_disk])
+	    rls = rls - rho[m_disk]
+	    rls[rls < 0.] = 1e10 * np.ones(np.sum(rls < 0.))
+	    narm = np.argmin(rls, axis = 0) % 8 
 
 	    Bdisk[0,m_disk] = np.sin(self.idisk)* self.b[narm] * (5. / rho[m_disk])
 	    Bdisk[1,m_disk] = np.cos(self.idisk)* self.b[narm] * (5. / rho[m_disk])
@@ -264,7 +271,7 @@ class GMF(object):
 	m = np.sqrt(rho**2. + z**2.) >= 1.
 
 	bx = lambda rho_p: self.BX0 * np.exp(-rho_p / self.rhoX)
-	tx = lambda rho,z,rho_p: np.arctan(np.abs(z)/(rho - rho_p))
+	tx = lambda rho,z,rho_p: np.arctan2(np.abs(z),(rho - rho_p))
 
 	rho_p	= rho[m] *self.rhoXc/(self.rhoXc + np.abs(z[m] ) / np.tan(self.ThetaX0))
 

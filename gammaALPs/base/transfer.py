@@ -6,6 +6,7 @@ from astropy.table import Table
 from os import path
 from multiprocessing import Pool,Process
 import os
+import copy
 # ------------------------- #
 
 """
@@ -23,9 +24,11 @@ Delta_ag = lambda g,B: 1.52e-2*g*B
 Delta_a = lambda m,E: -7.8e-2*m**2./E
 Delta_pl = lambda n,E: -1.1e-7*n/E
 Delta_CMB = lambda E: 0.8e-7*E
+			
+Delta_QED = lambda B,E: 4.1e-9*E*B**2.
 # with correction factors of Perna et al. 2012
-Delta_QED = lambda B,E: 4.1e-9*E*B**2. * (1. + 1.2e-6 * B / Bcrit) / \
-				(1. + 1.33e-6*B / Bcrit + 0.59e-6 * (B / Bcrit)**2.)
+#Delta_QED = lambda B,E: 4.1e-9*E*B**2. * (1. + 1.2e-6 * B / Bcrit) / \
+#				(1. + 1.33e-6*B / Bcrit + 0.59e-6 * (B / Bcrit)**2.)
 chiCMB = 0.511e-42
 # --------------------------------------- #
 #Plasma freq in 10^-9 eV
@@ -297,24 +300,21 @@ class GammaALPTransfer(object):
     def __setDeltas(self):
 	"""Set Deltas and eigenvalues of mixing matrix for each domain"""
 
-	self._Dperp	= Delta_pl(self._nn,self._ee) + 2.*Delta_QED(self._bb,self._ee) \
-				+ 0.j + Delta_CMB(self._ee)
-	self._Dpar	= Delta_pl(self._nn,self._ee) + 3.5*Delta_QED(self._bb,self._ee) \
-				+ 0.j + Delta_CMB(self._ee) 
-	# no CMB term
-	#self._Dperp	= Delta_pl(self._nn,self._ee) + 2.*Delta_QED(self._bb,self._ee) \
-				#+ 0.j
-	#self._Dpar	= Delta_pl(self._nn,self._ee) + 3.5*Delta_QED(self._bb,self._ee) \
-				#+ 0.j
+	self._Dperp	= Delta_pl(self._nn,self._ee) + 0.j #+ 2.*Delta_QED(self._bb,self._ee) \
+	self._Dpar	= Delta_pl(self._nn,self._ee) + 0.j #+ 3.5*Delta_QED(self._bb,self._ee) \
 
-	self._Dag	= Delta_ag(self.alp.g,self._bb)				
+	self._Dpl	= Delta_pl(self._nn,self._ee)
+	self._DQED	= Delta_QED(self._bb,self._ee)
+	self._Dag	= Delta_ag(self.alp.g,self._bb)
 	self._Da	= Delta_a(self.alp.m,self._ee)
 
 	# add additional terms if absorption rate or dispersion are defined
 	# absorption
 	if type(self._Gamma) == np.ndarray:
-	    self._Dperp += 0.5j * self._Gamma
-	    self._Dpar += 0.5j * self._Gamma
+	    #self._Dperp += 0.5j * self._Gamma
+	    #self._Dpar += 0.5j * self._Gamma
+	    self._Dperp -= 0.5j * self._Gamma
+	    self._Dpar -= 0.5j * self._Gamma
 
 	if type(self._chi) == np.ndarray:
 	    self._Dperp += Delta_CMB(self._ee) / chiCMB * self._chi
@@ -323,22 +323,31 @@ class GammaALPTransfer(object):
 	if type(self._Delta) == np.ndarray:
 	    self._Dperp += self._Delta
 	    self._Dpar += self._Delta
+	 #no CMB: comment out next three lines
+	else:
+	    # add CMB term
+	   self._Dperp += Delta_CMB(self._ee)
+	   self._Dpar += Delta_CMB(self._ee)
 
-	self._Dosc	= np.sqrt((self._Dpar - self._Da)**2. + 4.*self._Dag**2.)
-
-	# mixing angle - arctan2 does not work for complex numbers
-	#self._alph	= 0.5 * np.arctan2(2. * self._Dag , (self._Dpar - self._Da)) 
-	# sin * cos of mixing angle
+	#self._Dosc	= np.sqrt((self._Dpar - self._Da)**2.  + 4.*self._Dag**2.)
+	self._Dosc	= ((self._Dpar - self._Da)**2.  + 4.*self._Dag**2.)
+	self._Dosc	= np.sqrt(self._Dosc)
+	
+	#self._saca 	= np.sin(self._alph) * np.cos(self._alph)
 	self._saca	= self._Dag / self._Dosc # = 0.5 * sin(2. * alpha)
-	# cosine^2 of mixing angle
-	self._caca	= 0.5 * (1. +  (self._Dpar - self._Da) / self._Dosc)
-	# sin^2 of mixing angle
-	self._sasa	= 0.5 * (1. -  (self._Dpar - self._Da) / self._Dosc)
 
+	# cosine^2 of mixing angle
+	#self._caca 	= np.cos(self._alph) * np.cos(self._alph)
+	self._caca	= 0.5 * (1. +  (self._Dpar - self._Da) / self._Dosc)
+
+	# sin^2 of mixing angle
+	#self._sasa 	= np.sin(self._alph) * np.sin(self._alph)
+	self._sasa	= 0.5 * (1. -  (self._Dpar - self._Da) / self._Dosc)
 
 	self._EW1 = self._Dperp
 	self._EW2 = 0.5 * (self._Dpar + self._Da - self._Dosc)
 	self._EW3 = 0.5 * (self._Dpar + self._Da + self._Dosc)
+
 	return
 
     def __setT1n(self):
@@ -354,14 +363,15 @@ class GammaALPTransfer(object):
 	self._T2[...,0,0] = self._spp * self._spp * self._sasa
 	self._T2[...,0,1] = self._spp * self._cpp * self._sasa
 	self._T2[...,0,2] = -1. * self._spp * self._saca
-                     
+                   
 	self._T2[...,1,0] = self._T2[...,0,1]
 	self._T2[...,1,1] = self._cpp * self._cpp * self._sasa
 	self._T2[...,1,2] = -1. * self._cpp * self._saca
-
+        
 	self._T2[...,2,0] = self._T2[...,0,2]
 	self._T2[...,2,1] = self._T2[...,1,2]
 	self._T2[...,2,2] = self._caca
+
 	return
 
     def __setT3n(self):
@@ -370,14 +380,15 @@ class GammaALPTransfer(object):
 	self._T3[...,0,0] = self._spp * self._spp * self._caca
 	self._T3[...,0,1] = self._spp * self._cpp * self._caca
 	self._T3[...,0,2] = self._spp * self._saca
-                     
+                    
 	self._T3[...,1,0] = self._T3[...,0,1]
 	self._T3[...,1,1] = self._cpp * self._cpp * self._caca
 	self._T3[...,1,2] = self._cpp * self._saca
-                                         
+                                        
 	self._T3[...,2,0] = self._T3[...,0,2]
 	self._T3[...,2,1] = self._T3[...,1,2]
 	self._T3[...,2,2] = self._sasa
+
 	return
 
     def __setTn(self):
@@ -386,9 +397,10 @@ class GammaALPTransfer(object):
 	ew2ll = (self._EW2 * self._ll)[..., np.newaxis, np.newaxis]
 	ew3ll = (self._EW3 * self._ll)[..., np.newaxis, np.newaxis]
 
-	self._Tn = np.exp(1.j * ew1ll) * self._T1 + \
-		    np.exp(1.j * ew2ll) * self._T2 + \
-		    np.exp(1.j * ew3ll) * self._T3
+	self._Tn = np.exp(-1.j * ew1ll) * self._T1 + \
+		    np.exp(-1.j * ew2ll) * self._T2 + \
+		    np.exp(-1.j * ew3ll) * self._T3
+	self._Tn = np.round(self._Tn, 8)
 	return
 	
     def writeEnviron(self, name, filepath = './'):
@@ -584,6 +596,31 @@ class GammaALPTransfer(object):
 	    pool.join()
 	    return dotProd(T)
 
+    def show_conv_prob_vs_r(self, pin, pout):
+	"""
+	Compute the conversion probability as a function of distance.
+	Works only after you have computed the transfer matrices in each domain.
+
+	Parameters
+	----------
+	pin: `~numpy.ndarray`
+	    3 x 3 matrix with initial polarization
+	pout: `~numpy.ndarray`
+	    3 x 3 matrix with final polarization
+	
+	Returns
+	-------
+	Conversion probability for each energy and distance 
+	"""
+	p_r = []
+	for i in range(self._Tn.shape[1]):
+	    if not i:
+		p_r.append(calcConvProb(pin,pout,self._Tn[:,i]))
+	    else:
+		p_r.append(calcConvProb(pin,pout,dotProd(self._Tn[:,:i])))
+	return np.array(p_r)
+	
+
 # ---------------------------------------------------------------------------- #
 # --- Global Functions ------------------------------------------------------- #
 # ---------------------------------------------------------------------------- #
@@ -610,8 +647,16 @@ def calcConvProb(pin, pout, T):
     """
     return np.squeeze(np.real(np.trace(
 	    (np.matmul(pout,
-		np.matmul(T,
-		    np.matmul(pin,np.transpose(T, axes = (0,2,1)).conjugate())
+		# first has to be transpose and the second conjugate. 
+		# to see this for two domains, with 1 being the closest domain to the beam
+		# (farthest away from the observer).
+		# T = T1 T2
+		# what we don't want:
+		# rfinal = T r T^dagger = T1T2 r T2^dagger T1^dagger
+		# what we want:
+		# rfinal = T^T r (T^T)^dagger = T2T1 r T1^dagger T2^dagger
+		np.matmul(np.transpose(T, axes = (0,2,1)),
+		    np.matmul(pin,T.conjugate())
 		    )
 		)
 	    ),
