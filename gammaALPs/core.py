@@ -4,7 +4,7 @@ from astropy.coordinates import SkyCoord
 import numpy as np
 from ebltable.tau_from_model import OptDepth
 from gammaALPs.base import environs as env
-from gammaALPs.base.transfer import calcConvProb
+from gammaALPs.base.transfer import calcConvProb, calcLinPol
 from gammaALPs.utils.interp2d import Interp2D 
 import logging
 
@@ -511,6 +511,7 @@ class ModuleList(object):
 	self.__nsim_max = np.max(self._all_nsim)
 
 	self._px_final, self._py_final, self._pa_final = [],[],[]
+	self._lin_pol, self._circ_pol = [],[]
 	if OptDepth in [type(t) for t in self.modules]:
 	    # get the index of the EBL module
 	    idx = [type(t) for t in self.modules].index(OptDepth)
@@ -535,6 +536,9 @@ class ModuleList(object):
 		self._px_final.append(calcConvProb(pol, self.px, Tobs))
 		self._py_final.append(calcConvProb(pol, self.py, Tobs))
 		self._pa_final.append(calcConvProb(pol, self.pa, Tobs))
+		l,c = calcLinPol(pol,Tobs)
+		self._lin_pol.append(l)
+		self._circ_pol.append(c)
 
 	    self._px_src = np.array(self._px_src)
 	    self._py_src = np.array(self._py_src)
@@ -542,12 +546,18 @@ class ModuleList(object):
 	else:
 	    # mutlitply all environments for all B-field realizations
 	    for n in range(self.__nsim_max):
-		Ttot = self._multiply_env(0,len(self._Tenv) + 1,n)
-		self._px_final.append(calcConvProb(self.pin, self.px, Ttot))
-		self._py_final.append(calcConvProb(self.pin, self.py, Ttot))
-		self._pa_final.append(calcConvProb(self.pin, self.pa, Ttot))
+		Tobs = self._multiply_env(0,len(self._Tenv) + 1,n)
+		self._px_final.append(calcConvProb(self.pin, self.px, Tobs))
+		self._py_final.append(calcConvProb(self.pin, self.py, Tobs))
+		self._pa_final.append(calcConvProb(self.pin, self.pa, Tobs))
+		l,c = calcLinPol(self.pin,Tobs)
+		self._lin_pol.append(l)
+		self._circ_pol.append(c)
+
 	self._px_final = np.array(self._px_final)
 	self._py_final = np.array(self._py_final)
 	self._pa_final = np.array(self._pa_final)
+	self._lin_pol = np.array(self._lin_pol)
+	self._circ_pol = np.array(self._circ_pol)
 
 	return self._px_final, self._py_final, self._pa_final

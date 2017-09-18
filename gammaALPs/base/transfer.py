@@ -661,3 +661,35 @@ def calcConvProb(pin, pout, T):
 		)
 	    ),
 	    axis1=1, axis2=2)))
+
+def calcLinPol(pin, T):
+    """
+    Calculate the the linear polarization degree of the final transfer matrix
+
+    Parameters
+    ----------
+    pin: `~numpy.ndarray`
+	3 x 3 matrix with initial polarization
+    T: `~numpy.ndarray`
+	n x 3 x 3 complex transfer matrix for n energies
+
+    Returns 
+    -------
+    n-dim `~numpy.ndarray` with conversion probabilities for each energy
+
+    Notes
+    -----
+    See Eq. (44) of Bassan et al. (2010): https://arxiv.org/pdf/1001.5267.pdf
+    """
+    # rfinal = T^T r (T^T)^dagger = T2T1 r T1^dagger T2^dagger
+    rfinal = np.matmul(np.transpose(T, axes = (0,2,1)),
+		    np.matmul(pin,T.conjugate())
+		    )
+    lin_pol = np.sqrt((rfinal[:,0,0] - rfinal[:,1,1])**2. + (rfinal[:,0,1] + rfinal[:,1,0])**2.)
+    lin_pol /= (rfinal[:,0,0] + rfinal[:,1,1])
+    circ_pol = np.imag(rfinal[:,0,1] - rfinal[:,1,0]) / (rfinal[:,0,0] + rfinal[:,1,1])
+    if not np.all(np.imag(lin_pol) == 0.):
+	logging.warning("Not all values of linear polarization are real values!")
+    if not np.all(np.imag(circ_pol) == 0.):
+	logging.warning("Not all values of circular polarization are real values!")
+    return np.real(lin_pol), np.real(circ_pol) # number should be real already, this discards the zero imaginary part
