@@ -363,6 +363,8 @@ class ModuleList(object):
 	    in the Galactic magnetic field (GMF) of the Milky Way
 	- File: initializes `~gammaALPs.base.environs.MixFromFile` for mixing 
 	    in a magnetic field given by a data file
+	- Array: initializes `~gammaALPs.base.environs.MixFromArray` for mixing 
+	    in a magnetic field given by a numpy arrays for B,psi,nel,r, and dL
 	- EBL: initializes `~ebltable.tau_from_model.OptDepth` for EBL attenuation, 
 	    i.e. no photon-ALP mixing in the intergalactic medium
 	"""
@@ -393,6 +395,9 @@ class ModuleList(object):
 			EGeV = self.EGeV, **kwargs))
 	elif environ == 'File':
 	    self._modules.insert(order,env.MixFromFile(self.alp, 
+			EGeV = self.EGeV, **kwargs))
+	elif environ == 'Array':
+	    self._modules.insert(order,env.MixFromArray(self.alp, 
 			EGeV = self.EGeV, **kwargs))
 	else:
 	    raise ValueError("Unkwon Environment chosen")

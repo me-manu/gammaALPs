@@ -109,6 +109,10 @@ class MixIGMFCell(trans.GammaALPTransfer):
 			Delta = tra.Delta)
 	return
 
+    @property
+    def t(self):
+	return self._t
+
 class MixICMCell(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):
 	"""
@@ -465,7 +469,7 @@ class MixJet(trans.GammaALPTransfer):
 	    self._neljet = njet.NelJet(kwargs['n0'],kwargs['r0'],kwargs['beta'])
 			    
 	    # init the transfer function with absorption
-	    super(MixJet,self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r) * 1e3, 
+	    super(MixJet,self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r), 
 						dL * 1e-3, alp, Gamma = None, chi = None, Delta = None)
 
 	    # transform energies to stationary frame
@@ -596,7 +600,7 @@ class MixGMF(trans.GammaALPTransfer):
 	Electron density parameters:
 
 	n0: float
-	Electron density in cm^-3 (default: 10). NE2001 code implementation still missing.
+	    Electron density in cm^-3 (default: 10). NE2001 code implementation still missing.
 	"""
 	kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
 	kwargs.setdefault('restore', None)
@@ -613,7 +617,7 @@ class MixGMF(trans.GammaALPTransfer):
 	self._galactic = kwargs['galactic']
 
 	# Nel kwargs
-	kwargs.setdefault('n0', 1e4)
+	kwargs.setdefault('n0', 1e1)
 
 	# for B field calculation
 	self.__zmax = kwargs['zmax']
@@ -804,6 +808,60 @@ class MixFromFile(trans.GammaALPTransfer):
 	    tra = super(MixFromFile,self).readEnviron(kwargs['restore'], alp, 
 						filepath = kwargs['restore_path'])
 	    super(MixFromFile,self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel, 
+						tra.dL, tra.alp, Gamma = tra.Gamma,
+						chi = tra.chi, Delta = tra.Delta)
+	return
+
+class MixFromArray(trans.GammaALPTransfer):
+    def __init__(self, alp, Btrans, psi, nel, r, dL, **kwargs):
+	"""
+	Initialize mixing in environment given by numpy arrays
+
+	Parameters
+	----------
+	alp: `~gammaALPs.ALP`
+	    `~gammaALPs.ALP` object with ALP parameters
+	Btrans: `~numpy.ndarray`
+	    n-dim or m x n-dim, absolute value of transversal B field, in muG
+	    if m x n-dimensional, m realizations are assumed
+	psi: `~numpy.ndarray`
+	    n-dim or m x n-dim, Angles between transversal direction and one polarization,
+	    if m x n-dimensional, m realizations are assumed
+	nel: `~numpy.ndarray`
+	    n-dim or m x n-dim, electron density, in cm^-3,
+	    if m x n-dimensional, m realizations are assumed
+	r: `~numpy.ndarray`
+	    n-dim, bin centers along line of sight in kpc, 
+	    if m x n-dimensional, m realizations are assumed
+	dL: `~numpy.ndarray`
+	    n-dim, bin widths along line of sight in kpc, 
+	    if m x n-dimensional, m realizations are assumed
+
+	kwargs
+	------
+	EGeV: `~numpy.ndarray` 
+	    Gamma-ray energies in GeV
+
+	restore: str or None
+	    if str, identifier for files to restore environment. 
+	    If None, initialize mixing with new B field
+	restore_path: str
+	    full path to environment files
+
+	"""
+	kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
+	kwargs.setdefault('restore', None)
+	kwargs.setdefault('restore_path', './')
+
+	if kwargs['restore'] == None:
+			    
+	    # init the transfer function 
+	    super(MixFromArray,self).__init__(kwargs['EGeV'], Btrans, psi, nel, 
+						dL, alp, Gamma = None, chi = None, Delta = None)
+	else:
+	    tra = super(MixFromFile,self).readEnviron(kwargs['restore'], alp, 
+						filepath = kwargs['restore_path'])
+	    super(MixFromArray,self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel, 
 						tra.dL, tra.alp, Gamma = tra.Gamma,
 						chi = tra.chi, Delta = tra.Delta)
 	return

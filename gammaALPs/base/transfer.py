@@ -22,7 +22,7 @@ Bcrit 		= 4.414e13 # critical magnetic field in G
 # --- Momentum differences in kpc^-1 --- #
 Delta_ag = lambda g,B: 1.52e-2*g*B
 Delta_a = lambda m,E: -7.8e-2*m**2./E
-Delta_pl = lambda n,E: -1.1e-7*n/E
+Delta_pl = lambda n,E: -1.1e-4*n/E
 Delta_CMB = lambda E: 0.8e-7*E
 			
 Delta_QED = lambda B,E: 4.1e-9*E*B**2.
@@ -32,8 +32,8 @@ Delta_QED = lambda B,E: 4.1e-9*E*B**2.
 chiCMB = 0.511e-42
 # --------------------------------------- #
 #Plasma freq in 10^-9 eV
-#n is electron density in 10^-3 cm^-3
-w_pl_e9 = lambda n: 0.00117*np.sqrt(n)
+#n is electron density in cm^-3
+w_pl_e9 = lambda n: 0.00117*np.sqrt(n/1e-3)
 # --------------------------------------- #
 	
 
@@ -47,7 +47,7 @@ class GammaALPTransfer(object):
     Units used are:
     magnetic field B: micro Gauss
     length scales: kpc
-    electron densities: 10^-3 cm^-3
+    electron densities: cm^-3
     ALP mass: neV
     photon-ALP coupling: 10^-11 GeV^-1
 
@@ -72,7 +72,7 @@ class GammaALPTransfer(object):
 	    Or (k,m)-dim numpy array with angles for k B-field realizations
 
 	nel: `~numpy.ndarray`
-	    m-dim numpy array with electron densities in 10^-3 cm^-3 along the line of sight.
+	    m-dim numpy array with electron densities in cm^-3 along the line of sight.
 
 	dL: `~numpy.ndarray`
 	    m-dim numpy array with distance step length traveled along line of sight in kpc.
@@ -109,7 +109,6 @@ class GammaALPTransfer(object):
 	    photon-ALP couplint in 10^-11 GeV^-1. Default in 1.
 	"""
 	self._EGeV = EGeV
-	self._nel = nel
 	self._dL = dL
 	self._Gamma = Gamma
 	self._Delta = Delta
@@ -132,6 +131,13 @@ class GammaALPTransfer(object):
 	    self._B = B[0]
 	else:
 	    self._B = B
+
+	if len(nel.shape) > 1:
+	    self._neln = nel
+	    logging.debug('nel shape: {0}:'.format(self._neln.shape))
+	    self._nel = nel[0]
+	else:
+	    self._nel = nel
 
 	# init transfer matrices
 	self._T1		= np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)	
@@ -193,6 +199,10 @@ class GammaALPTransfer(object):
 	return self._Bn
 
     @property
+    def neln(self):
+	return self._neln
+
+    @property
     def nsim(self):
 	return self._nsim
 
@@ -225,6 +235,12 @@ class GammaALPTransfer(object):
 	self.__init_meshgrids()
 	return
 
+    @neln.setter
+    def neln(self, neln):
+	self._neln = neln
+	self._nel = neln[0]
+	return
+
     @psi.setter
     def psi(self, psi):
 	self._psi = psi
@@ -244,7 +260,7 @@ class GammaALPTransfer(object):
     @nel.setter
     def nel(self, nel):
 	if type(nel) == u.Quantity:
-	    self._nel = nel.to('10**-3 cm**-3').value
+	    self._nel = nel.to('cm**-3').value
 	else:
 	    self._nel = nel
 	self.__init_transfer_matrices()
@@ -420,7 +436,6 @@ class GammaALPTransfer(object):
 
 
 	"""
-	np.save(path.join(filepath,name) + '_nel.npy', self.nel)
 	np.save(path.join(filepath,name) + '_dL.npy', self.dL)
 	np.save(path.join(filepath,name) + '_EGeV.npy', self.EGeV)
 
@@ -435,6 +450,11 @@ class GammaALPTransfer(object):
 	else:
 	    np.save(path.join(filepath,name) + '_B.npy', self.B)
 	    np.save(path.join(filepath,name) + '_psi.npy', self.psin)
+
+	try:
+	    np.save(path.join(filepath,name) + '_nel.npy', self.neln)
+	except AttributeError:
+	    np.save(path.join(filepath,name) + '_nel.npy', self.nel)
 	     
 	if type(self._Gamma) == np.ndarray:
 	    np.save(path.join(filepath,name) + '_Gamma.npy', self._Gamma)
@@ -500,6 +520,11 @@ class GammaALPTransfer(object):
 		self.B = self._Bn[nsim]
 	    except AttributeError:
 	    	logging.debug("B field assumed constant, only angle Psi is changed")
+		pass
+
+	    try:
+		self.nel = self._neln[nsim]
+	    except AttributeError:
 		pass
 
 	self.__setDeltas()
@@ -688,6 +713,8 @@ def calcLinPol(pin, T):
     lin_pol = np.sqrt((rfinal[:,0,0] - rfinal[:,1,1])**2. + (rfinal[:,0,1] + rfinal[:,1,0])**2.)
     lin_pol /= (rfinal[:,0,0] + rfinal[:,1,1])
     circ_pol = np.imag(rfinal[:,0,1] - rfinal[:,1,0]) / (rfinal[:,0,0] + rfinal[:,1,1])
+
+# need to check this:
     if not np.all(np.imag(lin_pol) == 0.):
 	logging.warning("Not all values of linear polarization are real values!")
     if not np.all(np.imag(circ_pol) == 0.):
