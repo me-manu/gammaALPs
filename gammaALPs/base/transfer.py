@@ -316,8 +316,8 @@ class GammaALPTransfer(object):
     def __setDeltas(self):
 	"""Set Deltas and eigenvalues of mixing matrix for each domain"""
 
-	self._Dperp	= Delta_pl(self._nn,self._ee) + 0.j #+ 2.*Delta_QED(self._bb,self._ee) \
-	self._Dpar	= Delta_pl(self._nn,self._ee) + 0.j #+ 3.5*Delta_QED(self._bb,self._ee) \
+	self._Dperp	= Delta_pl(self._nn,self._ee) + 0.j + 2.*Delta_QED(self._bb,self._ee)
+	self._Dpar	= Delta_pl(self._nn,self._ee) + 0.j + 3.5*Delta_QED(self._bb,self._ee)
 
 	self._Dpl	= Delta_pl(self._nn,self._ee)
 	self._DQED	= Delta_QED(self._bb,self._ee)
@@ -651,7 +651,9 @@ class GammaALPTransfer(object):
 # ---------------------------------------------------------------------------- #
 def dotProd(T):
     """Calculate dot product over last two axis of a multi dimensional matrix"""
-    return np.array([reduce(np.dot, Tn) for Tn in T])
+    #return np.array([reduce(np.dot, Tn) for Tn in T])
+    # reverse along domain axis, see comment in next function
+    return np.array([reduce(np.dot, Tn) for Tn in T[:,::-1,...]])
 
 def calcConvProb(pin, pout, T):
     """
@@ -678,10 +680,11 @@ def calcConvProb(pin, pout, T):
 		# T = T1 T2
 		# what we don't want:
 		# rfinal = T r T^dagger = T1T2 r T2^dagger T1^dagger
-		# what we want:
-		# rfinal = T^T r (T^T)^dagger = T2T1 r T1^dagger T2^dagger
-		np.matmul(np.transpose(T, axes = (0,2,1)),
-		    np.matmul(pin,T.conjugate())
+		# thus, you have to turn around the multiplication in dotProd along the domain axis, 
+		# so that T = T2 T1, and thus
+		# rfinal = T r T^dagger = T2T1 r T1^dagger T2^dagger
+		np.matmul(T,
+		    np.matmul(pin,np.transpose(T.conjugate(), axes = (0,2,1)))
 		    )
 		)
 	    ),

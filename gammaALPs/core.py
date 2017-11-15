@@ -242,7 +242,7 @@ class ModuleList(object):
     the photon-ALP oscillation is computed.
     """
     def __init__(self, alp, source, pin = np.diag((1.,1.,0.)) * 0.5, 
-    		EGeV = np.logspace(0.,4.,100)):
+    		EGeV = np.logspace(0.,4.,100), seed = None):
 	"""
 	Initiliaze the class, energy range, and polarization matrices
 
@@ -260,9 +260,13 @@ class ModuleList(object):
 	    3x3 dim matrix with initial polarization.
 	    Default: un-polarized photon beam
 
-	EGeV : `~numpy.ndarray`
+	EGeV: `~numpy.ndarray`
 	    n-dim numpy array with gamma-ray energies in GeV
 	    Default: log-spaced array between 1 GeV and 10 TeV
+	
+	seed: int or array_like, optional
+	    Seed for RandomState for numpy random numbers.
+	    Must be convertible to 32 bit unsigned integers.
 	"""
 	self._alp = alp
 	self._source = source
@@ -273,6 +277,7 @@ class ModuleList(object):
 	self._pa = np.diag((0.,0.,1.))
 	self._pin = pin
 	self._modules = []
+	np.random.seed(seed = seed)
 	return
 
     @property
