@@ -473,7 +473,7 @@ class MixJet(trans.GammaALPTransfer):
 						dL * 1e-3, alp, Gamma = None, chi = None, Delta = None)
 
 	    # transform energies to stationary frame
-	    self._ee /= self.source._doppler
+	    self._ee /= self._source._doppler
 	else:
 	    tra = super(MixJet,self).readEnviron(kwargs['restore'],alp,
 					    filepath = kwargs['restore_path'])
@@ -519,8 +519,8 @@ class MixJet(trans.GammaALPTransfer):
 	"""
 	# Calculate normalized rho component, i.e. distance
 	# from line of sight to jet axis assuming a self similar jet
-	p,tj,to = np.radians(phi), np.radians(self.theta_jet), \
-		    np.radians(self.theta_obs)
+	p,tj,to = np.radians(phi), np.radians(self._source.theta_jet), \
+		    np.radians(self._source.theta_obs)
 
 	rho_n = np.tan(to) / np.tan(tj)
 	k = 2.405 # pinch, set so that Bz = 0 at jet boundary
