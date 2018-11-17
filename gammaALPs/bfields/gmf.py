@@ -418,6 +418,7 @@ class GMF_Pshirkov(object):
 	phi_disk	= b * np.log(1. + self.d/self.Rsun) - pi / 2.
 
 	B		= np.cos(phi - b * np.log(rho / self.Rsun) + phi_disk)
+        print phi_disk / np.pi
 	if self.m == 'ASS':
 	    B = np.abs(B)
 
