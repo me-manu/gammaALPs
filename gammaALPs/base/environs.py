@@ -150,6 +150,9 @@ class MixICMCell(trans.GammaALPTransfer):
          nsim: int
              number of B field realizations
 
+         r_abell: float
+             Abell radius of cluster (radius until which oscillation probability is computed)
+
          ICM kwargs:
 
          n0: float
@@ -191,6 +194,10 @@ class MixICMCell(trans.GammaALPTransfer):
          kwargs.setdefault('beta2', 0.)
 
          kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'], kwargs['L0']))
+         if kwargs['r_abell'] <= kwargs['L0']:
+            logging.warning("r_abell <= L0: assuming one domain from 0. to L0")
+            kwargs['rbounds'] = np.array([0.,kwargs['L0']])
+
 
          self._rbounds = kwargs['rbounds']
          self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
@@ -213,6 +220,14 @@ class MixICMCell(trans.GammaALPTransfer):
                            tra.nel, tra.dL, tra.alp, Gamma = tra.Gamma,
                            chi = tra.chi, Delta = tra.Delta)
          return
+
+    @property
+    def r(self):
+         return self._r
+
+    @property
+    def rbounds(self):
+         return self._rbounds
 
 class MixICMGaussTurb(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):

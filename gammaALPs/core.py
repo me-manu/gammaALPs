@@ -16,7 +16,7 @@ class Source(object):
     As well as jet parameters: bulk Lorentz factor, observation
     and jet opening angle
     """
-    def __init__(self, z, ra, dec, **kwargs):
+    def __init__(self, z, **kwargs):
         """
         Initialize the source class
 
@@ -24,15 +24,14 @@ class Source(object):
         ----------
         z: float
             source redshift
-        ra: float or string
-            Right Ascension compatible with `~astropy.coordinates.SkyCoord` object
-        dec: float or string
-            Declination compatible with `~astropy.coordinates.SkyCoord` object
-
         kwargs
         ------
         EGeV: `~numpy.ndarray`
             array that contains gamma-ray energies in GeV
+        ra: float or string
+            Right Ascension compatible with `~astropy.coordinates.SkyCoord` object
+        dec: float or string
+            Declination compatible with `~astropy.coordinates.SkyCoord` object
         l: float
             Galactic longitude or 'None'. If given, overwrites ra and dec
         b: float
@@ -44,11 +43,17 @@ class Source(object):
         theta_jet: float
             Jet opening angle in degrees. Default: 1/bLorentz
         """
-        kwargs.setdefault('l', 'None')
-        kwargs.setdefault('b', 'None')
+        kwargs.setdefault('ra', None)
+        kwargs.setdefault('dec', None)
+        kwargs.setdefault('l', None)
+        kwargs.setdefault('b', None)
         kwargs.setdefault('theta_obs', 3.)
         kwargs.setdefault('bLorentz', 10.)
         kwargs.setdefault('theta_jet', np.rad2deg(1./kwargs['bLorentz']))
+
+        if kwargs['ra'] is None and kwargs['dec'] is None and \
+            kwargs['l'] is None and kwargs['b'] is None:
+            raise ValueError("Coordinates cannot all be of None Type!")
 
         # calculate doppler factor
         self._bLorentz = kwargs['bLorentz']
@@ -57,7 +62,8 @@ class Source(object):
         self._z = z
             
         self.calcDoppler()
-        self.set_ra_dec_l_b(ra, dec, l = kwargs['l'], b = kwargs['b'])
+        self.set_ra_dec_l_b(ra = kwargs['ra'], dec = kwargs['dec'],
+                    l = kwargs['l'], b = kwargs['b'])
 
         return 
 
@@ -118,7 +124,7 @@ class Source(object):
     @bLorentz.setter
     def bLorentz(self, bLorentz):
         self._bLorentz = bLorentz
-            self.calcDoppler()
+        self.calcDoppler()
         return
 
     @ra.setter
@@ -163,10 +169,10 @@ class Source(object):
                             np.cos(np.radians(self.theta_obs))))
         return 
 
-    def set_ra_dec_l_b(self,ra,dec,l = 'None', b = 'None'):
+    def set_ra_dec_l_b(self,ra,dec,l = None, b = None):
         """Set l and b or ra and dec"""
 
-        if l == 'None' and b == 'None':
+        if l is None and b is None:
             if type(ra) == str:
                 self._c = SkyCoord(ra, dec, frame='icrs')
             elif type(ra) == float:
@@ -195,7 +201,7 @@ class ALP(object):
     photon-ALP coupling: 10^-11 GeV^-1
     """
     def __init__(self, m, g):
-            """
+        """
         Initialize the ALP class
 
         Parameters
