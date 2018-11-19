@@ -35,7 +35,56 @@ chiCMB = 0.511e-42
 #n is electron density in cm^-3
 w_pl_e9 = lambda n: 0.00117*np.sqrt(n/1e-3)
 # --------------------------------------- #
-         
+
+# --- Min and Max energies -------------- #
+def EminGeV(m_neV, g11, n_cm3, BmuG):
+    """
+    Calculates the energy above which the strong mixing regime sets in.
+    Includes momentum difference terms Delta_pl, Delta_a and Delta_ag.
+    If input parameters are provided as arrays, they all need to have the same shape.
+
+    Parameter
+    ---------
+    m_neV: float or array-like 
+        ALP mass in neV
+
+    g11: float or array-like 
+        photon-ALP coupling in 10^-11 GeV^-1
+
+    n_cm3: float or array-like
+        electron density in cm^-3
+
+    BmuG: float or array-like
+        transversal magnetic field in muG
+
+    Returns 
+    -------
+    minimum energy of strong mixing regime in GeV as float or array. 
+    """
+    return np.abs(2.6 * m_neV**2. - 3.6e-3 * n_cm3) / g11 / BmuG
+
+def EmaxGeV(g11, BmuG):
+    """
+    Calculates the energy below which the mixing occurs in the strong mixing regime.
+    Includes momentum difference terms Delta_CMB, Delta_QED (without high order corrections) and Delta_ag.
+    If input parameters are provided as arrays, they all need to have the same shape.
+
+    Parameter
+    ---------
+    m_neV: float or array-like 
+        ALP mass in neV
+
+    g11: float or array-like 
+        photon-ALP coupling in 10^-11 GeV^-1
+
+    BmuG: float or array-like
+        transversal magnetic field in muG
+
+    Returns 
+    -------
+    maximum energy of strong mixing regime in GeV as float or array. 
+    """
+    return 4e5 * g11 * BmuG / (2e-1 * BmuG**2. + 1.)
 
 
 class GammaALPTransfer(object):
@@ -630,13 +679,20 @@ class GammaALPTransfer(object):
              3 x 3 matrix with initial polarization
          pout: `~numpy.ndarray`
              3 x 3 matrix with final polarization
+
+         {options}
+
+         thinning: int
+             steps taken for calculation of transfer matrix. 1 means no thinning.
+         nprocess: int
+             distibute matrix multiplication to n (if n > 1) processes using python's multiprocessing. 
          
          Returns
          -------
          Conversion probability for each energy and distance 
          """
          p_r = []
-         for i in range(self._Tn.shape[1]):
+         for i in range(0,self._Tn.shape[1]):
              if not i:
                   p_r.append(calcConvProb(pin,pout,self._Tn[:,i]))
              else:

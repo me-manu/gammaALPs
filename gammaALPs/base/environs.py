@@ -256,6 +256,9 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
              default: linear range between 0. and r_abell 
              with 1/kH (min turbulence scale) as step size
 
+         thinning: int
+             if > 1, thin out array of r
+
          B field kwargs:
 
          B0: float
@@ -301,6 +304,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
          kwargs.setdefault('restore', None)
          kwargs.setdefault('restore_path', './')
          kwargs.setdefault('nsim', 1)
+         kwargs.setdefault('thinning', 1)
 
          # Bfield kwargs
          kwargs.setdefault('B0', 1.)
@@ -323,7 +327,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
          # step length is assumed to be 1. / kH -> minimum turbulence length scale
          kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'],1. / kwargs['kH']))
-         self._rbounds = kwargs['rbounds']
+         self._rbounds = kwargs['rbounds'][::kwargs['thinning']]
 
          self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
          dL = self._rbounds[1:] - self._rbounds[:-1]
@@ -350,6 +354,14 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
                                                       tra.dL, tra.alp, Gamma = tra.Gamma,
                                                       chi = tra.chi, Delta = tra.Delta)
          return
+
+    @property
+    def r(self):
+         return self._r
+
+    @property
+    def rbounds(self):
+         return self._rbounds
 
 class MixJet(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):
@@ -499,6 +511,14 @@ class MixJet(trans.GammaALPTransfer):
                                                       chi = tra.chi, Delta = tra.Delta)
          return
 
+
+    @property
+    def r(self):
+         return self._r
+
+    @property
+    def rbounds(self):
+         return self._rbounds
          
     @property
     def Rjet(self):
@@ -690,6 +710,14 @@ class MixGMF(trans.GammaALPTransfer):
              self._galactic = galactic
          self._B, self._psi = self.Bgmf_calc()
          return 
+
+    @property
+    def r(self):
+         return self._r
+
+    @property
+    def rbounds(self):
+         return self._rbounds
 
     def set_coordinates(self):
          """
