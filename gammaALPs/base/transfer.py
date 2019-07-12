@@ -5,6 +5,7 @@ from astropy import units as u
 from astropy.table import Table
 from os import path
 from multiprocessing import Pool,Process
+from functools import reduce
 import os
 import copy
 # ------------------------- #
