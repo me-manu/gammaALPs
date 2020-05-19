@@ -1,7 +1,7 @@
 # --- Imports --------------------- #
 import numpy as np
-from numpy.random import rand
-from numpy import log,log10,pi,meshgrid,cos,sum,sqrt,linspace,array,isscalar,logspace
+from numpy.random import rand, seed
+from numpy import log,log10,pi,meshgrid,cos,sum,sqrt,array,isscalar,logspace
 from math import ceil
 from scipy.integrate import simps
 from astropy import units as u
@@ -53,8 +53,10 @@ class Bgaussian(object):
         kwargs.setdefault('kMin',-1)
         kwargs.setdefault('dkType','log')
         kwargs.setdefault('dkSteps',0)
+        kwargs.setdefault('seed', None)
 
         self.__dict__.update(kwargs)
+        seed(self.seed)
 
         if self.kMin < 0.:
             self.kMin = self._kL * 1e-3
@@ -86,6 +88,7 @@ class Bgaussian(object):
 
     def __init_k_array(self):
         """initialize the k array"""
+        seed(self.seed)
         # initialize the k values and intervalls.
         if self.dkType == 'linear':
             self.__kn = np.linspace(self.kMin, self._kH, self.dkSteps)
@@ -153,6 +156,8 @@ class Bgaussian(object):
 
     def new_random_numbers(self):
         """Generate new random numbers for Un,Vn, and kn if knType == random"""
+        seed(self.seed)
+        
         if self.dkType == 'random':
             self.__dk = rand(self.dkSteps)
             self.__dk *= (self._kH - self.kMin) / sum(self.__dk)
@@ -305,4 +310,42 @@ class Bgaussian(object):
         tt,zz = meshgrid(t,z)
         kernel = self.Fq(tt) * cos(tt * zz * self._kH)
         # the self._kH factor comes from the substitution t = k / _kH
-        return self._B * self._B / 4. * simps(kernel * tt,log(tt),axis = 1)  * self._kH        
+        return self._B * self._B / 4. * simps(kernel * tt,log(tt),axis = 1)  * self._kH
+
+    def rotation_measure(self, z, n_el, nsim=1):
+        """
+        Calculate the rotation measure of a
+        random Gaussian field.
+
+        Parameters
+        ----------
+        z: array-like
+           m-dim array with distance traversed in magnetic field, in kpc
+
+        n_el: array-like
+           m-dim array with electron density in cm^-3
+
+        {options}
+
+        nsim = int
+            number of B-field simulations
+
+        Returns
+        -------
+        Rotation measure for each simulated B field as an `~numpy.ndarray` if nsim > 1
+        or as a scalar if nsim=1
+        """
+        kernel = []
+        for i in range(nsim):
+            # calculate the longitudinal component
+            # this is sqrt(2) * one of the transversal components,
+            # see Eq. A8 in https://arxiv.org/pdf/1406.5972.pdf
+            # and the fact that the correlation factor of long. comp.
+            # is twice the one of the trans. component and enters
+            # the B field in sqrt
+            self.new_random_numbers()
+            B = np.sqrt(2.) * self.Bgaus(z)
+            kernel.append(B * n_el)
+
+        return 812. * simps(kernel, z, axis=1)
+

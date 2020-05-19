@@ -146,7 +146,7 @@ class Source(object):
         return
 
     @l.setter
-    def ra(self, l):
+    def l(self, l):
         if type(l) == u.Quantity:
             self._l = l.to('degree').value
         else:
@@ -155,7 +155,7 @@ class Source(object):
         return
 
     @b.setter
-    def ra(self, b):
+    def b(self, b):
         if type(b) == u.Quantity:
             self._b = b.to('degree').value
         else:
