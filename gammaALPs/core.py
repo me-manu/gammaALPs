@@ -338,6 +338,7 @@ class ModuleList(object):
         self._circ_pol = None
         self.__nsim_max = None
         self._atten = None
+        self._eblnorm = None
         return
 
     @property
