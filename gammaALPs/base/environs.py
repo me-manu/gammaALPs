@@ -1,17 +1,17 @@
 import numpy as np
-from gammaALPs.base import transfer as trans
-from gammaALPs.bfields import cell, gauss, gmf, jet
-from gammaALPs.nel import icm 
-from gammaALPs.nel import jet as njet
-from gammaALPs.utils import trafo
+from . import transfer as trans
+from ..bfields import cell, gauss, gmf, jet
+from ..nel import icm
+from ..nel import jet as njet
+from ..utils import trafo
 from astropy import units as u
 from astropy import constants as c
 from astropy.cosmology import FlatLambdaCDM
-from astropy.coordinates import SkyCoord
 from ebltable.tau_from_model import OptDepth
 from scipy.special import jv
 from scipy.interpolate import UnivariateSpline as USpline
 import logging
+
 
 class MixIGMFCell(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):
@@ -112,12 +112,16 @@ class MixIGMFCell(trans.GammaALPTransfer):
 
     @property
     def t(self):
-         return self._t
+        return self._t
+
+    @property
+    def Bfield_model(self):
+        return self._b
 
 class MixICMCell(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):
          """
-         Initialize mixing in the intracluster magnetic field, 
+         Initialize mixing in the intracluster magnetic field,
          assuming that it follows a domain-like structre.
 
          Parameters
@@ -127,7 +131,7 @@ class MixICMCell(trans.GammaALPTransfer):
 
          kwargs
          ------
-         EGeV: `~numpy.ndarray` 
+         EGeV: `~numpy.ndarray`
              Gamma-ray energies in GeV
 
          restore: str or None
@@ -230,6 +234,10 @@ class MixICMCell(trans.GammaALPTransfer):
     @property
     def rbounds(self):
          return self._rbounds
+
+    @property
+    def Bfield_model(self):
+        return self._b
 
 class MixICMGaussTurb(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):
@@ -366,6 +374,10 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
     @property
     def rbounds(self):
          return self._rbounds
+
+    @property
+    def Bfield_model(self):
+        return self._b
 
 class MixJet(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):
@@ -527,6 +539,10 @@ class MixJet(trans.GammaALPTransfer):
     @property
     def Rjet(self):
          return self._Rjet
+
+    @property
+    def Bfield_model(self):
+        return self._b
 
     @Rjet.setter
     def Rjet(self, Rjet):
@@ -722,6 +738,10 @@ class MixGMF(trans.GammaALPTransfer):
     @property
     def rbounds(self):
          return self._rbounds
+
+    @property
+    def Bfield_model(self):
+        return self._Bgmf
 
     def set_coordinates(self):
          """

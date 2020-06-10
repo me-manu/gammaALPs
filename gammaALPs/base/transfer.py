@@ -2,12 +2,9 @@
 import numpy as np
 import logging
 from astropy import units as u
-from astropy.table import Table
 from os import path
 from multiprocessing import Pool,Process
 from functools import reduce
-import os
-import copy
 # ------------------------- #
 
 """
@@ -36,6 +33,7 @@ chiCMB = 0.511e-42
 #n is electron density in cm^-3
 w_pl_e9 = lambda n: 0.00117*np.sqrt(n/1e-3)
 # --------------------------------------- #
+
 
 # --- Min and Max energies -------------- #
 def EminGeV(m_neV, g11, n_cm3, BmuG):
@@ -191,9 +189,9 @@ class GammaALPTransfer(object):
              self._nel = nel
 
          # init transfer matrices
-         self._T1                  = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)         
-         self._T2                  = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
-         self._T3                  = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+         self._T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+         self._T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+         self._T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
 
          # init meshgrid arrays
          self._ee, self._bb = np.meshgrid(self._EGeV, self._B, indexing = 'ij')

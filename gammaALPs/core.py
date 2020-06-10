@@ -1,12 +1,12 @@
 from astropy import units as u
-from astropy import constants as c
 from astropy.coordinates import SkyCoord
 import numpy as np
 from ebltable.tau_from_model import OptDepth
-from gammaALPs.base import environs as env
-from gammaALPs.base.transfer import calcConvProb, calcLinPol
-from gammaALPs.utils.interp2d import Interp2D 
+from .base import environs as env
+from .base.transfer import calcConvProb, calcLinPol
+from .utils.interp2d import Interp2D
 import logging
+
 
 class Source(object):
     """
@@ -60,8 +60,9 @@ class Source(object):
         self._theta_obs = kwargs['theta_obs']
         self._theta_jet = kwargs['theta_jet']
         self._z = z
+        self._doppler = None
             
-        self.calcDoppler()
+        self.calc_doppler()
         self.set_ra_dec_l_b(ra = kwargs['ra'], dec = kwargs['dec'],
                     l = kwargs['l'], b = kwargs['b'])
 
@@ -105,7 +106,7 @@ class Source(object):
             self._theta_obs= theta_obs.to('degree').value
         else:
             self._theta_obs = theta_obs
-            self.calcDoppler()
+            self.calc_doppler()
         return
 
     @z.setter
@@ -124,7 +125,7 @@ class Source(object):
     @bLorentz.setter
     def bLorentz(self, bLorentz):
         self._bLorentz = bLorentz
-        self.calcDoppler()
+        self.calc_doppler()
         return
 
     @ra.setter
@@ -150,7 +151,7 @@ class Source(object):
         if type(l) == u.Quantity:
             self._l = l.to('degree').value
         else:
-            self._l =  l
+            self._l = l
         self.set_ra_dec_l_b(self._ra,self._dec, l = self._l, b = self._b)
         return
 
@@ -163,7 +164,7 @@ class Source(object):
         self.set_ra_dec_l_b(self._ra,self._dec, l = self._l, b = self._b)
         return
 
-    def calcDoppler(self):
+    def calc_doppler(self):
         """Calculate the Doppler factor of the plasma"""
         self._doppler = 1./(self._bLorentz * ( 1. - np.sqrt(1. - 1./self._bLorentz**2.) * \
                             np.cos(np.radians(self.theta_obs))))
@@ -189,7 +190,6 @@ class Source(object):
         self._ra = self._c.ra.value
         self._dec = self._c.dec.value
         return
-        
 
 
 class ALP(object):
@@ -240,6 +240,40 @@ class ALP(object):
             self._g = g
         return
 
+
+class NamedClassList(list):
+    """
+    A list of classes indexable with an integer or classes's name.
+    As it a subclasses the built-in class ``list``, it provides all the methods of the
+    standard ``list`` class.
+    Adapted from
+    https://github.com/s3rvac/blog/tree/master/en-2014-10-11-indexing-python-lists-with-integer-or-object-name
+    """
+
+    def __getitem__(self, key):
+        return self._delegate_to_list('__getitem__', key)
+
+    def __setitem__(self, key, value):
+        return self._delegate_to_list('__setitem__', key, value)
+
+    def __delitem__(self, key):
+        return self._delegate_to_list('__delitem__', key)
+
+    def keys(self):
+        return [type(item).__name__.strip("Mix") for item in self]
+
+    def _delegate_to_list(self, method, key, *args):
+        if isinstance(key, str):
+            key = self._index_of(key)
+        return getattr(super(), method)(key, *args)
+
+    def _index_of(self, name):
+        for index, item in enumerate(self):
+            if type(item).__name__ == name or type(item).__name__.strip("Mix") == name:
+                return index
+        raise IndexError('no object named {!r}'.format(name))
+
+
 class ModuleList(object):
     """
     Class that collects all environments for photon-ALP mixing 
@@ -247,10 +281,14 @@ class ModuleList(object):
     the ALP mass, the source, and the energies at which 
     the photon-ALP oscillation is computed.
     """
-    def __init__(self, alp, source, pin = np.diag((1.,1.,0.)) * 0.5, 
-                    EGeV = np.logspace(0.,4.,100), seed = None):
+    def __init__(self,
+                 alp,
+                 source,
+                 pin=np.diag((1.,1.,0.)) * 0.5,
+                 EGeV=np.logspace(0.,4.,100),
+                 seed=None):
         """
-        Initiliaze the class, energy range, and polarization matrices
+        Initialize the class, energy range, and polarization matrices
 
         Parameters
         ----------
@@ -282,8 +320,18 @@ class ModuleList(object):
         self._py = np.diag((0.,1.,0.))
         self._pa = np.diag((0.,0.,1.))
         self._pin = pin
-        self._modules = []
-        np.random.seed(seed = seed)
+        self._modules = NamedClassList()
+        np.random.seed(seed=seed)
+        self._px_src = None
+        self._py_src = None
+        self._pa_src = None
+        self._px_final = None
+        self._py_final = None
+        self._pa_final = None
+        self._lin_pol = None
+        self._circ_pol = None
+        self.__nsim_max = None
+        self._atten = None
         return
 
     @property
@@ -340,7 +388,7 @@ class ModuleList(object):
                 m.EGeV = EGeV * (1. + self.source.z)
         return
 
-    def add_propagation(self,environ, order, **kwargs):
+    def add_propagation(self, environ, order, **kwargs):
         """
         Add a propagation environment to the module list
 
@@ -384,37 +432,43 @@ class ModuleList(object):
         self._eblnorm = kwargs['eblnorm']
 
         if environ == 'EBL':
-            self._modules.insert(order, OptDepth.readmodel(model = kwargs['eblmodel']))
-            self._atten = np.exp(-self._eblnorm * \
-                self._modules[order].opt_depth(self.source.z,self.EGeV / 1e3))
+            self._modules.insert(order, OptDepth.readmodel(model=kwargs['eblmodel']))
+            self._atten = np.exp(-self._eblnorm *\
+                self._modules[order].opt_depth(self.source.z, self.EGeV / 1e3))
 
         elif environ == 'IGMF':
-            self._modules.insert(order,env.MixIGMFCell(self.alp, self.source,
-                        EGeV = self.EGeV, **kwargs))
-
+            self._modules.insert(order, env.MixIGMFCell(self.alp, self.source,
+                                                        EGeV=self.EGeV,
+                                                        **kwargs))
         elif environ == 'ICMCell':
-            self._modules.insert(order,env.MixICMCell(self.alp,
-                        EGeV = self.EGeV * (1. + self.source.z), **kwargs))
+            self._modules.insert(order, env.MixICMCell(self.alp,
+                                                       EGeV=self.EGeV * (1. + self.source.z),
+                                                       **kwargs))
         elif environ == 'ICMGaussTurb':
-            self._modules.insert(order,env.MixICMGaussTurb(self.alp,
-                        EGeV = self.EGeV * (1. + self.source.z), **kwargs))
+            self._modules.insert(order, env.MixICMGaussTurb(self.alp,
+                                                            EGeV=self.EGeV * (1. + self.source.z),
+                                                            **kwargs))
         elif environ == 'Jet':
-            self._modules.insert(order,env.MixJet(self.alp, self.source, 
-                        EGeV = self.EGeV * (1. + self.source.z), **kwargs))
+            self._modules.insert(order, env.MixJet(self.alp, self.source,
+                                                   EGeV=self.EGeV * (1. + self.source.z),
+                                                   **kwargs))
         elif environ == 'GMF':
-            self._modules.insert(order,env.MixGMF(self.alp, self.source, 
-                        EGeV = self.EGeV, **kwargs))
+            self._modules.insert(order, env.MixGMF(self.alp, self.source,
+                                                   EGeV=self.EGeV,
+                                                   **kwargs))
         elif environ == 'File':
-            self._modules.insert(order,env.MixFromFile(self.alp, 
-                        EGeV = self.EGeV, **kwargs))
+            self._modules.insert(order, env.MixFromFile(self.alp,
+                                                        EGeV=self.EGeV,
+                                                        **kwargs))
         elif environ == 'Array':
-            self._modules.insert(order,env.MixFromArray(self.alp, 
-                        EGeV = self.EGeV, **kwargs))
+            self._modules.insert(order, env.MixFromArray(self.alp,
+                                                         EGeV=self.EGeV,
+                                                         **kwargs))
         else:
             raise ValueError("Unkwon Environment chosen")
         return
 
-    def add_disp_abs(self,EGeV, r_kpc, disp, module_id, type_matrix = 'dispersion', **kwargs):
+    def add_disp_abs(self, EGeV, r_kpc, disp, module_id, type_matrix='dispersion', **kwargs):
             """
             Add dispersion, absorption, or extra momentum difference term to a propagation module using 
             interpolation of of a 2d dispersion / absorption matrix
@@ -443,7 +497,7 @@ class ModuleList(object):
             """
             if module_id >= len(self.modules):
                 raise ValueError("requested module id is out of range")
-            if type(self.modules[module_id]) == OptDepth:
+            if isinstance(self.modules[module_id], OptDepth):
                 raise RuntimeError("dispersion / absorption cannot be applied to EBL only module")
 
             # interpolate matrix
@@ -461,14 +515,13 @@ class ModuleList(object):
                 raise ValueError("type_matrix must either be 'dispersion', 'absorption' or 'Delta'")
             return
 
-        
     def _check_modules_random_fields(self):
         """
         Check how many modules have n > 1 B field realizations. 
         At the moment, only one component is allowed to have multiple realizations.
         """
         self._all_nsim = []
-        for im,m in enumerate(self.modules):
+        for im, m in enumerate(self.modules):
             if not type(m) == OptDepth:
                 self._all_nsim.append(m.nsim)
         logging.debug(self._all_nsim)
@@ -504,7 +557,7 @@ class ModuleList(object):
         # Calculate the transfer matrices for each environment
         self._Tenv = [] 
         self._check_modules_random_fields()
-        for im,m in enumerate(self.modules):
+        for im, m in enumerate(self.modules):
             if not type(m) == OptDepth:
                 logging.info('Running Module {0:n}: {1}'.format(im, type(m)))
                 logging.debug('Photon-ALP mixing in {0}: {1:.3e}'.format(type(m), m.alp.g))
@@ -528,6 +581,7 @@ class ModuleList(object):
 
         self._px_final, self._py_final, self._pa_final = [],[],[]
         self._lin_pol, self._circ_pol = [],[]
+
         if OptDepth in [type(t) for t in self.modules]:
             # get the index of the EBL module
             idx = [type(t) for t in self.modules].index(OptDepth)
@@ -542,9 +596,9 @@ class ModuleList(object):
 
                 # new polarization matrix close to observer after traversing EBL
                 pol = np.zeros((self.EGeV.size,3,3))
-                pol[:,0,0] = self._px_src[-1] * self._atten
-                pol[:,1,1] = self._py_src[-1] * self._atten
-                pol[:,2,2] = self._pa_src[-1]
+                pol[:, 0, 0] = self._px_src[-1] * self._atten
+                pol[:, 1, 1] = self._py_src[-1] * self._atten
+                pol[:, 2, 2] = self._pa_src[-1]
 
                 # mutliply all matrices for observer environment
                 # all_sim and Tenv have one index less, since EBL not included
@@ -552,13 +606,14 @@ class ModuleList(object):
                 self._px_final.append(calcConvProb(pol, self.px, Tobs))
                 self._py_final.append(calcConvProb(pol, self.py, Tobs))
                 self._pa_final.append(calcConvProb(pol, self.pa, Tobs))
-                l,c = calcLinPol(pol,Tobs)
+                l, c = calcLinPol(pol,Tobs)
                 self._lin_pol.append(l)
                 self._circ_pol.append(c)
 
             self._px_src = np.array(self._px_src)
             self._py_src = np.array(self._py_src)
             self._pa_src = np.array(self._pa_src)
+
         else:
             # mutlitply all environments for all B-field realizations
             for n in range(self.__nsim_max):
@@ -566,7 +621,7 @@ class ModuleList(object):
                 self._px_final.append(calcConvProb(self.pin, self.px, Tobs))
                 self._py_final.append(calcConvProb(self.pin, self.py, Tobs))
                 self._pa_final.append(calcConvProb(self.pin, self.pa, Tobs))
-                l,c = calcLinPol(self.pin,Tobs)
+                l, c = calcLinPol(self.pin,Tobs)
                 self._lin_pol.append(l)
                 self._circ_pol.append(c)
 

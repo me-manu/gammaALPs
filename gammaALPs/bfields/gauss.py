@@ -1,11 +1,12 @@
 # --- Imports --------------------- #
 import numpy as np
 from numpy.random import rand, seed
-from numpy import log,log10,pi,meshgrid,cos,sum,sqrt,array,isscalar,logspace
+from numpy import log, log10, pi, meshgrid, cos, sum, sqrt, array, isscalar, logspace
 from math import ceil
 from scipy.integrate import simps
 from astropy import units as u
 # --------------------------------- #
+
 
 # ========================================================== #
 # === Gaussian turbulent magnetic field ==================== #
