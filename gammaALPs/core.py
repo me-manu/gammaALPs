@@ -260,7 +260,13 @@ class NamedClassList(list):
         return self._delegate_to_list('__delitem__', key)
 
     def keys(self):
-        return [type(item).__name__.strip("Mix") for item in self]
+        return [type(item).__name__.strip("mix") for item in self]
+
+    def values(self):
+        return self
+
+    def items(self):
+        return [(self.keys()[i], self[i]) for i in range(len(self))]
 
     def _delegate_to_list(self, method, key, *args):
         if isinstance(key, str):
