@@ -1,12 +1,13 @@
 # --- Imports --------------------- #
 import numpy as np
-from numpy.random import rand, seed
+import copy
+from numpy.random import rand, seed, randint
 from numpy import log, log10, pi, meshgrid, cos, sum, sqrt, array, isscalar, logspace
 from math import ceil
 from scipy.integrate import simps
 from astropy import units as u
+from sys import maxsize
 # --------------------------------- #
-
 
 # ========================================================== #
 # === Gaussian turbulent magnetic field ==================== #
@@ -158,7 +159,7 @@ class Bgaussian(object):
     def new_random_numbers(self):
         """Generate new random numbers for Un,Vn, and kn if knType == random"""
         seed(self.seed)
-        
+
         if self.dkType == 'random':
             self.__dk = rand(self.dkSteps)
             self.__dk *= (self._kH - self.kMin) / sum(self.__dk)
@@ -266,11 +267,27 @@ class Bgaussian(object):
         tuple with two m-dim  `~numpy.ndarray` array with absolute value of transversal field
         and angles between total transversal magnetic field and x2 direction
         """
+        seed(self.seed)
+
         B, Psin = [],[]
+
+        # if seed is integer
+        # create a list of random integers which are then used
+        # to create nsim Bfield realizations
+        if isinstance(self.seed, int):
+            seeds = randint(2**32 - 1, size=nsim)
+            seed_old = copy.deepcopy(self.seed)
+        else:
+            seeds = None
+
         for i in range(nsim):
             # calculate first transverse component, 
             # this is already computed with central B-field strength
             Bt = self.Bgaus(z)
+
+            if seeds is not None:
+                self.seed = seeds[i]
+
             self.new_random_numbers()                # new random numbers
             # calculate second transverse component, 
             #this is already computed with central B-field strength
@@ -283,6 +300,9 @@ class Bgaussian(object):
         B = np.squeeze(B)
         Psin = np.squeeze(Psin)
 
+        # restore old seed
+        if seeds is not None:
+            self.seed = copy.deepcopy(seed_old)
 
         if np.isscalar(Bscale) or type(Bscale) == np.ndarray:
             B *= Bscale
@@ -336,8 +356,20 @@ class Bgaussian(object):
         Rotation measure for each simulated B field as an `~numpy.ndarray` if nsim > 1
         or as a scalar if nsim=1
         """
+        seed(self.seed)
+        # if seed is integer
+        # create a list of random integers which are then used
+        # to create nsim Bfield realizations
+        if isinstance(self.seed, int):
+            seeds = randint(2**32 - 1, size=nsim)
+            seed_old = copy.deepcopy(self.seed)
+        else:
+            seeds = None
+
         kernel = []
         for i in range(nsim):
+            if seeds is not None:
+                self.seed = seeds[i]
             # calculate the longitudinal component
             # this is sqrt(2) * one of the transversal components,
             # see Eq. A8 in https://arxiv.org/pdf/1406.5972.pdf
@@ -347,6 +379,10 @@ class Bgaussian(object):
             self.new_random_numbers()
             B = np.sqrt(2.) * self.Bgaus(z)
             kernel.append(B * n_el)
+
+        # restore old seed
+        if seeds is not None:
+            self.seed = copy.deepcopy(seed_old)
 
         return 812. * simps(kernel, z, axis=1)
 
