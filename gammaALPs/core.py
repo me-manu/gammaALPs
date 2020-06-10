@@ -381,9 +381,9 @@ class ModuleList(object):
         """
         kwargs.setdefault('eblmodel', 'dominguez')
         kwargs.setdefault('eblnorm', 1.)
-        self._eblnorm = kwargs['eblnorm']
 
         if environ == 'EBL':
+            self._eblnorm = kwargs['eblnorm']
             self._modules.insert(order, OptDepth.readmodel(model = kwargs['eblmodel']))
             self._atten = np.exp(-self._eblnorm * \
                 self._modules[order].opt_depth(self.source.z,self.EGeV / 1e3))
