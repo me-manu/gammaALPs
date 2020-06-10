@@ -2,12 +2,9 @@
 import numpy as np
 import logging
 from astropy import units as u
-from astropy.table import Table
 from os import path
 from multiprocessing import Pool,Process
 from functools import reduce
-import os
-import copy
 # ------------------------- #
 
 """
@@ -28,14 +25,15 @@ Delta_CMB = lambda E: 0.8e-7*E
                            
 #Delta_QED = lambda B,E: 4.1e-9*E*B**2.
 # with correction factors of Perna et al. 2012
-Delta_QED = lambda B,E: 4.1e-9*E*B**2. * (1. + 1.2e-6 * B / Bcrit) / \
-                                    (1. + 1.33e-6*B / Bcrit + 0.59e-6 * (B / Bcrit)**2.)
+Delta_QED = lambda B,E: 4.1e-9*E*B**2. #* (1. + 1.2e-6 * B / Bcrit) / \
+                                    #(1. + 1.33e-6*B / Bcrit + 0.59e-6 * (B / Bcrit)**2.)
 chiCMB = 0.511e-42
 # --------------------------------------- #
 #Plasma freq in 10^-9 eV
 #n is electron density in cm^-3
 w_pl_e9 = lambda n: 0.00117*np.sqrt(n/1e-3)
 # --------------------------------------- #
+
 
 # --- Min and Max energies -------------- #
 def EminGeV(m_neV, g11, n_cm3, BmuG):
@@ -86,6 +84,7 @@ def EmaxGeV(g11, BmuG):
     maximum energy of strong mixing regime in GeV as float or array. 
     """
     return 4e5 * g11 * BmuG / (2e-1 * BmuG**2. + 1.)
+    #return 2.1e6 * g11 / BmuG  # no CMB term
 
 
 class GammaALPTransfer(object):
@@ -190,9 +189,9 @@ class GammaALPTransfer(object):
              self._nel = nel
 
          # init transfer matrices
-         self._T1                  = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)         
-         self._T2                  = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
-         self._T3                  = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+         self._T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+         self._T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+         self._T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
 
          # init meshgrid arrays
          self._ee, self._bb = np.meshgrid(self._EGeV, self._B, indexing = 'ij')
@@ -366,11 +365,12 @@ class GammaALPTransfer(object):
     def __setDeltas(self):
          """Set Deltas and eigenvalues of mixing matrix for each domain"""
 
-         self._Dperp         = Delta_pl(self._nn,self._ee) + 0.j + 2.*Delta_QED(self._bb,self._ee)
-         self._Dpar         = Delta_pl(self._nn,self._ee) + 0.j + 3.5*Delta_QED(self._bb,self._ee)
+         self._DQED         = Delta_QED(self._bb,self._ee)
+
+         self._Dperp         = Delta_pl(self._nn,self._ee) + 0.j + 2.*self._DQED
+         self._Dpar         = Delta_pl(self._nn,self._ee) + 0.j + 3.5*self._DQED
 
          self._Dpl         = Delta_pl(self._nn,self._ee)
-         self._DQED         = Delta_QED(self._bb,self._ee)
          self._Dag         = Delta_ag(self.alp.g,self._bb)
          self._Da         = Delta_a(self.alp.m,self._ee)
 
@@ -392,8 +392,8 @@ class GammaALPTransfer(object):
           #no CMB: comment out next three lines
          else:
              # add CMB term
-            self._Dperp += Delta_CMB(self._ee)
-            self._Dpar += Delta_CMB(self._ee)
+             self._Dperp += Delta_CMB(self._ee)
+             self._Dpar += Delta_CMB(self._ee)
 
          #self._Dosc         = np.sqrt((self._Dpar - self._Da)**2.  + 4.*self._Dag**2.)
          self._Dosc         = ((self._Dpar - self._Da)**2.  + 4.*self._Dag**2.)

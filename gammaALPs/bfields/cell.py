@@ -1,6 +1,6 @@
 # --- Imports --------------------- #
 import numpy as np
-from numpy.random import rand
+from numpy.random import rand, seed
 from numpy import log,log10,pi,meshgrid,cos,sum,sqrt,linspace,array,isscalar,logspace
 from math import ceil
 from scipy.integrate import simps
@@ -16,7 +16,7 @@ class Bcell(object):
     """
     Class to calculate a turbulent magnetic field with a cell like structure
     """
-    def __init__(self,B,Lcoh):
+    def __init__(self, B, Lcoh, seed=None):
         """
         Initialize B field with cell like structre. 
 
@@ -30,6 +30,7 @@ class Bcell(object):
         # --- Set the defaults 
         self._B = B
         self._Lcoh = Lcoh
+        self._seed = seed
         return
 
     @property
@@ -59,6 +60,7 @@ class Bcell(object):
     def new_random_numbers(self, Nd,nsim = 1):
         """Generate new random numbers for angle of magnetic field for Nd domains"""
         # angle between photon propagation on B-field in i-th domain 
+        seed(self._seed)
         return 2. * np.pi * rand(nsim,int(Nd))
 
     def new_Bn(self,Nd, Bscale = None, nsim = 1):

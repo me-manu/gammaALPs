@@ -1,17 +1,17 @@
 import numpy as np
-from gammaALPs.base import transfer as trans
-from gammaALPs.bfields import cell, gauss, gmf, jet
-from gammaALPs.nel import icm 
-from gammaALPs.nel import jet as njet
-from gammaALPs.utils import trafo
+from . import transfer as trans
+from ..bfields import cell, gauss, gmf, jet
+from ..nel import icm
+from ..nel import jet as njet
+from ..utils import trafo
 from astropy import units as u
 from astropy import constants as c
 from astropy.cosmology import FlatLambdaCDM
-from astropy.coordinates import SkyCoord
 from ebltable.tau_from_model import OptDepth
 from scipy.special import jv
 from scipy.interpolate import UnivariateSpline as USpline
 import logging
+
 
 class MixIGMFCell(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):
@@ -70,13 +70,14 @@ class MixIGMFCell(trans.GammaALPTransfer):
          kwargs.setdefault('dL', 'None')
          kwargs.setdefault('cosmo',FlatLambdaCDM(H0 = 70., Om0 = 0.3))
          kwargs.setdefault('eblmodel', 'dominguez')
+         kwargs.setdefault('seed', None)
 
          self._source = source
          self._t = OptDepth.readmodel(model = kwargs['eblmodel'])
          self._cosmo = kwargs['cosmo']
 
          if kwargs['restore'] == None:
-             self._b = cell.Bcell(kwargs['B0'],kwargs['L0'])
+             self._b = cell.Bcell(kwargs['B0'],kwargs['L0'], seed=kwargs['seed'])
              B, psi, dL, self._zstep = self._b.new_Bcosmo(self._source.z, 
                                     cosmo = kwargs['cosmo'], nsim = kwargs['nsim']) 
              if not kwargs['dL'].lower() == 'none':
@@ -111,12 +112,16 @@ class MixIGMFCell(trans.GammaALPTransfer):
 
     @property
     def t(self):
-         return self._t
+        return self._t
+
+    @property
+    def Bfield_model(self):
+        return self._b
 
 class MixICMCell(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):
          """
-         Initialize mixing in the intracluster magnetic field, 
+         Initialize mixing in the intracluster magnetic field,
          assuming that it follows a domain-like structre.
 
          Parameters
@@ -126,7 +131,7 @@ class MixICMCell(trans.GammaALPTransfer):
 
          kwargs
          ------
-         EGeV: `~numpy.ndarray` 
+         EGeV: `~numpy.ndarray`
              Gamma-ray energies in GeV
 
          restore: str or None
@@ -192,6 +197,7 @@ class MixICMCell(trans.GammaALPTransfer):
          kwargs.setdefault('n2', 0.)
          kwargs.setdefault('r_core2', 0.)
          kwargs.setdefault('beta2', 0.)
+         kwargs.setdefault('seed', None)
 
          kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'], kwargs['L0']))
          if kwargs['r_abell'] <= kwargs['L0']:
@@ -228,6 +234,10 @@ class MixICMCell(trans.GammaALPTransfer):
     @property
     def rbounds(self):
          return self._rbounds
+
+    @property
+    def Bfield_model(self):
+        return self._b
 
 class MixICMGaussTurb(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):
@@ -314,6 +324,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
          kwargs.setdefault('kMin', -1.)
          kwargs.setdefault('dkType','log')
          kwargs.setdefault('dkSteps',0)
+         kwargs.setdefault('seed', None)
 
          # ICM kwargs
          kwargs.setdefault('n0', 1e-3)
@@ -339,7 +350,8 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
                                                  kwargs['kL'], kwargs['q'], 
                                              kMin = kwargs['kMin'],
                                              dkType = kwargs['dkType'],
-                                             dkSteps = kwargs['dkSteps'])
+                                             dkSteps = kwargs['dkSteps'],
+                                             seed=kwargs['seed'])
              B, psi = self._b.new_Bn(self._r, Bscale = self._nelicm.Bscale(self._r), 
                                              nsim = kwargs['nsim']) 
 
@@ -362,6 +374,10 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
     @property
     def rbounds(self):
          return self._rbounds
+
+    @property
+    def Bfield_model(self):
+        return self._b
 
 class MixJet(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):
@@ -523,6 +539,10 @@ class MixJet(trans.GammaALPTransfer):
     @property
     def Rjet(self):
          return self._Rjet
+
+    @property
+    def Bfield_model(self):
+        return self._b
 
     @Rjet.setter
     def Rjet(self, Rjet):
@@ -718,6 +738,10 @@ class MixGMF(trans.GammaALPTransfer):
     @property
     def rbounds(self):
          return self._rbounds
+
+    @property
+    def Bfield_model(self):
+        return self._Bgmf
 
     def set_coordinates(self):
          """
