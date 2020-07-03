@@ -314,7 +314,7 @@ class ModuleList(object):
             n-dim numpy array with gamma-ray energies in GeV
             Default: log-spaced array between 1 GeV and 10 TeV
         
-        seed: int or array_like, optional
+        seed: int, optional
             Seed for RandomState for numpy random numbers.
             Must be convertible to 32 bit unsigned integers.
         """
@@ -327,7 +327,7 @@ class ModuleList(object):
         self._pa = np.diag((0.,0.,1.))
         self._pin = pin
         self._modules = NamedClassList()
-        np.random.seed(seed=seed)
+        self._seed = seed
         self._px_src = None
         self._py_src = None
         self._pa_src = None
@@ -370,6 +370,10 @@ class ModuleList(object):
         return self._pin
 
     @property
+    def seed(self):
+        return self._seed
+
+    @property
     def modules(self):
         return self._modules
 
@@ -394,6 +398,10 @@ class ModuleList(object):
             else:
                 m.EGeV = EGeV * (1. + self.source.z)
         return
+
+    @seed.setter
+    def seed(self, seed):
+        self._seed = seed
 
     def add_propagation(self, environ, order, **kwargs):
         """
@@ -436,6 +444,8 @@ class ModuleList(object):
         """
         kwargs.setdefault('eblmodel', 'dominguez')
         kwargs.setdefault('eblnorm', 1.)
+        kwargs.setdefault('seed', self._seed)
+
         self._eblnorm = kwargs['eblnorm']
 
         if environ == 'EBL':

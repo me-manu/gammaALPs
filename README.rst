@@ -1,12 +1,12 @@
 gammaALPs
 =========
 
-Python packages to calculate the conversion probabiltiy between photons and axions / axionlike particles in various astrophysical magnetic fields.
+Python packages to calculate the conversion probabilty between photons and axions / axionlike particles in various astrophysical magnetic fields.
 
 Prerequisites
 -------------
 
-Python 2.7 and newest versions of the following packages 
+Python 2.7 or 3.6 and the following packages 
     - numpy 
     - scipy
     - astropy
@@ -24,4 +24,4 @@ example/ and notebooks/ folder, https://github.com/me-manu/gammaALPs
 
 License
 -------
-ebltable is distributed under the modified BSD License.
+gammaALPs is distributed under the modified BSD License.

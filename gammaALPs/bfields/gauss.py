@@ -6,8 +6,8 @@ from numpy import log, log10, pi, meshgrid, cos, sum, sqrt, array, isscalar, log
 from math import ceil
 from scipy.integrate import simps
 from astropy import units as u
-from sys import maxsize
 # --------------------------------- #
+
 
 # ========================================================== #
 # === Gaussian turbulent magnetic field ==================== #
@@ -45,6 +45,8 @@ class Bgaussian(object):
             number of dkSteps.
             For log spacing, number of steps per decade / number of decades ~ 10
             should be chosen.
+        seed: int or None
+            random seed
         """
         self._B = B
         self._kH = kH
