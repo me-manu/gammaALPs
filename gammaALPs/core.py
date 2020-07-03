@@ -6,6 +6,7 @@ from .base import environs as env
 from .base.transfer import calcConvProb, calcLinPol
 from .utils.interp2d import Interp2D
 import logging
+import sys
 
 
 class Source(object):
@@ -271,7 +272,10 @@ class NamedClassList(list):
     def _delegate_to_list(self, method, key, *args):
         if isinstance(key, str):
             key = self._index_of(key)
-        return getattr(super(), method)(key, *args)
+        if sys.version_info[0] < 3:
+            return getattr(super(NamedClassList, self), method)(key, *args)
+        else:
+            return getattr(super(), method)(key, *args)
 
     def _index_of(self, name):
         for index, item in enumerate(self):
