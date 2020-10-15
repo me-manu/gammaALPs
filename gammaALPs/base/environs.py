@@ -310,6 +310,9 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
             if > 0., use profile with this second r_core value
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
+        func: function pointer or None
+            if provided, this is a function that takes r in kpc and returns
+            the electron density in cm^-3
         """
         kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
         kwargs.setdefault('restore', None)
@@ -336,6 +339,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         kwargs.setdefault('n2', 0.)
         kwargs.setdefault('r_core2', 0.)
         kwargs.setdefault('beta2', 0.)
+        kwargs.setdefault('func', None)
 
         # step length is assumed to be 1. / kH -> minimum turbulence length scale
         kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'],1. / kwargs['kH']))
@@ -344,7 +348,10 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
         dL = self._rbounds[1:] - self._rbounds[:-1]
 
-        self._nelicm = icm.NelICM(**kwargs)
+        if kwargs['func'] is None:
+            self._nelicm = icm.NelICM(**kwargs)
+        else:
+            self._nelicm = icm.NelICMFunction(**kwargs)
 
         if kwargs['restore'] == None:
             self._b = gauss.Bgaussian(kwargs['B0'], kwargs['kH'],
@@ -355,7 +362,6 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
                                             seed=kwargs['seed'])
             B, psi = self._b.new_Bn(self._r, Bscale = self._nelicm.Bscale(self._r),
                                             nsim = kwargs['nsim'])
-
 
             # init the transfer function with absorption
             super(MixICMGaussTurb,self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),

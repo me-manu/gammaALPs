@@ -7,6 +7,7 @@ from astropy import units as u
 # === Electron densities for intra-cluster medium ========== #
 # ========================================================== #
 
+
 class NelICM(object):
     """Class to set characteristics of electron density of intracluster medium"""
     def __init__(self,**kwargs):
@@ -111,7 +112,7 @@ class NelICM(object):
         return
 
     @r_core2.setter
-    def r_core2(self,r_core2):
+    def r_core2(self, r_core2):
         if type(r_core2) == u.Quantity:
             self._r_core2 = r_core2.to('kpc').value
         else:
@@ -124,11 +125,11 @@ class NelICM(object):
         return
 
     @eta.setter
-    def eta(self,eta):
+    def eta(self, eta):
         self._eta = eta
         return
 
-    def __call__(self,r):
+    def __call__(self, r):
         """
         Calculate the electron density as function from cluster center
 
@@ -143,13 +144,13 @@ class NelICM(object):
         """
 
         if self._beta2 > 0. and self._r_core2 > 0. and self._n2 > 0:
-            res =  self._n0 * (1. + r**2./self._r_core**2.)**(-1.5 * self._beta) +\
+            res = self._n0 * (1. + r**2./self._r_core**2.)**(-1.5 * self._beta) +\
                     self._n2 * (1. + r**2./self._r_core2**2.)**(-1.5 * self._beta2) 
         elif self._r_core2 > 0. and self._n2 > 0:
-            res        =  np.sqrt(self._n0**2. * (1. + r**2./self._r_core**2.)**(-3. * self._beta) + \
+            res = np.sqrt(self._n0**2. * (1. + r**2./self._r_core**2.)**(-3. * self._beta) + \
                             self._n2**2. * (1. + r**2./self._r_core2**2.)**(-3. * self._beta) )
         else:
-            res =  self._n0 * (1. + r**2./self._r_core**2.)**(-1.5 * self._beta)
+            res = self._n0 * (1. + r**2./self._r_core**2.)**(-1.5 * self._beta)
 
         return res
 
@@ -166,9 +167,9 @@ class NelICM(object):
         -------
         n-dim `~numpy.ndarray` with electron density in 10**-3 cm**-3
         """
-        return n0 * np.ones(r.shape[0])
+        return self._n0 * np.ones(r.shape[0])
 
-    def Bscale(self,r):
+    def Bscale(self, r):
         """
         Calculate the scaling of the B field with electron density as function from cluster center
 
@@ -187,3 +188,78 @@ class NelICM(object):
             return (self.__call__(r) / np.sqrt(self._n0**2. +self._n2**2.) )**self._eta
         else:
             return (self.__call__(r) / self._n0)**self._eta
+
+
+class NelICMFunction(object):
+    """
+    Class to set characteristics of electron density of intracluster medium,
+    where electron density is provided by a function
+    """
+    def __init__(self, func, **kwargs):
+        """
+        Initialize the class
+
+        kwargs
+        ------
+        func: function pointer
+        function that takes radius in kpc and returns electron density in cm^-3
+
+        eta: float
+            exponent for scaling of B field with electron density (default = 1.)
+
+        """
+        kwargs.setdefault('eta', 1.)
+
+        self._func = func
+        self._eta = kwargs['eta']
+
+        return
+
+    @property
+    def beta(self):
+        return self._beta
+
+    @property
+    def func(self):
+        return self._func
+
+    @eta.setter
+    def eta(self, eta):
+        self._eta = eta
+        return
+
+    def __call__(self, r):
+        """
+        Calculate the electron density as function from cluster center
+
+        Parameters
+        ----------
+        r: `~numpy.ndarray`
+            n-dim array with distance from cluster center in kpc
+
+        Returns
+        -------
+        n-dim `~numpy.ndarray` with electron density in 10**-3 cm**-3
+        """
+
+        return self._func(r) * 1e-3
+
+    def Bscale(self, r, r0=0.):
+        """
+        Calculate the scaling of the B field with electron density as function from cluster center
+
+        Parameters
+        ----------
+        r: `~numpy.ndarray`
+            n-dim array with distance from cluster center in kpc
+
+        {options}
+
+        r0: float
+        Normalization for scale factor in kpc. Default: 0.
+
+        Returns
+        -------
+        n-dim `~numpy.ndarray` with scaling of B field with electron density
+        """
+        return (self.__call__(r) / self.__call__(r0))**self._eta

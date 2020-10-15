@@ -7,9 +7,10 @@ from astropy import units as u
 # === Electron densities for AGN jet medium ================ #
 # ========================================================== #
 
+
 class NelJet(object):
     """Class to set characteristics of electron density of AGN Jet"""
-    def __init__(self,n0,r0,beta):
+    def __init__(self, n0, r0, beta):
         """
         Initialize the class
 
