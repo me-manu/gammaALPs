@@ -5,6 +5,9 @@ from astropy import units as u
 from os import path
 from multiprocessing import Pool,Process
 from functools import reduce
+import numba
+from numba import jit
+import time
 # ------------------------- #
 
 Bcrit = 4.414e13  # critical magnetic field in G
@@ -14,7 +17,7 @@ Delta_ag = lambda g, B: 1.52e-2*g*B
 Delta_a = lambda m, E: -7.8e-2*m**2./E
 Delta_pl = lambda n, E: -1.1e-4*n/E
 Delta_CMB = lambda E: 0.8e-7*E
-                           
+
 #Delta_QED = lambda B,E: 4.1e-9*E*B**2.
 # with correction factors of Perna et al. 2012
 Delta_QED = lambda B,E: 4.1e-9*E*B**2. * (1. + 1.2e-6 * B / Bcrit) / \
@@ -36,10 +39,10 @@ def EminGeV(m_neV, g11, n_cm3, BmuG):
 
     Parameter
     ---------
-    m_neV: float or array-like 
+    m_neV: float or array-like
         ALP mass in neV
 
-    g11: float or array-like 
+    g11: float or array-like
         photon-ALP coupling in 10^-11 GeV^-1
 
     n_cm3: float or array-like
@@ -48,9 +51,9 @@ def EminGeV(m_neV, g11, n_cm3, BmuG):
     BmuG: float or array-like
         transversal magnetic field in muG
 
-    Returns 
+    Returns
     -------
-    minimum energy of strong mixing regime in GeV as float or array. 
+    minimum energy of strong mixing regime in GeV as float or array.
     """
     return np.abs(2.6 * m_neV**2. - 3.6e-3 * n_cm3) / g11 / BmuG
 
@@ -63,18 +66,18 @@ def EmaxGeV(g11, BmuG):
 
     Parameter
     ---------
-    m_neV: float or array-like 
+    m_neV: float or array-like
         ALP mass in neV
 
-    g11: float or array-like 
+    g11: float or array-like
         photon-ALP coupling in 10^-11 GeV^-1
 
     BmuG: float or array-like
         transversal magnetic field in muG
 
-    Returns 
+    Returns
     -------
-    maximum energy of strong mixing regime in GeV as float or array. 
+    maximum energy of strong mixing regime in GeV as float or array.
     """
     return 4e5 * g11 * BmuG / (2e-1 * BmuG**2. + 1.)
     #return 2.1e6 * g11 / BmuG  # no CMB term
@@ -196,7 +199,7 @@ class GammaALPTransfer(object):
         return
 
     # --- define properties ---- #
-    @property 
+    @property
     def EGeV(self):
         return self._EGeV
 
@@ -434,11 +437,11 @@ class GammaALPTransfer(object):
          self._T3[..., 0, 0] = self._spp * self._spp * self._caca
          self._T3[..., 0, 1] = self._spp * self._cpp * self._caca
          self._T3[..., 0, 2] = self._spp * self._saca
-                    
+
          self._T3[..., 1, 0] = self._T3[...,0,1]
          self._T3[..., 1, 1] = self._cpp * self._cpp * self._caca
          self._T3[..., 1, 2] = self._cpp * self._saca
-                                        
+
          self._T3[..., 2, 0] = self._T3[...,0,2]
          self._T3[..., 2, 1] = self._T3[...,1,2]
          self._T3[..., 2, 2] = self._sasa
@@ -456,7 +459,7 @@ class GammaALPTransfer(object):
                        np.exp(-1.j * ew3ll) * self._T3
         self._Tn = np.round(self._Tn, 8)
         return
-         
+
     def writeEnviron(self, name, filepath = './'):
         """
         Save the current magnetic field, psi angles, and electron density to
@@ -686,15 +689,34 @@ class GammaALPTransfer(object):
             else:
                  p_r.append(calcConvProb(pin,pout,dotProd(self._Tn[:,:i])))
         return np.array(p_r)
-         
+
 
 # ---------------------------------------------------------------------------- #
 # --- Global Functions ------------------------------------------------------- #
 # ---------------------------------------------------------------------------- #
-def dotProd(T):
+def dotProd_old(T):
     """Calculate dot product over last two axis of a multi dimensional matrix"""
     # reverse along domain axis, see comment in next function
     return np.array([reduce(np.dot, Tn) for Tn in T[:,::-1,...]])
+
+@jit(nopython=True)
+def dotProd(T):
+    """Calculate dot product over last two axis of a multi dimensional matrix"""
+    # reverse along domain axis, see comment in next function
+    dfT = T[:,::-1,...]
+    prod_ar = np.zeros((dfT.shape[0],dfT.shape[-2],dfT.shape[-1]),dtype=np.complex_)
+    for e in range(dfT.shape[0]):
+        prod = dfT[e][0]
+        for di in range(dfT[e].shape[0]-1):
+            d = dfT[e][1+di]
+            subprod = np.zeros(d.shape,dtype=np.complex_)
+            for i in range(d.shape[0]):
+                for j in range(d.shape[1]):
+                    for k in range(d.shape[1]):
+                        subprod[i,j] += prod[i,k] * d[k,j]
+            prod = subprod
+        prod_ar[e] = prod
+    return prod_ar
 
 def calcConvProb(pin, pout, T):
     """
@@ -709,19 +731,19 @@ def calcConvProb(pin, pout, T):
     T: `~numpy.ndarray`
          n x 3 x 3 complex transfer matrix for n energies
 
-    Returns 
+    Returns
     -------
     n-dim `~numpy.ndarray` with conversion probabilities for each energy
     """
     return np.squeeze(np.real(np.trace(
              (np.matmul(pout,
-                  # first has to be transpose and the second conjugate. 
+                  # first has to be transpose and the second conjugate.
                   # to see this for two domains, with 1 being the closest domain to the beam
                   # (farthest away from the observer).
                   # T = T1 T2
                   # what we don't want:
                   # rfinal = T r T^dagger = T1T2 r T2^dagger T1^dagger
-                  # thus, you have to turn around the multiplication in dotProd along the domain axis, 
+                  # thus, you have to turn around the multiplication in dotProd along the domain axis,
                   # so that T = T2 T1, and thus
                   # rfinal = T r T^dagger = T2T1 r T1^dagger T2^dagger
                   np.matmul(T,
@@ -742,7 +764,7 @@ def calcLinPol(pin, T):
     T: `~numpy.ndarray`
          n x 3 x 3 complex transfer matrix for n energies
 
-    Returns 
+    Returns
     -------
     n-dim `~numpy.ndarray` with conversion probabilities for each energy
 
