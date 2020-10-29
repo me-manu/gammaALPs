@@ -38,7 +38,7 @@ class Source(object):
         b: float
             Galactic latitude or 'None'. If given, overwrites ra and dec
         theta_obs: float
-            Angle between l.o.s. and jet axis in degrees (default: 3.) 
+            Angle between l.o.s. and jet axis in degrees (default: 3.)
         bLorentz: float
             bulk lorentz factor of gamma-ray emitting plasma (default: 10.)
         theta_jet: float
@@ -62,12 +62,12 @@ class Source(object):
         self._theta_jet = kwargs['theta_jet']
         self._z = z
         self._doppler = None
-            
+
         self.calc_doppler()
         self.set_ra_dec_l_b(ra = kwargs['ra'], dec = kwargs['dec'],
                     l = kwargs['l'], b = kwargs['b'])
 
-        return 
+        return
 
     @property
     def z(self):
@@ -134,7 +134,7 @@ class Source(object):
         if type(ra) == u.Quantity:
             self._ra = ra.to('degree').value
         else:
-            self._ra = ra 
+            self._ra = ra
         self.set_ra_dec_l_b(self._ra,self._dec)
         return
 
@@ -169,7 +169,7 @@ class Source(object):
         """Calculate the Doppler factor of the plasma"""
         self._doppler = 1./(self._bLorentz * ( 1. - np.sqrt(1. - 1./self._bLorentz**2.) * \
                             np.cos(np.radians(self.theta_obs))))
-        return 
+        return
 
     def set_ra_dec_l_b(self,ra,dec,l = None, b = None):
         """Set l and b or ra and dec"""
@@ -208,14 +208,14 @@ class ALP(object):
         Parameters
         ----------
         m: float
-            ALP mass in neV. 
+            ALP mass in neV.
 
         g: float
             photon-ALP couplint in 10^-11 GeV^-1.
         """
         self._m = m
         self._g = g
-        return 
+        return
 
     @property
     def m(self):
@@ -286,9 +286,9 @@ class NamedClassList(list):
 
 class ModuleList(object):
     """
-    Class that collects all environments for photon-ALP mixing 
-    and manages common parameters such as photon-ALP coupling, 
-    the ALP mass, the source, and the energies at which 
+    Class that collects all environments for photon-ALP mixing
+    and manages common parameters such as photon-ALP coupling,
+    the ALP mass, the source, and the energies at which
     the photon-ALP oscillation is computed.
     """
     def __init__(self,
@@ -317,7 +317,7 @@ class ModuleList(object):
         EGeV: `~numpy.ndarray`
             n-dim numpy array with gamma-ray energies in GeV
             Default: log-spaced array between 1 GeV and 10 TeV
-        
+
         seed: int, optional
             Seed for RandomState for numpy random numbers.
             Must be convertible to 32 bit unsigned integers.
@@ -353,7 +353,7 @@ class ModuleList(object):
     def source(self):
         return self._source
 
-    @property 
+    @property
     def EGeV(self):
         return self._EGeV
 
@@ -399,6 +399,9 @@ class ModuleList(object):
                 self._atten = np.exp(-self._eblnorm * m.opt_depth(self.source.z,EGeV / 1e3))
             elif type(m) == env.MixIGMFCell or type(m) == env.MixGMF:
                 m.EGeV = EGeV
+            elif type(m) == env.MixJet_HelicalTangled:
+                m.EGeV = EGeV * (1. + self.source.z)
+                m._ee /= m._gammas
             else:
                 m.EGeV = EGeV * (1. + self.source.z)
         return
@@ -426,24 +429,26 @@ class ModuleList(object):
 
         Notes
         -----
-        Available environments are the classes given in `gammaALPs.base.environs`, 
+        Available environments are the classes given in `gammaALPs.base.environs`,
         where all the specific options are listed.
         The identifiers for the environments are:
-        - IGMF: initializes `~gammaALPs.base.environs.MixIGMFCell` for mixing 
+        - IGMF: initializes `~gammaALPs.base.environs.MixIGMFCell` for mixing
             in intergalactic magnetic field (IGMF) which is assumed to be of a cell-like structure
-        - ICMCell: initializes `~gammaALPs.base.environs.MixICMCell` for mixing 
+        - ICMCell: initializes `~gammaALPs.base.environs.MixICMCell` for mixing
             in intra-cluster medium which is assumed to be of a cell-like structure
-        - ICMGaussTurb: initializes `~gammaALPs.base.environs.MixICMGaussTurb` for mixing 
+        - ICMGaussTurb: initializes `~gammaALPs.base.environs.MixICMGaussTurb` for mixing
             in intra-cluster medium which is assumed to follow a Gaussian turbulence spectrum
-        - Jet: initializes `~gammaALPs.base.environs.MixJet` for mixing 
+        - Jet: initializes `~gammaALPs.base.environs.MixJet` for mixing
             in the AGN jet, where the field is assumed to be coherent
-        - GMF: initializes `~gammaALPs.base.environs.MixGMF` for mixing 
+        - JetHelicalTangled: initializes `~gammaALPs.base.environs.MixJet_HelicalTangled` for mixing
+            in the AGN jet with two field components (tangled and helical)
+        - GMF: initializes `~gammaALPs.base.environs.MixGMF` for mixing
             in the Galactic magnetic field (GMF) of the Milky Way
-        - File: initializes `~gammaALPs.base.environs.MixFromFile` for mixing 
+        - File: initializes `~gammaALPs.base.environs.MixFromFile` for mixing
             in a magnetic field given by a data file
-        - Array: initializes `~gammaALPs.base.environs.MixFromArray` for mixing 
+        - Array: initializes `~gammaALPs.base.environs.MixFromArray` for mixing
             in a magnetic field given by a numpy arrays for B,psi,nel,r, and dL
-        - EBL: initializes `~ebltable.tau_from_model.OptDepth` for EBL attenuation, 
+        - EBL: initializes `~ebltable.tau_from_model.OptDepth` for EBL attenuation,
             i.e. no photon-ALP mixing in the intergalactic medium
         """
         kwargs.setdefault('eblmodel', 'dominguez')
@@ -473,6 +478,10 @@ class ModuleList(object):
             self._modules.insert(order, env.MixJet(self.alp, self.source,
                                                    EGeV=self.EGeV * (1. + self.source.z),
                                                    **kwargs))
+        elif environ == 'JetHelicalTangled':
+            self._modules.insert(order, env.MixJet_HelicalTangled(self.alp, self.source,
+                                                   EGeV=self.EGeV * (1. + self.source.z),
+                                                   **kwargs))
         elif environ == 'GMF':
             self._modules.insert(order, env.MixGMF(self.alp, self.source,
                                                    EGeV=self.EGeV,
@@ -491,16 +500,16 @@ class ModuleList(object):
 
     def add_disp_abs(self, EGeV, r_kpc, disp, module_id, type_matrix='dispersion', **kwargs):
             """
-            Add dispersion, absorption, or extra momentum difference term to a propagation module using 
+            Add dispersion, absorption, or extra momentum difference term to a propagation module using
             interpolation of of a 2d dispersion / absorption matrix
 
             Parameters
             ----------
-            EGeV: `~numpy.ndarray` 
+            EGeV: `~numpy.ndarray`
                 n-dim array with gamma-ray energies in GeV at which dispersion/absorption/momentum difference matrix
                 is calculated
 
-            r_kpc: `~numpy.ndarray` 
+            r_kpc: `~numpy.ndarray`
                 m-dim array with distnaces in kpc at which dispersion/absorption/momentum difference matrix
                 is calculated
 
@@ -538,7 +547,7 @@ class ModuleList(object):
 
     def _check_modules_random_fields(self):
         """
-        Check how many modules have n > 1 B field realizations. 
+        Check how many modules have n > 1 B field realizations.
         At the moment, only one component is allowed to have multiple realizations.
         """
         self._all_nsim = []
@@ -552,7 +561,7 @@ class ModuleList(object):
             logging.error("Number of realizations for the ALP modules: {0}".format(self._all_nsim))
             raise RuntimeError
         return
-        
+
     def _multiply_env(self,istart,istop,n):
         """
         Helper function to multiply the transfer matrices
@@ -573,10 +582,12 @@ class ModuleList(object):
         """
         Run the calculation for all modules
         """
+
         self.EGeV = self._EGeV  # update energies of all modules
                                 # also accounts for changed redshift
         # Calculate the transfer matrices for each environment
-        self._Tenv = [] 
+        self._Tenv = []
+
         self._check_modules_random_fields()
         for im, m in enumerate(self.modules):
             if not type(m) == OptDepth:
@@ -596,13 +607,12 @@ class ModuleList(object):
         # check if we have simple EBL absorption present
         # in which case we calculate separately the mixing in the source,
         # the EBL absorption, and the mixing near the observer.
-        # Otherwise only use transfer matrices to calculate the total 
+        # Otherwise only use transfer matrices to calculate the total
         # oscillation probability
         self.__nsim_max = np.max(self._all_nsim)
 
         self._px_final, self._py_final, self._pa_final = [],[],[]
         self._lin_pol, self._circ_pol = [],[]
-
         if OptDepth in [type(t) for t in self.modules]:
             # get the index of the EBL module
             idx = [type(t) for t in self.modules].index(OptDepth)

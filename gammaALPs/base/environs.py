@@ -310,9 +310,6 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
             if > 0., use profile with this second r_core value
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
-        func: function pointer or None
-            if provided, this is a function that takes r in kpc and returns
-            the electron density in cm^-3
         """
         kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
         kwargs.setdefault('restore', None)
@@ -339,7 +336,6 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         kwargs.setdefault('n2', 0.)
         kwargs.setdefault('r_core2', 0.)
         kwargs.setdefault('beta2', 0.)
-        kwargs.setdefault('func', None)
 
         # step length is assumed to be 1. / kH -> minimum turbulence length scale
         kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'],1. / kwargs['kH']))
@@ -348,10 +344,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
         dL = self._rbounds[1:] - self._rbounds[:-1]
 
-        if kwargs['func'] is None:
-            self._nelicm = icm.NelICM(**kwargs)
-        else:
-            self._nelicm = icm.NelICMFunction(**kwargs)
+        self._nelicm = icm.NelICM(**kwargs)
 
         if kwargs['restore'] == None:
             self._b = gauss.Bgaussian(kwargs['B0'], kwargs['kH'],
@@ -362,6 +355,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
                                             seed=kwargs['seed'])
             B, psi = self._b.new_Bn(self._r, Bscale = self._nelicm.Bscale(self._r),
                                             nsim = kwargs['nsim'])
+
 
             # init the transfer function with absorption
             super(MixICMGaussTurb,self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),
@@ -542,7 +536,7 @@ class MixJet(trans.GammaALPTransfer):
     @property
     def rbounds(self):
         return self._rbounds
-         
+
     @property
     def Rjet(self):
         return self._Rjet
@@ -604,6 +598,184 @@ class MixJet(trans.GammaALPTransfer):
 
         return Btrans, Psin
 
+class MixJet_HelicalTangled(trans.GammaALPTransfer):
+    def __init__(self, alp, source, **kwargs):
+        """
+        Initialize mixing in the magnetic field of the jet
+
+        Parameters
+        ----------
+        alp: `~gammaALPs.ALP`
+            `~gammaALPs.ALP` object with ALP parameters
+
+        source: `~gammaALPs.Source`
+            `~gammaALPs.Source` object with source parameters
+
+        kwargs
+        ------
+        EGeV: `~numpy.ndarray`
+            Gamma-ray energies in GeV
+
+        restore: str or None
+            if str, identifier for files to restore environment.
+            If None, initialize mixing with new B field
+        restore_path: str
+            full path to environment files
+
+        ndom: Number of domains in jet model. (default 400)
+
+        B-Field kwargs:
+
+        ft: float
+            fraction of magnetic field energy density in tangled field
+        r_T: float
+            radius at which helical field becomes toroidal in pc
+        Bt_exp: float
+            exponent of the transverse component of the helical field
+            at r<=r_T. i.e. sin(pitch angle) ~ r^Bt_exp while r<r_T
+            and pitch angle = pi/2 at r=r_T
+        B0: float
+            Bfield strength in G
+        r0: float
+            radius where B field is equal to b0 in pc
+        g0: float
+            jet lorenz factor at r0
+        gmin: float
+            jet lorenz factor at rjet
+        rvhe:  float
+            distance of gamma-ray emission region from BH in pc
+        rjet: float
+            jet length in pc
+        alpha: float
+            power-law index of electron energy distribution function
+        l_tcor: float
+            tangled field coherence average length in pc
+        jwf: float
+            jet width factor used when calculating l_tcor = jwf*jetwidth
+        jwf_dist: string
+            type of distribution for jet width factors (jwf) when
+            calculating l_tcor with jwf*jetwidth
+        tseed: float
+            seed for random tangled domains
+
+        Electron density kwargs:
+
+        n0: float
+            electron density at R0 in cm**-3 (default 1e3)
+        beta: float
+            exponent of electron density (default = -2.)
+
+        Jet kwargs:
+
+        g0: float
+            jet lorenz factor at r0
+        """
+        kwargs.setdefault('EGeV', np.logspace(0.,5.,400))
+        kwargs.setdefault('restore', None)
+        kwargs.setdefault('restore_path', './')
+        kwargs.setdefault('ndom', 400)
+        # Bfield kwargs
+        kwargs.setdefault('ft', 0.3)
+        kwargs.setdefault('r_T', 0.3)
+        kwargs.setdefault('Bt_exp', -1.)
+        kwargs.setdefault('B0', 0.8)
+        kwargs.setdefault('r0', 0.3)
+        kwargs.setdefault('l_tcor', 0.1)
+        kwargs.setdefault('jwf', 1.)
+        kwargs.setdefault('jwf_dist', None)
+        kwargs.setdefault('tseed', 0)
+        # electron density kwargs
+        kwargs.setdefault('n0', 5e4)
+        kwargs.setdefault('beta', -2.)
+        # jet kwargs
+        kwargs.setdefault('gmin', 2.)
+        kwargs.setdefault('g0', 9.)
+        kwargs.setdefault('alpha', 1.68)
+        kwargs.setdefault('rjet', 3206.3)
+        kwargs.setdefault('rvhe', 0.3)
+
+        self._rbounds = np.logspace(np.log10(kwargs['rvhe']),np.log10(kwargs['rjet']),kwargs['ndom'])
+        if kwargs['ft']>0. and kwargs['l_tcor'] != 'jetdom' and kwargs['l_tcor'] != 'jetwidth':
+            while np.average(np.diff(self._rbounds)) > kwargs['l_tcor']:
+                kwargs['ndom']+=50
+                self._rbounds = np.logspace(np.log10(kwargs['rvhe']),np.log10(kwargs['rjet']),kwargs['ndom'])
+            print("Not enough jet doms to resolve tangled field. Increased to {}".format(kwargs['ndom']))
+
+        self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
+        dL = self._rbounds[1:] - self._rbounds[:-1]
+
+        self._b = jet.Bjet_HelicalTangled(kwargs['ft'],
+                            kwargs['r_T'],
+                            kwargs['Bt_exp'],
+                            kwargs['B0'],
+                            kwargs['r0'],
+                            kwargs['g0'],
+                            kwargs['rvhe'],
+                            kwargs['rjet'],
+                            kwargs['alpha'],
+                            kwargs['l_tcor'],
+                            kwargs['jwf'],
+                            kwargs['jwf_dist'],
+                            kwargs['tseed'])
+
+        B, psi = self._b.get_jet_props_gen(self._r)
+
+
+        #change rs if they were not originally resolving the tangled field
+        try:
+            if self._b._trerun:
+                try:
+                    self._rbounds = self._b._newbounds
+                except AttributeError:
+                    self._rbounds = self._b._tdoms
+                self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
+                dL = self._rbounds[1:] - self._rbounds[:-1]
+        except AttributeError:
+            pass
+
+
+        self._neljet = njet.NeleffectiveJet_HelicalTangled(kwargs['n0'],kwargs['rvhe'],kwargs['alpha'],kwargs['beta'])
+
+        # init the transfer function with absorption
+        super(MixJet_HelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r),
+                                                 dL * 1e-3, alp, Gamma = None, chi = None, Delta = None)
+
+        # transform energies to stationary frame
+        self._gammas = self.jet_gammas_scaled_gg(self._r, kwargs['rvhe'], kwargs['rjet'], kwargs['gmin'], kwargs['g0'])
+
+        self._ee /= self._gammas
+
+        return
+
+    def jet_gammas_scaled(self,rs,r0,g0,rjet):
+        """
+        Function to get jet lorentz factors. Shape of function
+        from PC Jet model, scaled to r0, g0, and rjet.
+        """
+        gxs = rs
+        gz = 4. * (g0/9.)
+        gmx = 9. * (g0/9.)
+        gmn = 2. * (g0/9.)
+        xcon = 0.3 * (r0/0.3)
+        L = 3206.3 * (rjet/3206.3)
+        g1 = (gz + ((gmx - gz)/(xcon**(1-0.68)))* gxs**(1-0.68)) * (gxs<xcon)
+        g2 = (gmx - ((gmx-gmn)/np.log10(L/xcon))*np.log10(gxs/xcon)) * (gxs>=xcon)
+        return g1+g2
+
+    def jet_gammas_scaled_gg(self,rs,rvhe,rjet,gmin,gmax):
+        """
+        Function to get jet lorentz factors. Shape of function
+        from PC Jet model, scaled to r0, gmin, gmax and rjet.
+        """
+        gxs = rs
+        gz = 4. * (gmax/9.)
+        gmx = 9. * (gmax/9.)
+        gmn = 2. * (gmin/2.)
+        xcon = 0.3 * (rvhe/0.3)
+        L = 3206.3 * (rjet/3206.3)
+        g1 = (gz + ((gmx - gz)/(xcon**(1-0.68)))* gxs**(1-0.68)) * (gxs<xcon)
+        g2 = (gmx - ((gmx-gmn)/np.log10(L/xcon))*np.log10(gxs/xcon)) * (gxs>=xcon)
+        return g1+g2
 
 class MixGMF(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):
