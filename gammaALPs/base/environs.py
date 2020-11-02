@@ -284,8 +284,8 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
             power-law turbulence spectrum (default: q = 11/3 is Kolmogorov type spectrum)
         kMin: float
             minimum wave number in 1. / kpc,
-            defualt 1e-3 * kL (the k interval runs from kMin to kH)
-            dkType:string
+            default 1e-3 * kL (the k interval runs from kMin to kH)
+        dkType:string
             either linear, log, or random. Determine the spacing of the dk intervals
         dkSteps: int
             number of dkSteps.
@@ -342,7 +342,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         kwargs.setdefault('func', None)
 
         # step length is assumed to be 1. / kH -> minimum turbulence length scale
-        kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'],1. / kwargs['kH']))
+        kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'], 1. / kwargs['kH']))
         self._rbounds = kwargs['rbounds'][::kwargs['thinning']]
 
         self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])

@@ -54,9 +54,9 @@ class Bgaussian(object):
         self._q = q
 
         # --- Set the defaults 
-        kwargs.setdefault('kMin',-1)
-        kwargs.setdefault('dkType','log')
-        kwargs.setdefault('dkSteps',0)
+        kwargs.setdefault('kMin', None)
+        kwargs.setdefault('dkType', 'log')
+        kwargs.setdefault('dkSteps', 0)
         kwargs.setdefault('seed', None)
 
         self.__dict__.update(kwargs)
@@ -83,7 +83,6 @@ class Bgaussian(object):
             self.__kn = np.array([self.kMin + sum(self.__dk[:n]) for n in range(self.__dk.shape[0])])
         else:
             raise ValueError("dkType has to either 'linear', 'log', or 'random', not {0:s}".format(self.dkType))
-
 
         self.__Un = rand(self.__kn.shape[0])
         self.__Vn = rand(self.__kn.shape[0])
@@ -239,16 +238,16 @@ class Bgaussian(object):
         -------
         m-dim `~numpy.ndarray` array with values of transversal field
         """
-        zz, kk = meshgrid(z,self.__kn)
-        zz, dd = meshgrid(z,self.__dk)
-        zz, uu = meshgrid(z,self.__Un)
-        zz, vv = meshgrid(z,self.__Vn)
+        zz, kk = meshgrid(z, self.__kn)
+        _, dd = meshgrid(z, self.__dk)
+        _, uu = meshgrid(z, self.__Un)
+        _, vv = meshgrid(z, self.__Vn)
 
         B = sum(sqrt(self.__corrTrans(kk) / pi * dd * 2. * log(1. / uu)) \
-                * cos(kk * zz + 2. * pi * vv), axis = 0)
+                * cos(kk * zz + 2. * pi * vv), axis=0)
         return B
 
-    def new_Bn(self,z, Bscale = None, nsim = 1):
+    def new_Bn(self, z, Bscale = None, nsim = 1):
         """
         Calculate two components of a turbulent magnetic field and 
         the angle between the the two.

@@ -202,7 +202,7 @@ class NelICMFunction(object):
         kwargs
         ------
         func: function pointer
-        function that takes radius in kpc and returns electron density in cm^-3
+            function that takes radius in kpc and returns electron density in cm^-3
 
         eta: float
             exponent for scaling of B field with electron density (default = 1.)
@@ -222,6 +222,10 @@ class NelICMFunction(object):
     @property
     def func(self):
         return self._func
+
+    @property
+    def eta(self):
+        return self._eta
 
     @eta.setter
     def eta(self, eta):
