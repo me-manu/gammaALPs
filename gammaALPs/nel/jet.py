@@ -76,7 +76,7 @@ class NelJet(object):
         """
         return self._n0 * np.power(r / self._r0, self._beta)
 
-class NeleffectiveJet_HelicalTangled(object):
+class NeleffectiveJetHelicalTangled(object):
     """
     Class to get effective electron densities in jet, taking into account that
     the jet is not a cold plasma. i.e. the electron distribution is non-thermal.

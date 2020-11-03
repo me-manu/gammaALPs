@@ -88,7 +88,7 @@ class Bjet(object):
         psi = np.ones(B.shape[0]) * psi
         return B, psi
 
-class Bjet_HelicalTangled(object):
+class BjetHelicalTangled(object):
     """
     Class to calculate magnetic field in AGN Jet assuming a two component field:
        1. A helical component transforming from poloidal to toroidal
@@ -376,7 +376,7 @@ class Bjet_HelicalTangled(object):
                 self._tdoms = np.array(self._tdoms)
 
             elif self._ft > 0 and self._l_tcor == 'jetwidth':
-                
+
                 theta_m1_interp = USpline(np.log10(z),gammas)
 
                 p = lambda r,rsw,c,a: c*(rsw+r)**a

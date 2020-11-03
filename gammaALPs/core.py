@@ -399,7 +399,7 @@ class ModuleList(object):
                 self._atten = np.exp(-self._eblnorm * m.opt_depth(self.source.z,EGeV / 1e3))
             elif type(m) == env.MixIGMFCell or type(m) == env.MixGMF:
                 m.EGeV = EGeV
-            elif type(m) == env.MixJet_HelicalTangled:
+            elif type(m) == env.MixJetHelicalTangled:
                 m.EGeV = EGeV * (1. + self.source.z)
                 m._ee /= m._gammas
             else:
@@ -440,7 +440,7 @@ class ModuleList(object):
             in intra-cluster medium which is assumed to follow a Gaussian turbulence spectrum
         - Jet: initializes `~gammaALPs.base.environs.MixJet` for mixing
             in the AGN jet, where the field is assumed to be coherent
-        - JetHelicalTangled: initializes `~gammaALPs.base.environs.MixJet_HelicalTangled` for mixing
+        - JetHelicalTangled: initializes `~gammaALPs.base.environs.MixJetHelicalTangled` for mixing
             in the AGN jet with two field components (tangled and helical)
         - GMF: initializes `~gammaALPs.base.environs.MixGMF` for mixing
             in the Galactic magnetic field (GMF) of the Milky Way
@@ -479,7 +479,7 @@ class ModuleList(object):
                                                    EGeV=self.EGeV * (1. + self.source.z),
                                                    **kwargs))
         elif environ == 'JetHelicalTangled':
-            self._modules.insert(order, env.MixJet_HelicalTangled(self.alp, self.source,
+            self._modules.insert(order, env.MixJetHelicalTangled(self.alp, self.source,
                                                    EGeV=self.EGeV * (1. + self.source.z),
                                                    **kwargs))
         elif environ == 'GMF':

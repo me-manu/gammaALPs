@@ -598,7 +598,7 @@ class MixJet(trans.GammaALPTransfer):
 
         return Btrans, Psin
 
-class MixJet_HelicalTangled(trans.GammaALPTransfer):
+class MixJetHelicalTangled(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):
         """
         Initialize mixing in the magnetic field of the jet
@@ -704,7 +704,7 @@ class MixJet_HelicalTangled(trans.GammaALPTransfer):
         self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
         dL = self._rbounds[1:] - self._rbounds[:-1]
 
-        self._b = jet.Bjet_HelicalTangled(kwargs['ft'],
+        self._b = jet.BjetHelicalTangled(kwargs['ft'],
                             kwargs['r_T'],
                             kwargs['Bt_exp'],
                             kwargs['B0'],
@@ -734,10 +734,10 @@ class MixJet_HelicalTangled(trans.GammaALPTransfer):
             pass
 
 
-        self._neljet = njet.NeleffectiveJet_HelicalTangled(kwargs['n0'],kwargs['rvhe'],kwargs['alpha'],kwargs['beta'])
+        self._neljet = njet.NeleffectiveJetHelicalTangled(kwargs['n0'],kwargs['rvhe'],kwargs['alpha'],kwargs['beta'])
 
         # init the transfer function with absorption
-        super(MixJet_HelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r),
+        super(MixJetHelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r),
                                                  dL * 1e-3, alp, Gamma = None, chi = None, Delta = None)
 
         # transform energies to stationary frame
