@@ -443,6 +443,8 @@ class BjetHelicalTangled(object):
 
         # t4 = time.time()
 
+        BhelrT = Bs[np.argmin([abs(ll-self._r_T) for ll in z])] * np.sqrt(1. - self._ft)
+
         for i,l in enumerate(z):
             # if i == int(len(z)/2):
                 # t6 = time.time()
@@ -452,7 +454,7 @@ class BjetHelicalTangled(object):
 
             h_phi = np.pi/2. #just align helix phi with one axis, why not?
             if l <= self._r_T: #Set section size
-                B_hel *= (l/self._r_T)**(self._Bt_exp + 1.) #make B_hel go like Bt_exp (make 1 '-a')
+                B_hel *= BhelrT*(l/self._r_T)**(self._Bt_exp + 1.) #make B_hel go like Bt_exp (make 1 '-a')
 
             # if i == int(len(z)/2):
                 # t7 = time.time()
