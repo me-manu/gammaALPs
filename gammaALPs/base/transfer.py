@@ -3,11 +3,9 @@ import numpy as np
 import logging
 from astropy import units as u
 from os import path
-from multiprocessing import Pool,Process
+from multiprocessing import Pool
 from functools import reduce
-import numba
 from numba import jit
-import time
 # ------------------------- #
 
 Bcrit = 4.414e13  # critical magnetic field in G

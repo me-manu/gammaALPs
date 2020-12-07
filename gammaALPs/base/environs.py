@@ -348,24 +348,24 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
         if kwargs['restore'] == None:
             self._b = gauss.Bgaussian(kwargs['B0'], kwargs['kH'],
-                                                kwargs['kL'], kwargs['q'],
-                                            kMin = kwargs['kMin'],
-                                            dkType = kwargs['dkType'],
-                                            dkSteps = kwargs['dkSteps'],
-                                            seed=kwargs['seed'])
-            B, psi = self._b.new_Bn(self._r, Bscale = self._nelicm.Bscale(self._r),
-                                            nsim = kwargs['nsim'])
+                                      kwargs['kL'], kwargs['q'],
+                                      kMin=kwargs['kMin'],
+                                      dkType=kwargs['dkType'],
+                                      dkSteps=kwargs['dkSteps'],
+                                      seed=kwargs['seed'])
 
+            B, psi = self._b.new_Bn(self._r, Bscale=self._nelicm.Bscale(self._r),
+                                            nsim=kwargs['nsim'])
 
             # init the transfer function with absorption
-            super(MixICMGaussTurb,self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),
-                                                     dL, alp, Gamma = None, chi = None, Delta = None)
+            super(MixICMGaussTurb, self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),
+                                                     dL, alp, Gamma=None, chi=None, Delta=None)
         else:
-            tra = super(MixICMGaussTurb,self).readEnviron(kwargs['restore'], alp,
-                                                     filepath = kwargs['restore_path'])
-            super(MixICMGaussTurb,self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
-                                                     tra.dL, tra.alp, Gamma = tra.Gamma,
-                                                     chi = tra.chi, Delta = tra.Delta)
+            tra = super(MixICMGaussTurb, self).readEnviron(kwargs['restore'], alp,
+                                                           filepath=kwargs['restore_path'])
+            super(MixICMGaussTurb, self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
+                                                  tra.dL, tra.alp, Gamma=tra.Gamma,
+                                                  chi=tra.chi, Delta=tra.Delta)
         return
 
     @property
@@ -598,6 +598,7 @@ class MixJet(trans.GammaALPTransfer):
 
         return Btrans, Psin
 
+
 class MixJetHelicalTangled(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):
         """
@@ -720,7 +721,6 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         B, psi = self._b.get_jet_props_gen(self._r)
 
-
         #change rs if they were not originally resolving the tangled field
         try:
             if self._b._trerun:
@@ -776,6 +776,7 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         g1 = (gz + ((gmx - gz)/(xcon**(1-0.68)))* gxs**(1-0.68)) * (gxs<xcon)
         g2 = (gmx - ((gmx-gmn)/np.log10(L/xcon))*np.log10(gxs/xcon)) * (gxs>=xcon)
         return g1+g2
+
 
 class MixGMF(trans.GammaALPTransfer):
     def __init__(self, alp, source, **kwargs):

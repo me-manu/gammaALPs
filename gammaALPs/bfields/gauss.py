@@ -9,6 +9,53 @@ from astropy import units as u
 # --------------------------------- #
 
 
+def Fq(x, kL, kH, q):
+    """
+    Calculate the F_q function for given x,kL, and _kH
+
+    Arguments
+    ---------
+    x:        n-dim array, Ratio between k and _kH
+
+    Returns
+    -------
+    n-dim array with Fq values
+    """
+    if q == 0.:
+        F = 3. * kH ** 2. / (kH ** 3. - kL ** 3.) * \
+                    (0.5 * (1. - x*x) - x * x * np.log(x))
+
+        F_low = 3. * (0.5 * (kH ** 2. - kL ** 2.) + \
+                    (x * kH) * (x * kH) * np.log(kH / kL)) \
+                    / (kH ** 3. - kL ** 3.)
+
+    elif q == -2.:
+        F = (0.5 * (1. - x*x) - np.log(x)) / (kH - kL )
+        F_low = (np.log(kH / kL ) + (x * kH) * \
+                (x * kH) * 0.5 * (kL ** (-2) - kH ** (-2)) ) \
+                / (kH - kL )
+    elif q == -3.:
+        F = 1. / np.log(kH / kL) / kH / x / 3. * (-x*x*x - 3. * x + 4.)
+        F_low = ((kL ** (-2) - kH ** (-2)) + (x * kH) * \
+                (x * kH) / 3. * (kL ** (-3) - kH ** (-3)) ) / \
+                np.log(kH / kL )
+    else:
+        F = kH ** (q + 2.) / (kH ** (q + 3.) - \
+            kL ** (q + 3.)) * \
+            (q + 3.) / (q * (q + 2.)) * \
+            (q + x * x * ( 2. + q - 2. * (1. + q) * x ** q))
+
+        F_low = (q + 3.) * ( (kH ** (q + 2) - \
+                kL ** (q +2)) / (q + 2.) + \
+                (x * kH) * (x * kH) / q * \
+                (kH ** q - kL ** q)) / \
+                (kH ** (q + 3.) - kL**(q + 3))
+
+    result = np.zeros_like(x)
+    result[x >= kL / kH] = F[x >= kL / kH]
+    result[x < kL / kH] = F_low[x < kL / kH]
+    return result
+
 # ========================================================== #
 # === Gaussian turbulent magnetic field ==================== #
 # ========================================================== #
@@ -170,7 +217,7 @@ class Bgaussian(object):
         self.__Vn = rand(self.__kn.shape[0])
         return
 
-    def Fq(self,x):
+    def Fq(self, x):
         """
         Calculate the F_q function for given x,kL, and _kH
 
@@ -210,7 +257,7 @@ class Bgaussian(object):
                                     (self._kH ** (self._q + 3.) - self._kL**(self._q + 3) ) 
         return F(x) * (x >= self._kL / self._kH) + F_low(x) * (x < self._kL / self._kH)
 
-    def __corrTrans(self,k):
+    def __corrTrans(self, k):
         """
         Calculate the transversal correlation function for wave number k
 
@@ -223,6 +270,7 @@ class Bgaussian(object):
         n-dim array with values of the correlation function
         """
         return pi / 4. * self._B * self._B * self.Fq(k / self._kH)
+        #return pi / 4. * self._B * self._B * Fq(k / self._kH, self._kL, self._kH, self._q)
 
     def Bgaus(self, z):
         """
@@ -238,16 +286,23 @@ class Bgaussian(object):
         -------
         m-dim `~numpy.ndarray` array with values of transversal field
         """
+        #t0 = time.time()
         zz, kk = meshgrid(z, self.__kn)
         _, dd = meshgrid(z, self.__dk)
         _, uu = meshgrid(z, self.__Un)
         _, vv = meshgrid(z, self.__Vn)
 
-        B = sum(sqrt(self.__corrTrans(kk) / pi * dd * 2. * log(1. / uu)) \
+        #t1 = time.time()
+
+        corr_trans = self.__corrTrans(kk)
+        #t2 = time.time()
+        B = sum(sqrt(corr_trans / pi * dd * 2. * log(1. / uu))
                 * cos(kk * zz + 2. * pi * vv), axis=0)
+        #t3 = time.time()
+        #print ("t3-t2", t3-t2, "t2-t1", t2-t1, "t1-t0", t1-t0)
         return B
 
-    def new_Bn(self, z, Bscale = None, nsim = 1):
+    def new_Bn(self, z, Bscale=None, nsim=1):
         """
         Calculate two components of a turbulent magnetic field and 
         the angle between the the two.
@@ -291,12 +346,12 @@ class Bgaussian(object):
 
             self.new_random_numbers()                # new random numbers
             # calculate second transverse component, 
-            #this is already computed with central B-field strength
+            # this is already computed with central B-field strength
             Bu = self.Bgaus(z)        
             # calculate total transverse component 
             B.append(np.sqrt(Bt ** 2. + Bu ** 2.))
             # and angle to x2 (t) axis -- use atan2 to get the quadrants right
-            Psin.append(np.arctan2(Bt , Bu))
+            Psin.append(np.arctan2(Bt, Bu))
 
         B = np.squeeze(B)
         Psin = np.squeeze(Psin)
@@ -308,9 +363,9 @@ class Bgaussian(object):
         if np.isscalar(Bscale) or type(Bscale) == np.ndarray:
             B *= Bscale
 
-        return B,Psin
+        return B, Psin
 
-    def spatialCorr(self, z, steps = 10000):
+    def spatialCorr(self, z, steps=10000):
         """
         Calculate the spatial coherence of the turbulent field
 
@@ -328,13 +383,13 @@ class Bgaussian(object):
         """
         if isscalar(z):
             z = array([z])
-        t = logspace(-9.,0.,steps)
-        tt,zz = meshgrid(t,z)
+        t = logspace(-9., 0., steps)
+        tt, zz = meshgrid(t, z)
         kernel = self.Fq(tt) * cos(tt * zz * self._kH)
         # the self._kH factor comes from the substitution t = k / _kH
-        return self._B * self._B / 4. * simps(kernel * tt,log(tt),axis = 1)  * self._kH
+        return self._B * self._B / 4. * simps(kernel * tt, log(tt), axis=1) * self._kH
 
-    def rotation_measure(self, z, n_el, nsim=1):
+    def rotation_measure(self, z, n_el, eta=0.5, nsim=1):
         """
         Calculate the rotation measure of a
         random Gaussian field.
@@ -349,8 +404,11 @@ class Bgaussian(object):
 
         {options}
 
-        nsim = int
+        nsim: int
             number of B-field simulations
+
+        n_cpu: int
+            number of cpus for multiprocessing
 
         Returns
         -------
@@ -379,7 +437,7 @@ class Bgaussian(object):
             # the B field in sqrt
             self.new_random_numbers()
             B = np.sqrt(2.) * self.Bgaus(z)
-            kernel.append(B * n_el)
+            kernel.append(B * (n_el / n_el[0])**eta * n_el)
 
         # restore old seed
         if seeds is not None:
