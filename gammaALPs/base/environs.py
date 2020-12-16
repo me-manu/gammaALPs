@@ -118,6 +118,10 @@ class MixIGMFCell(trans.GammaALPTransfer):
     def Bfield_model(self):
         return self._b
 
+    @property
+    def nel_model(self):
+        return self._nel
+
 
 class MixICMCell(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):
@@ -238,6 +242,11 @@ class MixICMCell(trans.GammaALPTransfer):
     @property
     def Bfield_model(self):
         return self._b
+
+    @property
+    def nel_model(self):
+        return self._nel
+
 
 
 class MixICMGaussTurb(trans.GammaALPTransfer):
@@ -379,6 +388,10 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
     @property
     def Bfield_model(self):
        return self._b
+
+    @property
+    def nel_model(self):
+        return self._nelicm
 
 
 class MixJet(trans.GammaALPTransfer):
@@ -544,6 +557,10 @@ class MixJet(trans.GammaALPTransfer):
     @property
     def Bfield_model(self):
         return self._b
+
+    @property
+    def nel_model(self):
+        return self._neljet
 
     @Rjet.setter
     def Rjet(self, Rjet):
@@ -922,6 +939,10 @@ class MixGMF(trans.GammaALPTransfer):
     @property
     def Bfield_model(self):
         return self._Bgmf
+
+    @property
+    def nel_model(self):
+        return self._nelgmf
 
     def set_coordinates(self):
         """

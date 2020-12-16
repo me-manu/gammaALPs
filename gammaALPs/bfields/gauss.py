@@ -389,7 +389,7 @@ class Bgaussian(object):
         # the self._kH factor comes from the substitution t = k / _kH
         return self._B * self._B / 4. * simps(kernel * tt, log(tt), axis=1) * self._kH
 
-    def rotation_measure(self, z, n_el, eta=0.5, nsim=1):
+    def rotation_measure(self, z, n_el, eta=0.5, nsim=1, n_el0=None):
         """
         Calculate the rotation measure of a
         random Gaussian field.
@@ -407,14 +407,22 @@ class Bgaussian(object):
         nsim: int
             number of B-field simulations
 
-        n_cpu: int
-            number of cpus for multiprocessing
+        n_el0: None or float
+            normalization for B field scaling with electron density,
+            B = B0 * (n_el(r) / n_el0)^eta.
+            If none, n_el[0] will be used.
+
+
 
         Returns
         -------
         Rotation measure for each simulated B field as an `~numpy.ndarray` if nsim > 1
         or as a scalar if nsim=1
         """
+
+        if n_el0 is None:
+            n_el0 = n_el[0]
+
         seed(self.seed)
         # if seed is integer
         # create a list of random integers which are then used
@@ -437,7 +445,7 @@ class Bgaussian(object):
             # the B field in sqrt
             self.new_random_numbers()
             B = np.sqrt(2.) * self.Bgaus(z)
-            kernel.append(B * (n_el / n_el[0])**eta * n_el)
+            kernel.append(B * (n_el / n_el0)**eta * n_el)
 
         # restore old seed
         if seeds is not None:

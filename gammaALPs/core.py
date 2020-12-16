@@ -62,6 +62,8 @@ class Source(object):
         self._theta_jet = kwargs['theta_jet']
         self._z = z
         self._doppler = None
+        self._c = None
+        self._c_gal = None
 
         self.calc_doppler()
         self.set_ra_dec_l_b(ra = kwargs['ra'], dec = kwargs['dec'],
@@ -88,6 +90,14 @@ class Source(object):
     @property
     def b(self):
         return self._b
+
+    @property
+    def c(self):
+        return self._c
+
+    @property
+    def c_gal(self):
+        return self._c_gal
 
     @property
     def theta_obs(self):
