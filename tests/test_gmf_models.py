@@ -1,35 +1,36 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
+import os
 from numpy.testing import assert_allclose
 from gammaALPs.bfields import gmf
 from astropy.tests.helper import pytest
 
 
-#@pytest.fixture(scope='module')
-#def jannsonfile(request, tmpdir_factory):
-    #path = tmpdir_factory.mktemp('data')
+@pytest.fixture(scope='module')
+def jannson_file(request, tmpdir_factory):
+    path = tmpdir_factory.mktemp('data')
 
-    #outfile = "jansson_field_test.npy"
-    #url = 'https://raw.githubusercontent.com/fermiPy/fermipy-extra/master/data/jannson_field_test.npy'
-    #os.system('curl -o %s -OL %s' % (outfile, url))
-    #request.addfinalizer(lambda: path.remove(rec=1))
+    outfile = "jansson_field_test.npy"
+    url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/jansson_field_test.npy'
+    os.system('curl -o %s -OL %s' % (outfile, url))
+    request.addfinalizer(lambda: path.remove(rec=1))
 
-    #return outfile
-
-
-#@pytest.fixture(scope='module')
-#def pshirkovfile(request, tmpdir_factory):
-    #path = tmpdir_factory.mktemp('data')
-#
-    #outfile = "pshirkov_field_test.npy"
-    #url = 'https://raw.githubusercontent.com/fermiPy/fermipy-extra/master/data/pshirkiv_field_test.npy'
-    #os.system('curl -o %s -OL %s' % (outfile, url))
-    #request.addfinalizer(lambda: path.remove(rec=1))
-#
-    #return outfile
+    return outfile
 
 
-def test_jansson(tmpdir):
+@pytest.fixture(scope='module')
+def pshirkov_file(request, tmpdir_factory):
+    path = tmpdir_factory.mktemp('data')
+
+    outfile = "pshirkov_field_test.npy"
+    url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/pshirkov_field_test.npy'
+    os.system('curl -o %s -OL %s' % (outfile, url))
+    request.addfinalizer(lambda: path.remove(rec=1))
+
+    return outfile
+
+
+def test_jansson(jannson_file):
 
     # 3D coordinates for galacto centric coordinate sys
     x = np.linspace(-20., 20., 300)
@@ -70,14 +71,14 @@ def test_jansson(tmpdir):
         BX[:, i] = b[1]
 
     #np.save("jansson_field_test", {"X": BX, "halo": Bhalo, "disk": Bdisk})
-    compare_fields = np.load("jansson_field_test.npy", allow_pickle=True).flat[0]
+    compare_fields = np.load(jannson_file, allow_pickle=True).flat[0]
 
     assert_allclose(BX, compare_fields["X"], rtol=1e-6)
     assert_allclose(Bdisk, compare_fields["disk"], rtol=1e-6)
     assert_allclose(Bhalo, compare_fields["halo"], rtol=1e-6)
 
 
-def test_pshirkov(tmpdir):
+def test_pshirkov(pshirkov_file):
 
     # 3D coordinates for galacto centric coordinate sys
     x = np.linspace(-20., 20., 300)
@@ -111,7 +112,7 @@ def test_pshirkov(tmpdir):
         Bhalo[:, i] = b[1]
 
     #np.save("pshirkov_field_test", {"halo": Bhalo, "disk": Bdisk})
-    compare_fields = np.load("pshirkov_field_test.npy", allow_pickle=True).flat[0]
+    compare_fields = np.load(pshirkov_file, allow_pickle=True).flat[0]
 
     assert_allclose(Bdisk, compare_fields["disk"], rtol=1e-6)
     assert_allclose(Bhalo, compare_fields["halo"], rtol=1e-6)
