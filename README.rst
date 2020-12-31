@@ -1,7 +1,8 @@
 gammaALPs
 =========
 
-Python packages to calculate the conversion probabilty between photons and axions / axionlike particles in various astrophysical magnetic fields.
+Python packages to calculate the conversion probability between photons and axions / axion-like particles in
+various astrophysical magnetic fields.
 
 Prerequisites
 -------------

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
-from gammaALPs import __version__
+from gammaALPs.version import get_git_version
 
 here = path.abspath(path.dirname(__file__))
 
@@ -10,9 +10,9 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='gammaALPs',
-    version=__version__,
+    version=get_git_version(),
     include_package_data=True,
-    description='Python code to calculate the conversion probability between photons and axions / axionlike'
+    description='Python code to calculate the conversion probability between photons and axions / axion-like'
                 'particles in astrophysical magnetic fields',
     long_description=long_description,  # this is the readme
     long_description_content_type='text/x-rst',
@@ -44,9 +44,10 @@ setup(
     packages=find_packages(exclude=['build', 'docs', 'templates']),
 
     install_requires=[
-        'numpy >= 1.15',
-        'scipy >= 1.0',
-        'astropy>=2.0',
+        'numpy >= 1.19',
+        'scipy >= 1.5',
+        'numba >= 0.51',
+        'astropy>=4.0',
         'ebltable >=0.2',
     ]
 

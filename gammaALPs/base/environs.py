@@ -101,7 +101,7 @@ class MixIGMFCell(trans.GammaALPTransfer):
         else:
             dL, self._zstep = trafo.cosmo_cohlength(z,kwargs['L0'] * u.kpc, cosmo = self._cosmo)
 
-            tra = super(MixIGMFCell,self).readEnviron(
+            tra = super(MixIGMFCell,self).read_environ(
                                                 kwargs['restore'], alp,
                                                 filepath = kwargs['restore_path'],
                                                 )
@@ -184,7 +184,7 @@ class MixICMCell(trans.GammaALPTransfer):
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
         """
-        kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
+        kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
         kwargs.setdefault('nsim', 1)
@@ -224,8 +224,8 @@ class MixICMCell(trans.GammaALPTransfer):
             super(MixICMCell,self).__init__(kwargs['EGeV'], B, psi, self._nel(self._r),
                                                      dL, alp, Gamma = None, chi = None, Delta = None)
         else:
-            tra = super(MixICMCell,self).readEnviron(kwargs['restore'], alp,
-                                                     filepath = kwargs['restore_path'])
+            tra = super(MixICMCell,self).read_environ(kwargs['restore'], alp,
+                                                      filepath = kwargs['restore_path'])
             super(MixICMCell,self).__init__(tra.EGeV, tra.B, tra.psin,
                           tra.nel, tra.dL, tra.alp, Gamma = tra.Gamma,
                           chi = tra.chi, Delta = tra.Delta)
@@ -370,8 +370,8 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
             super(MixICMGaussTurb, self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),
                                                      dL, alp, Gamma=None, chi=None, Delta=None)
         else:
-            tra = super(MixICMGaussTurb, self).readEnviron(kwargs['restore'], alp,
-                                                           filepath=kwargs['restore_path'])
+            tra = super(MixICMGaussTurb, self).read_environ(kwargs['restore'], alp,
+                                                            filepath=kwargs['restore_path'])
             super(MixICMGaussTurb, self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
                                                   tra.dL, tra.alp, Gamma=tra.Gamma,
                                                   chi=tra.chi, Delta=tra.Delta)
@@ -535,8 +535,8 @@ class MixJet(trans.GammaALPTransfer):
             # transform energies to stationary frame
             self._ee /= self._source._doppler
         else:
-            tra = super(MixJet,self).readEnviron(kwargs['restore'],alp,
-                                                filepath = kwargs['restore_path'])
+            tra = super(MixJet,self).read_environ(kwargs['restore'], alp,
+                                                  filepath = kwargs['restore_path'])
             super(MixJet,self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel,
                                                      tra.dL, tra.alp, Gamma = tra.Gamma,
                                                      chi = tra.chi, Delta = tra.Delta)
@@ -845,7 +845,7 @@ class MixGMF(trans.GammaALPTransfer):
             default: 50 kpc
         model: string (default = jansson)
             GMF model that is used. Currently the model by Jansson & Farrar (2012)
-            (also with updates from Plack measurements)
+            (also with updates from Planck measurements)
             and Pshirkov et al. (2011) are implemented.
             Usage: model=[jansson12, jansson12b, jansson12c, pshirkov]
         model_sym: string (default = ASS)
@@ -908,8 +908,8 @@ class MixGMF(trans.GammaALPTransfer):
             super(MixGMF,self).__init__(kwargs['EGeV'], B, psi, self._nelgmf,
                                                      dL, alp, Gamma = None, chi = None, Delta = None)
         else:
-            tra = super(MixGMF,self).readEnviron(kwargs['restore'], alp,
-                                                     filepath = kwargs['restore_path'])
+            tra = super(MixGMF,self).read_environ(kwargs['restore'], alp,
+                                                  filepath = kwargs['restore_path'])
             super(MixGMF,self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel,
                                                      tra.dL, tra.alp, Gamma = tra.Gamma,
                                                      chi = tra.chi, Delta = tra.Delta)
@@ -1078,8 +1078,8 @@ class MixFromFile(trans.GammaALPTransfer):
             super(MixFromFile,self).__init__(kwargs['EGeV'], Btrans, psi, n,
                                                      dL, alp, Gamma = None, chi = None, Delta = None)
         else:
-            tra = super(MixFromFile,self).readEnviron(kwargs['restore'], alp,
-                                                     filepath = kwargs['restore_path'])
+            tra = super(MixFromFile,self).read_environ(kwargs['restore'], alp,
+                                                       filepath = kwargs['restore_path'])
             super(MixFromFile,self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
                                                      tra.dL, tra.alp, Gamma = tra.Gamma,
                                                      chi = tra.chi, Delta = tra.Delta)
@@ -1133,8 +1133,8 @@ class MixFromArray(trans.GammaALPTransfer):
             super(MixFromArray, self).__init__(kwargs['EGeV'], Btrans, psi, nel,
                                                      dL, alp, Gamma = None, chi = None, Delta = None)
         else:
-            tra = super(MixFromFile, self).readEnviron(kwargs['restore'], alp,
-                                                     filepath = kwargs['restore_path'])
+            tra = super(MixFromFile, self).read_environ(kwargs['restore'], alp,
+                                                        filepath = kwargs['restore_path'])
             super(MixFromArray, self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
                                                      tra.dL, tra.alp, Gamma = tra.Gamma,
                                                      chi = tra.chi, Delta = tra.Delta)

@@ -267,8 +267,3 @@ class NelICMFunction(object):
         n-dim `~numpy.ndarray` with scaling of B field with electron density
         """
         return (self.__call__(r) / self.__call__(r0))**self._eta
-
-
-class Test_this_stff(object):
-    def __init__(self):
-        pass

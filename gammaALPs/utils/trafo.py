@@ -1,15 +1,13 @@
 import numpy as np
-import logging
 from numpy import sin,cos
-from astropy.cosmology import FlatLambdaCDM, z_at_value
-from astropy import units as u
-from math import ceil
+from astropy.cosmology import FlatLambdaCDM
 from scipy.interpolate import interp1d
 
-def cosmo_cohlength(zmax,L0, cosmo = FlatLambdaCDM(H0 = 70., Om0 = 0.3)):
+
+def cosmo_cohlength(zmax,L0, cosmo=FlatLambdaCDM(H0=70., Om0=0.3)):
     """
-    Calculate a grid of coherence legnths given a maximum 
-    redshift, coherence legth, and cosmology
+    Calculate a grid of coherence lengths given a maximum
+    redshift, coherence length, and cosmology
 
     Parameters
     ----------
@@ -19,8 +17,6 @@ def cosmo_cohlength(zmax,L0, cosmo = FlatLambdaCDM(H0 = 70., Om0 = 0.3)):
     L0: `~astropy.units.quantity.Quantity`
         coherence length at z = 0
 
-    kwargs
-    ------
     cosmo: `~astropy.cosmology.core.FlatLambdaCDM`
         chosen cosmology, default is H0 = 70, Om0 = 0.3
 
@@ -31,11 +27,10 @@ def cosmo_cohlength(zmax,L0, cosmo = FlatLambdaCDM(H0 = 70., Om0 = 0.3)):
     - (N+1)-dim `~numpy.ndarray` with redshifts corresponding to summed coherence length starting with 0
     Last bin is chosen such that total luminosity distance is equal to zmax.
     """
-# interpolate Lumi distance
-    z = np.linspace(0.,zmax * 1.1,100)
-    l = cosmo.luminosity_distance(z) # l in Mpc
-    zfunc = interp1d(l.value,z)
-    lfunc = interp1d(z,l.value)
+    # interpolate Lumi distance
+    z = np.linspace(0.,zmax * 1.1, 100)
+    l = cosmo.luminosity_distance(z)  # l in Mpc
+    zfunc = interp1d(l.value, z)
 
     #z = [0.,z_at_value(cosmo.luminosity_distance, L0)]
     z = [0.,zfunc(L0.to('Mpc').value)]
@@ -48,7 +43,7 @@ def cosmo_cohlength(zmax,L0, cosmo = FlatLambdaCDM(H0 = 70., Om0 = 0.3)):
     dL[-1] = (cosmo.luminosity_distance(zmax) - cosmo.luminosity_distance(z[-2])).to('kpc').value
     z[-1] = zmax
 
-# Roncadelli's way
+    # Roncadelli's way
     #dz = (1.17e-3 * L0.to('Mpc') / (5. * u.Mpc)).value
     #Nd = int(ceil(0.85e3 * (5. * u.Mpc / L0.to('Mpc')).value * zmax))
     #dL = np.array([4.29e3 * dz / (1. + 1.45 * (n - 1.) * dz) for n in range(1, Nd + 1)]) * 1e3
@@ -56,19 +51,17 @@ def cosmo_cohlength(zmax,L0, cosmo = FlatLambdaCDM(H0 = 70., Om0 = 0.3)):
 
     return np.array(dL), np.array(z)
 
-
-
-
-
 # =========================================================== #
 # === Transformation function for Galactic Magnetic Field === #
 # =========================================================== #
+
 
 def norm(vec):
     """
     return the norm of vector vec
     """
     return np.sqrt(np.sum(vec)**2.)
+
 
 class NewBase:
     def __init__(self,d = 8.5):

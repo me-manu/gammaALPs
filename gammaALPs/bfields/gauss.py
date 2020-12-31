@@ -411,8 +411,6 @@ class Bgaussian(object):
             if given, this array is multiplied with the B field for an additional scaling depending on r,
             e.g., (n_el(r) / n_el(0))^eta
 
-
-
         Returns
         -------
         Rotation measure for each simulated B field as an `~numpy.ndarray` if nsim > 1

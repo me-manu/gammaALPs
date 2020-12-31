@@ -3,7 +3,7 @@ from astropy.coordinates import SkyCoord
 import numpy as np
 from ebltable.tau_from_model import OptDepth
 from .base import environs as env
-from .base.transfer import calcConvProb, calcLinPol
+from .base.transfer import calc_conv_prob, calc_lin_pol
 from .utils.interp2d import Interp2D
 import logging
 import sys
@@ -608,11 +608,11 @@ class ModuleList(object):
                                             type(m), m.EGeV[0], m.EGeV[-1], m.EGeV.size))
                 logging.debug('Number of B-field real. in {0}: {1:n}'.format(type(m), m.nsim))
                 if multiprocess > 1:
-                    T = m.calcTransferMulti(nprocess=multiprocess)
+                    T = m.calc_transfer_multi(nprocess=multiprocess)
                 else:
                     T = []
                     for i in range(m.nsim):
-                        T.append(m.calcTransfer(nsim = i, nprocess=1))
+                        T.append(m.calc_transfer(nsim = i, nprocess=1))
                 self._Tenv.append(np.array(T))
         # check if we have simple EBL absorption present
         # in which case we calculate separately the mixing in the source,
@@ -631,9 +631,9 @@ class ModuleList(object):
             for n in range(self.__nsim_max):
                 # mutliply all matrices for source environment
                 Tsrc = self._multiply_env(0,idx,n)
-                self._px_src.append(calcConvProb(self.pin, self.px, Tsrc))
-                self._py_src.append(calcConvProb(self.pin, self.py, Tsrc))
-                self._pa_src.append(calcConvProb(self.pin, self.pa, Tsrc))
+                self._px_src.append(calc_conv_prob(self.pin, self.px, Tsrc))
+                self._py_src.append(calc_conv_prob(self.pin, self.py, Tsrc))
+                self._pa_src.append(calc_conv_prob(self.pin, self.pa, Tsrc))
 
                 # new polarization matrix close to observer after traversing EBL
                 pol = np.zeros((self.EGeV.size,3,3))
@@ -644,10 +644,10 @@ class ModuleList(object):
                 # mutliply all matrices for observer environment
                 # all_sim and Tenv have one index less, since EBL not included
                 Tobs = self._multiply_env(idx,len(self._Tenv) + 1,n)
-                self._px_final.append(calcConvProb(pol, self.px, Tobs))
-                self._py_final.append(calcConvProb(pol, self.py, Tobs))
-                self._pa_final.append(calcConvProb(pol, self.pa, Tobs))
-                l, c = calcLinPol(pol,Tobs)
+                self._px_final.append(calc_conv_prob(pol, self.px, Tobs))
+                self._py_final.append(calc_conv_prob(pol, self.py, Tobs))
+                self._pa_final.append(calc_conv_prob(pol, self.pa, Tobs))
+                l, c = calc_lin_pol(pol, Tobs)
                 self._lin_pol.append(l)
                 self._circ_pol.append(c)
 
@@ -659,10 +659,10 @@ class ModuleList(object):
             # mutlitply all environments for all B-field realizations
             for n in range(self.__nsim_max):
                 Tobs = self._multiply_env(0,len(self._Tenv) + 1,n)
-                self._px_final.append(calcConvProb(self.pin, self.px, Tobs))
-                self._py_final.append(calcConvProb(self.pin, self.py, Tobs))
-                self._pa_final.append(calcConvProb(self.pin, self.pa, Tobs))
-                l, c = calcLinPol(self.pin,Tobs)
+                self._px_final.append(calc_conv_prob(self.pin, self.px, Tobs))
+                self._py_final.append(calc_conv_prob(self.pin, self.py, Tobs))
+                self._pa_final.append(calc_conv_prob(self.pin, self.pa, Tobs))
+                l, c = calc_lin_pol(self.pin, Tobs)
                 self._lin_pol.append(l)
                 self._circ_pol.append(c)
 

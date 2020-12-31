@@ -97,7 +97,7 @@ class GammaALPTransfer(object):
     Unit conversion is done through astropy.units module
     """
 
-    def __init__(self, EGeV, B, psi, nel, dL, alp, Gamma = None, chi = None, Delta = None):
+    def __init__(self, EGeV, B, psi, nel, dL, alp, Gamma=None, chi=None, Delta=None):
         """
         Initialize the transfer base class
 
@@ -194,7 +194,6 @@ class GammaALPTransfer(object):
         self._cpp = np.cos(self._pp)
         self._spp = np.sin(self._pp)
         self._nn = np.meshgrid(self._EGeV, self._nel, indexing = 'ij')[1]
-        return
 
     # --- define properties ---- #
     @property
@@ -356,7 +355,7 @@ class GammaALPTransfer(object):
         self._nn = np.meshgrid(self._EGeV, self._nel, indexing = 'ij')[1]
         return
 
-    def __setDeltas(self):
+    def __set_deltas(self):
         """Set Deltas and eigenvalues of mixing matrix for each domain"""
 
         self._DQED = Delta_QED(self._bb,self._ee)
@@ -382,7 +381,7 @@ class GammaALPTransfer(object):
             self._Dperp += self._Delta
             self._Dpar += self._Delta
 
-         #no CMB: comment out next three lines
+        # no CMB: comment out next three lines
         else:
             # add CMB term
             self._Dperp += Delta_CMB(self._ee)
@@ -458,7 +457,7 @@ class GammaALPTransfer(object):
         self._Tn = np.round(self._Tn, 8)
         return
 
-    def writeEnviron(self, name, filepath = './'):
+    def write_environ(self, name, filepath ='./'):
         """
         Save the current magnetic field, psi angles, and electron density to
         numpy files
@@ -475,35 +474,35 @@ class GammaALPTransfer(object):
 
 
         """
-        np.save(path.join(filepath,name) + '_dL.npy', self.dL)
-        np.save(path.join(filepath,name) + '_EGeV.npy', self.EGeV)
+        np.save(path.join(filepath, name) + '_dL.npy', self.dL)
+        np.save(path.join(filepath, name) + '_EGeV.npy', self.EGeV)
 
         if self.nsim > 1:
-            np.save(path.join(filepath,name) + '_psi.npy', self._psin)
+            np.save(path.join(filepath, name) + '_psi.npy', self._psin)
             try:
-                 np.save(path.join(filepath,name) + '_B.npy', self._Bn)
+                 np.save(path.join(filepath, name) + '_B.npy', self._Bn)
             except AttributeError:
                  logging.debug("B field assumed constant, only angle Psi is changed")
-                 np.save(path.join(filepath,name) + '_B.npy', self.B)
+                 np.save(path.join(filepath, name) + '_B.npy', self.B)
         else:
-            np.save(path.join(filepath,name) + '_B.npy', self.B)
-            np.save(path.join(filepath,name) + '_psi.npy', self.psin)
+            np.save(path.join(filepath, name) + '_B.npy', self.B)
+            np.save(path.join(filepath, name) + '_psi.npy', self.psin)
 
         try:
-            np.save(path.join(filepath,name) + '_nel.npy', self.neln)
+            np.save(path.join(filepath, name) + '_nel.npy', self.neln)
         except AttributeError:
-            np.save(path.join(filepath,name) + '_nel.npy', self.nel)
+            np.save(path.join(filepath, name) + '_nel.npy', self.nel)
 
         if isinstance(self._Gamma, np.ndarray):
-            np.save(path.join(filepath,name) + '_Gamma.npy', self._Gamma)
+            np.save(path.join(filepath, name) + '_Gamma.npy', self._Gamma)
         if isinstance(self._chi, np.ndarray):
-            np.save(path.join(filepath,name) + '_chi.npy', self._chi)
+            np.save(path.join(filepath, name) + '_chi.npy', self._chi)
         if isinstance(self._Delta, np.ndarray):
-            np.save(path.join(filepath,name) + '_Delta.npy', self._Delta)
-        return path.join(filepath,name) + '*.npy'
+            np.save(path.join(filepath, name) + '_Delta.npy', self._Delta)
+        return path.join(filepath, name) + '*.npy'
 
     @staticmethod
-    def readEnviron(name, alp, filepath = './'):
+    def read_environ(name, alp, filepath='./'):
         """
         Load a current magnetic field, psi angles, and electron density,
         absorption and dispersion rate from a previous cofiguration
@@ -515,8 +514,6 @@ class GammaALPTransfer(object):
         alp: `~gammaALPs.transer.ALP`
             `~gammaALPs.transer.ALP` object with ALP parameters
 
-        kwargs
-        ------
         filepath: str
             full path to output file
 
@@ -549,7 +546,7 @@ class GammaALPTransfer(object):
         return GammaALPTransfer(EGeV, B, psi, nel, dL, alp, Gamma = Gamma,
                                    chi = chi, Delta = Delta)
 
-    def __setTransferMatrices(self, nsim = -1):
+    def __set_transfer_matrices(self, nsim=-1):
         """Set the transfer matrices"""
         if nsim >= 0 and self.nsim > 1:
             self.psi = self.psin[nsim]
@@ -564,14 +561,14 @@ class GammaALPTransfer(object):
             except AttributeError:
                  pass
 
-        self.__setDeltas()
+        self.__set_deltas()
         self.__setT1n()
         self.__setT2n()
         self.__setT3n()
         self.__setTn()
         return
 
-    def fillTransfer(self):
+    def fill_transfer(self):
         """
         Calculate the transfer matrix for every domain for all
         requested magnetic field realizations
@@ -581,23 +578,23 @@ class GammaALPTransfer(object):
         list with all transfer functions for all B-field realizations
         """
         if self.nsim == 1:
-            self.__setTransferMatrices()
+            self.__set_transfer_matrices()
             return [self._Tn]
         else:
             Tn = []
             for nsim in range(self.nsim):
-                 self.__setTransferMatrices(nsim)
+                 self.__set_transfer_matrices(nsim)
                  Tn.append(self._Tn)
             return Tn
 
-    def calcTransferMulti(self, nprocess = 1):
+    def calc_transfer_multi(self, nprocess=1):
         """
         Calculate Transfer matrix by performing dot product of all transfer matrices
         along axis of distance. If multiple realizations for the B-field
         are to be calculated, parallel processing is used.
 
-        kwargs
-        ------
+        Parameters
+        ----------
         nprocess: int
             distibute matrix multiplication to n (if n > 1) processes using python's multiprocessing.
 
@@ -606,23 +603,23 @@ class GammaALPTransfer(object):
         List with n x 3 x 3 dim `~numpy.ndarray` with transfer matrix for all energies.
         Length of list is equal to number of requested B-field realizations.
         """
-        Tn = self.fillTransfer()
+        Tn = self.fill_transfer()
         if len(Tn) == 1:
-            return [dotProd(Tn[0])]
+            return [dot_prod(Tn[0])]
 #        os.system("taskset -p 0xff %d" % os.getpid())
         pool = Pool(processes=nprocess)
-        T = pool.map(dotProd, Tn)
+        T = pool.map(dot_prod, Tn)
         pool.close()
         pool.join()
         return T
 
-    def calcTransfer(self, nsim = -1, nprocess = 1):
+    def calc_transfer(self, nsim=-1, nprocess=1):
         """
         Calculate Transfer matrix by performing dot product of all transfer matrices
         along axis of distance.
 
-        kwargs
-        ------
+        Parameters
+        ----------
         nsim: int
             number of B-field realization to be used. Only works if class was initialized
             with multiple B-field realizations.
@@ -638,10 +635,10 @@ class GammaALPTransfer(object):
         if nprocess < 1:
             raise ValueError("nprocess must be >= 1, not {0:n}".format(nprocess))
 
-        self.__setTransferMatrices(nsim)
+        self.__set_transfer_matrices(nsim)
 
         if nprocess == 1: # only one process
-            return dotProd(self._Tn)
+            return dot_prod(self._Tn)
         else:  # split to mutliple processes
             pool = Pool(processes=nprocess)
             # split up the matrix
@@ -652,10 +649,10 @@ class GammaALPTransfer(object):
             # make a list of split up matrices
             Tn = [self._Tn[:,i[0]:i[1],...] for i in itr]
             # perform the multiprocessing
-            T = pool.map(dotProd, Tn)
+            T = pool.map(dot_prod, Tn)
             pool.close()
             pool.join()
-            return dotProd(T)
+            return dot_prod(T)
 
     def show_conv_prob_vs_r(self, pin, pout):
         """
@@ -669,36 +666,30 @@ class GammaALPTransfer(object):
         pout: `~numpy.ndarray`
             3 x 3 matrix with final polarization
 
-        {options}
-
-        thinning: int
-            steps taken for calculation of transfer matrix. 1 means no thinning.
-        nprocess: int
-            distibute matrix multiplication to n (if n > 1) processes using python's multiprocessing.
-
         Returns
         -------
         Conversion probability for each energy and distance
         """
         p_r = []
-        for i in range(0,self._Tn.shape[1]):
+        for i in range(0, self._Tn.shape[1]):
             if not i:
-                 p_r.append(calcConvProb(pin,pout,self._Tn[:,i]))
+                p_r.append(calc_conv_prob(pin, pout, self._Tn[:, i]))
             else:
-                 p_r.append(calcConvProb(pin,pout,dotProd(self._Tn[:,:i])))
+                p_r.append(calc_conv_prob(pin, pout, dot_prod(self._Tn[:, :i])))
         return np.array(p_r)
 
 
 # ---------------------------------------------------------------------------- #
 # --- Global Functions ------------------------------------------------------- #
 # ---------------------------------------------------------------------------- #
-def dotProd_old(T):
+def dot_prod_numpy(T):
     """Calculate dot product over last two axis of a multi dimensional matrix"""
     # reverse along domain axis, see comment in next function
     return np.array([reduce(np.dot, Tn) for Tn in T[:,::-1,...]])
 
+
 @jit(nopython=True)
-def dotProd(T):
+def dot_prod(T):
     """Calculate dot product over last two axis of a multi dimensional matrix"""
     # reverse along domain axis, see comment in next function
     dfT = T[:,::-1,...]
@@ -716,7 +707,8 @@ def dotProd(T):
         prod_ar[e] = prod
     return prod_ar
 
-def calcConvProb(pin, pout, T):
+
+def calc_conv_prob(pin, pout, T):
     """
     Calculate the conversion probability from an initial to a final state
 
@@ -735,23 +727,24 @@ def calcConvProb(pin, pout, T):
     """
     return np.squeeze(np.real(np.trace(
              (np.matmul(pout,
-                  # first has to be transpose and the second conjugate.
-                  # to see this for two domains, with 1 being the closest domain to the beam
-                  # (farthest away from the observer).
-                  # T = T1 T2
-                  # what we don't want:
-                  # rfinal = T r T^dagger = T1T2 r T2^dagger T1^dagger
-                  # thus, you have to turn around the multiplication in dotProd along the domain axis,
-                  # so that T = T2 T1, and thus
-                  # rfinal = T r T^dagger = T2T1 r T1^dagger T2^dagger
-                  np.matmul(T,
-                      np.matmul(pin,np.transpose(T.conjugate(), axes = (0,2,1)))
-                      )
-                  )
+                        # first has to be transpose and the second conjugate.
+                        # to see this for two domains, with 1 being the closest domain to the beam
+                        # (farthest away from the observer).
+                        # T = T1 T2
+                        # what we don't want:
+                        # rfinal = T r T^dagger = T1T2 r T2^dagger T1^dagger
+                        # thus, you have to turn around the multiplication in dotProd along the domain axis,
+                        # so that T = T2 T1, and thus
+                        # rfinal = T r T^dagger = T2T1 r T1^dagger T2^dagger
+                        np.matmul(T,
+                                  np.matmul(pin, np.transpose(T.conjugate(), axes = (0,2,1)))
+                                  )
+                        )
              ),
              axis1=1, axis2=2)))
 
-def calcLinPol(pin, T):
+
+def calc_lin_pol(pin, T):
     """
     Calculate the the linear polarization degree of the final transfer matrix
 
@@ -771,16 +764,17 @@ def calcLinPol(pin, T):
     See Eq. (44) of Bassan et al. (2010): https://arxiv.org/pdf/1001.5267.pdf
     """
     # rfinal = T^T r (T^T)^dagger = T2T1 r T1^dagger T2^dagger
-    rfinal = np.matmul(np.transpose(T, axes = (0,2,1)),
-                      np.matmul(pin,T.conjugate())
-                      )
-    lin_pol = np.sqrt((rfinal[:,0,0] - rfinal[:,1,1])**2. + (rfinal[:,0,1] + rfinal[:,1,0])**2.)
-    lin_pol /= (rfinal[:,0,0] + rfinal[:,1,1])
-    circ_pol = np.imag(rfinal[:,0,1] - rfinal[:,1,0]) / (rfinal[:,0,0] + rfinal[:,1,1])
+    rfinal = np.matmul(np.transpose(T, axes=(0,2,1)),
+                       np.matmul(pin,T.conjugate())
+                       )
+
+    lin_pol = np.sqrt((rfinal[:, 0, 0] - rfinal[:, 1, 1])**2. + (rfinal[:, 0, 1] + rfinal[:, 1, 0])**2.)
+    lin_pol /= (rfinal[:, 0, 0] + rfinal[:, 1, 1])
+    circ_pol = np.imag(rfinal[:, 0, 1] - rfinal[:, 1, 0]) / (rfinal[:, 0, 0] + rfinal[:, 1, 1])
 
 # need to check this:
     if not np.all(np.imag(lin_pol) == 0.):
-         logging.warning("Not all values of linear polarization are real values!")
+        logging.warning("Not all values of linear polarization are real values!")
     if not np.all(np.imag(circ_pol) == 0.):
-         logging.warning("Not all values of circular polarization are real values!")
+        logging.warning("Not all values of circular polarization are real values!")
     return np.real(lin_pol), np.real(circ_pol) # number should be real already, this discards the zero imaginary part
