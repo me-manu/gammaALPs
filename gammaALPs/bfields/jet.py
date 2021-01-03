@@ -1,28 +1,27 @@
 # --- Imports --------------------- #
+from __future__ import absolute_import, division, print_function
 import numpy as np
-from numpy.random import rand
-from numpy import log,log10,pi,meshgrid,cos,sum,sqrt,linspace,array,isscalar,logspace
-from math import ceil
-from scipy.integrate import simps
 import scipy.special as special
+import logging
 from scipy.interpolate import UnivariateSpline as USpline
 from astropy import units as u
-import time
+from scipy.special import jv
 # --------------------------------- #
+
 
 # ========================================================== #
 # === B field of AGN jet assuming a power-law toroidal field #
 # ========================================================== #
 class Bjet(object):
     """Class to calculate magnetic field in AGN Jet assuming a toroidal field"""
-    def __init__(self,B0,r0,alpha):
+    def __init__(self, B0, r0, alpha):
         """
         Initialize the class
 
         Parameters
         ----------
         B0: float
-            Bfield strength in G
+            B field strength in G
         r0: float
             radius where B field is equal to B0 in pc
         alpha: float
@@ -66,7 +65,7 @@ class Bjet(object):
         self._alpha = alpha
         return
 
-    def new_Bn(self,z, psi = np.pi / 4.):
+    def new_Bn(self, z, psi=np.pi / 4.):
         """
         Calculate the magnetic field as function of distance
 
@@ -84,9 +83,62 @@ class Bjet(object):
         -------
         tuple with n-dim `~numpy.ndarray` with B field in G and psi angles
         """
-        B = self._B0 * np.power(z / self._r0, self._alpha )
+        B = self._B0 * np.power(z / self._r0, self._alpha)
         psi = np.ones(B.shape[0]) * psi
         return B, psi
+
+    @staticmethod
+    def transversal_component_helical(B0, phi, theta_jet=3., theta_obs=0.):
+        """
+        compute Jet magnetic field along line of sight that
+        forms observation angle theta_obs with jet axis.
+        Model assumes the helical jet structure of
+        Clausen-Brown, E., Lyutikov, M., and Kharb, P. (2011); arXiv:1101.5149
+
+        Parameters
+        -----------
+        B0: array-like
+            N-dim array with magnetic field strength along jet axis
+
+        phi: float
+            phi angle in degrees along which photons propagate along jet
+            (in cylindrical jet geometry)
+
+        theta_jet: float
+            jet opening angle in degrees
+
+        theta_obs: float
+            angle between jet axis and line of sight in degrees
+
+        Returns
+        -------
+        2-dim tuple containing:
+            N-dim np.array, field strength along line of sight
+            N-dim np.array, with psi angles between photon polarization states
+            and Jet Bfield
+        """
+        # Calculate normalized rho component, i.e. distance
+        # from line of sight to jet axis assuming a self similar jet
+        p, tj, to = np.radians(phi), np.radians(theta_jet), np.radians(theta_obs)
+
+        rho_n = np.tan(to) / np.tan(tj)
+        k = 2.405  # pinch, set so that Bz = 0 at jet boundary
+
+        # compute bessel functions, see Clausen-Brown Eq. 2
+        j0 = jv(0., rho_n * k)
+        j1 = jv(1., rho_n * k)
+
+        # B-field along l.o.s.
+        Bn = np.cos(to) * j0 - np.sin(p)*np.sin(to) * j1
+        # B-field transversal to l.o.s.
+        Bt = np.cos(p) * j1
+        Bu = -(np.cos(to) * np.sin(p) * j1 + np.sin(to) * j0)
+
+        Btrans = B0 * np.sqrt(Bt**2. + Bu**2.)         # Abs value of transverse component in all domains
+        Psin = np.arctan2(B0*Bt,B0*Bu)         # arctan2 selects the right quadrant
+
+        return Btrans, Psin
+
 
 class BjetHelicalTangled(object):
     """
@@ -94,7 +146,7 @@ class BjetHelicalTangled(object):
        1. A helical component transforming from poloidal to toroidal
        2. A tangled component
     """
-    def __init__(self, ft, r_T, Bt_exp, B0, r0, g0, rvhe, rjet, alpha, l_tcor, jwf, jwf_dist,tseed):
+    def __init__(self, ft, r_T, Bt_exp, B0, r0, g0, rvhe, rjet, alpha, l_tcor, jwf, jwf_dist, tseed):
         """
         Initialize the class
 
@@ -109,7 +161,7 @@ class BjetHelicalTangled(object):
             at r<=r_T. i.e. sin(pitch angle) ~ r^Bt_exp while r<r_T
             and pitch angle = pi/2 at r=r_T
         B0: float
-            Bfield strength in G
+            B-field strength in G
         r0: float
             radius where B field is equal to b0 in pc
         g0: float
@@ -143,6 +195,10 @@ class BjetHelicalTangled(object):
         self._jwf = jwf
         self._jwf_dist = jwf_dist
         self._tseed = tseed
+        self._tthes = None
+        self._tphis = None
+        self._trerun = None
+        self._newbounds = None
         return
 
     @property
@@ -196,6 +252,22 @@ class BjetHelicalTangled(object):
     @property
     def tseed(self):
         return self._tseed
+
+    @property
+    def tthes(self):
+        return self._tthes
+
+    @property
+    def tphis(self):
+        return self._tphis
+
+    @property
+    def trerun(self):
+        return self._trerun
+
+    @property
+    def newbounds(self):
+        return self._newbounds
 
     @ft.setter
     def ft(self, ft):
@@ -344,28 +416,28 @@ class BjetHelicalTangled(object):
         g2 = (gmx - ((gmx-gmn)/np.log10(L/xcon))*np.log10(gxs/xcon)) * (gxs>=xcon)
         return g1+g2
 
-    def get_jet_props_gen(self,z,tdoms_done=False): #JET FRAME!
+    def get_jet_props_gen(self, z, tdoms_done=False):
         """
-        Calculate the magnetic field as function of distance
+        Calculate the magnetic field as function of distance in the jet frame
 
         Parameters
         ----------
-        z: `~numpy.ndarray`
+        z: array-like
             n-dim array with distance from BH in pc
 
         Returns
         -------
-        tuple with n-dim `~numpy.ndarray` with B field in G and psi angles
+        tuple with n-dim arrays with B field in G and psi angles
         """
         # t1 = time.time()
-        #get Bs from PC shape function
-        Bs = self.jet_bfield_scaled(z,self._rvhe,self._r0,self._B0) #r0 and rvhe in pc, b0 in G
+        # get Bs from PC shape function
+        Bs = self.jet_bfield_scaled(z,self._rvhe,self._r0,self._B0)  # r0 and rvhe in pc, b0 in G
         gammas = self.jet_gammas_scaled(z,self._r0,self._g0,self._rjet)
 
         if not tdoms_done:
             # t2 = time.time()
             if self._ft > 0 and self._l_tcor != 'jetdom' and self._l_tcor != 'jetwidth':
-                #tangled domains
+                # tangled domains
                 d = z[0]
                 self._tdoms=[]
                 tdom_seeds = np.arange(6007+self._tseed,6007+(2*len(z))+self._tseed,1)
@@ -391,7 +463,7 @@ class BjetHelicalTangled(object):
                 jwf_seeds = np.arange(4000+self._tseed,4000+1000+self._tseed,1)
                 np.random.seed(jwf_seeds)
 
-                while self._tdoms[-1]<= z[-1]:  #tdoms in pc here
+                while self._tdoms[-1]<= z[-1]:  # tdoms in pc here
 
                     if self._jwf_dist == 'Uniform':
                         self._jwf = np.random.uniform(0.1,1.)
@@ -406,32 +478,37 @@ class BjetHelicalTangled(object):
                         self._jwf = np.random.triangular(0.1,0.1,1.)
 
                     theta = 1./theta_m1_interp(np.log10(self._tdoms[-1]))
-                    self._tdoms.append(self._tdoms[-1]+ self._jwf*(p(self._rvhe,rsw,C,A) + con(self._tdoms[-1],self._rvhe,theta))) #doms length is jetwidth
+                    self._tdoms.append(self._tdoms[-1] + self._jwf*(p(self._rvhe, rsw, C, A)
+                                       + con(self._tdoms[-1], self._rvhe, theta)))  # doms length is jetwidth
 
                 self._tdoms = np.array(self._tdoms)
 
-
-                # t3 = time.time()
-                # print("getting tangled doms took {}s".format(t3-t2))
                 if len(self._tdoms)-1 > len(z) or min(np.diff(z))>min(np.diff(self._tdoms)):
-                    print("Not resolving tangled field: min z step is {} pc but min tangled length is {} pc".format(min(np.diff(z)),min(np.diff(self._tdoms))))
-                    print("# of z doms is {} but # tangled doms is {}".format(len(z),len(self._tdoms)))
+                    logging.warning("Not resolving tangled field: min z step is {}"
+                                    "pc but min tangled length is {} pc".format(
+                                        min(np.diff(z)),min(np.diff(self._tdoms))))
+                    logging.warning("# of z doms is {} but # tangled doms is {}".format(len(z), len(self._tdoms)))
                     self._trerun = True
+
                     if len(self._tdoms)-1 > len(z):
-                        print("rerunning with r = tdoms")
-                        return self.get_jet_props_gen(np.sqrt(self._tdoms[1:] * self._tdoms[:-1]),tdoms_done=True)
+                        logging.info("rerunning with r = tdoms")
+                        return self.get_jet_props_gen(np.sqrt(self._tdoms[1:] * self._tdoms[:-1]), tdoms_done=True)
                     else:
                         self._newbounds = self._tdoms
-                        while len(self._newbounds)<=400:
+                        while len(self._newbounds) <= 400:
                             btwn = (self._newbounds[1:] + self._newbounds[:-1])/2.
-                            self._newbounds = np.sort(np.concatenate((self._newbounds,btwn)))
-                        print("rerunning with {} domains. new min z step is {} pc".format(len(self._newbounds),min(np.diff(self._newbounds))))
-                        return self.get_jet_props_gen(np.sqrt(self._newbounds[1:] * self._newbounds[:-1]),tdoms_done=True)
+                            self._newbounds = np.sort(np.concatenate((self._newbounds, btwn)))
+
+                        logging.info("rerunning with {} domains. new min z step is {} pc".format(
+                              len(self._newbounds), min(np.diff(self._newbounds))))
+
+                        return self.get_jet_props_gen(np.sqrt(self._newbounds[1:] * self._newbounds[:-1]),
+                                                      tdoms_done=True)
 
             else:
-                self._tdoms=z
+                self._tdoms = z
 
-        #set up tangled field angles
+        # set up tangled field angles
         tthe_seeds = np.arange(0+self._tseed,len(self._tdoms)+self._tseed,1)
         tphi_seeds = np.arange(1007+self._tseed,1007+len(self._tdoms)+self._tseed,1)
         np.random.seed(tthe_seeds)
@@ -445,23 +522,23 @@ class BjetHelicalTangled(object):
 
         BhelrT = Bs[np.argmin([abs(ll-self._r_T) for ll in z])] * np.sqrt(1. - self._ft)
 
-        for i,l in enumerate(z):
+        for i, l in enumerate(z):
             # if i == int(len(z)/2):
                 # t6 = time.time()
-            B = Bs[i] #Gauss
+            B = Bs[i]  # Gauss
             B_tang = B * np.sqrt(self._ft)
             B_hel = B * np.sqrt(1. - self._ft)
 
-            h_phi = np.pi/2. #just align helix phi with one axis, why not?
-            if l <= self._r_T: #Set section size
-                B_hel *= BhelrT*(l/self._r_T)**(self._Bt_exp + 1.) #make B_hel go like Bt_exp (make 1 '-a')
+            h_phi = np.pi/2.  # just align helix phi with one axis, why not?
+            if l <= self._r_T:  # Set section size
+                B_hel *= BhelrT*(l/self._r_T)**(self._Bt_exp + 1.)  # make B_hel go like Bt_exp (make 1 '-a')
 
             # if i == int(len(z)/2):
                 # t7 = time.time()
 
-            #tangled field angles
-            if self._ft>0. and len(z)!=len(self._tdoms)-1:
-                #could probably be faster
+            # tangled field angles
+            if self._ft > 0. and len(z) != len(self._tdoms)-1:
+                # could probably be faster
                 t_phi = self._tphis[np.argmin([l-tl for tl in self._tdoms if l>=tl])]
                 t_the = self._tthes[np.argmin([l-tl for tl in self._tdoms if l>=tl])]
             else:
@@ -476,7 +553,7 @@ class BjetHelicalTangled(object):
 
 
             h_phi = np.pi/2.
-            h_the = np.pi/2. #in r-05 section theta is included in B_fact term ^ otherwise = pi/2 by def
+            h_the = np.pi/2. # in r-05 section theta is included in B_fact term ^ otherwise = pi/2 by def
             B_tang_t = B_tang * np.sin(t_the)
             B_hel_t = B_hel * np.sin(h_the)
 

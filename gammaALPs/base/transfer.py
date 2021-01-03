@@ -1,4 +1,5 @@
 # --- Imports ------------- #
+from __future__ import absolute_import, division, print_function
 import numpy as np
 import logging
 from astropy import units as u
@@ -83,8 +84,8 @@ def EmaxGeV(g11, BmuG):
 
 class GammaALPTransfer(object):
     """
-    Base clasee to calculate the transfer Function
-    of photon-oscillations in arbitrary magnetic fields.
+    Base class to calculate the transfer Function
+    of photon-ALP oscillations in arbitrary magnetic fields.
     Does not account for redshift evolution.
 
     Units used are:
@@ -103,53 +104,44 @@ class GammaALPTransfer(object):
 
         Parameters
         ----------
-        EGeV : `~numpy.ndarray`
+        EGeV: array-like
             n-dim numpy array with gamma-ray energies in GeV
 
-        B : `~numpy.ndarray`
+        B: array-like
             m-dim numpy array with magnetic field values along line of sight in micro Gauss
 
-        psi : `~numpy.ndarray`
+        psi: array-like
             m-dim numpy array with angles between transversal magnetic field in photon polarization
             direction (along y-axis) along the line of sight.
             Or (k,m)-dim numpy array with angles for k B-field realizations
 
-        nel: `~numpy.ndarray`
+        nel: array-like
             m-dim numpy array with electron densities in cm^-3 along the line of sight.
 
-        dL: `~numpy.ndarray`
+        dL: array-like
             m-dim numpy array with distance step length traveled along line of sight in kpc.
             In each step length dL, magnetic field is assumed to be constant.
 
         alp: `~gammaALPs.ALP`
             `~gammaALPs.ALP` object with ALP parameters
 
-
-        {options}
-
-        Gamma: `~numpy.ndarray` or None
-            (n x m)-dim numpy array with photon absorption rate at energy E and distance L.
+        Gamma: array-like or None
+            (n x m)-dim array with photon absorption rate at energy E and distance L.
             In kpc^-1.
             If None, no absorption is included.
             Default is None.
 
-        Delta: `~numpy.ndarray` or None
-            (n x m)-dim numpy array with additional momentum difference term for 0,0 and 1,1
+        Delta: array-like or None
+            (n x m)-dim array with additional momentum difference term for 0,0 and 1,1
             components of mixing matrix at energy E and distance L.
             In kpc^-1.
             If None, no additional term is included.
             Default is None.
 
-        chi: `~numpy.ndarray` or None
+        chi: array-like or None
             (n x m)-dim numpy array with photon dispersion rate at energy E and distance L.
             If None, no dispersion is included.
             Default is None.
-
-        m: float
-            ALP mass in neV. Default in 1.
-
-        g: float
-            photon-ALP couplint in 10^-11 GeV^-1. Default in 1.
         """
         self._EGeV = EGeV
         self._dL = dL
@@ -462,8 +454,8 @@ class GammaALPTransfer(object):
         Save the current magnetic field, psi angles, and electron density to
         numpy files
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         name: str
             name of job
 
@@ -505,10 +497,10 @@ class GammaALPTransfer(object):
     def read_environ(name, alp, filepath='./'):
         """
         Load a current magnetic field, psi angles, and electron density,
-        absorption and dispersion rate from a previous cofiguration
+        absorption and dispersion rate from a previous configuration
 
-        Paramters
-        ---------
+        Parameters
+        -----=----
         name: str
             name of job
         alp: `~gammaALPs.transer.ALP`
@@ -596,7 +588,7 @@ class GammaALPTransfer(object):
         Parameters
         ----------
         nprocess: int
-            distibute matrix multiplication to n (if n > 1) processes using python's multiprocessing.
+            distribute matrix multiplication to n (if n > 1) processes using python's multiprocessing.
 
         Returns
         -------
@@ -685,15 +677,15 @@ class GammaALPTransfer(object):
 def dot_prod_numpy(T):
     """Calculate dot product over last two axis of a multi dimensional matrix"""
     # reverse along domain axis, see comment in next function
-    return np.array([reduce(np.dot, Tn) for Tn in T[:,::-1,...]])
+    return np.array([reduce(np.dot, Tn) for Tn in T[:, ::-1, ...]])
 
 
 @jit(nopython=True)
 def dot_prod(T):
     """Calculate dot product over last two axis of a multi dimensional matrix"""
     # reverse along domain axis, see comment in next function
-    dfT = T[:,::-1,...]
-    prod_ar = np.zeros((dfT.shape[0],dfT.shape[-2],dfT.shape[-1]),dtype=np.complex_)
+    dfT = T[:, ::-1, ...]
+    prod_ar = np.zeros((dfT.shape[0], dfT.shape[-2], dfT.shape[-1]), dtype=np.complex_)
     for e in range(dfT.shape[0]):
         prod = dfT[e][0]
         for di in range(dfT[e].shape[0]-1):
@@ -702,7 +694,7 @@ def dot_prod(T):
             for i in range(d.shape[0]):
                 for j in range(d.shape[1]):
                     for k in range(d.shape[1]):
-                        subprod[i,j] += prod[i,k] * d[k,j]
+                        subprod[i, j] += prod[i, k] * d[k, j]
             prod = subprod
         prod_ar[e] = prod
     return prod_ar
@@ -714,16 +706,16 @@ def calc_conv_prob(pin, pout, T):
 
     Parameters
     ----------
-    pin: `~numpy.ndarray`
+    pin: array-like
          3 x 3 matrix with initial polarization
-    pout: `~numpy.ndarray`
+    pout: array-like
          3 x 3 matrix with final polarization
-    T: `~numpy.ndarray`
+    T: array-like
          n x 3 x 3 complex transfer matrix for n energies
 
     Returns
     -------
-    n-dim `~numpy.ndarray` with conversion probabilities for each energy
+    n-dim array with conversion probabilities for each energy
     """
     return np.squeeze(np.real(np.trace(
              (np.matmul(pout,
@@ -764,8 +756,8 @@ def calc_lin_pol(pin, T):
     See Eq. (44) of Bassan et al. (2010): https://arxiv.org/pdf/1001.5267.pdf
     """
     # rfinal = T^T r (T^T)^dagger = T2T1 r T1^dagger T2^dagger
-    rfinal = np.matmul(np.transpose(T, axes=(0,2,1)),
-                       np.matmul(pin,T.conjugate())
+    rfinal = np.matmul(np.transpose(T, axes=(0, 2, 1)),
+                       np.matmul(pin, T.conjugate())
                        )
 
     lin_pol = np.sqrt((rfinal[:, 0, 0] - rfinal[:, 1, 1])**2. + (rfinal[:, 0, 1] + rfinal[:, 1, 0])**2.)
@@ -777,4 +769,4 @@ def calc_lin_pol(pin, T):
         logging.warning("Not all values of linear polarization are real values!")
     if not np.all(np.imag(circ_pol) == 0.):
         logging.warning("Not all values of circular polarization are real values!")
-    return np.real(lin_pol), np.real(circ_pol) # number should be real already, this discards the zero imaginary part
+    return np.real(lin_pol), np.real(circ_pol)  # number should be real already, this discards the zero imaginary part

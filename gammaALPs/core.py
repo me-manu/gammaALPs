@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import numpy as np
@@ -64,10 +65,14 @@ class Source(object):
         self._doppler = None
         self._c = None
         self._c_gal = None
+        self._ra = None
+        self._dec = None
+        self._l = None
+        self._b = None
 
         self.calc_doppler()
-        self.set_ra_dec_l_b(ra = kwargs['ra'], dec = kwargs['dec'],
-                    l = kwargs['l'], b = kwargs['b'])
+        self.set_ra_dec_l_b(ra=kwargs['ra'], dec=kwargs['dec'],
+                            l=kwargs['l'], b= kwargs['b'])
 
         return
 
@@ -114,21 +119,20 @@ class Source(object):
     @theta_obs.setter
     def theta_obs(self, theta_obs):
         if type(theta_obs) == u.Quantity:
-            self._theta_obs= theta_obs.to('degree').value
+            self._theta_obs = theta_obs.to('degree').value
         else:
             self._theta_obs = theta_obs
             self.calc_doppler()
         return
 
     @z.setter
-    def z(self,z):
+    def z(self, z):
         self._z = z
-        return self._z
 
     @theta_jet.setter
     def theta_jet(self, theta_jet):
         if type(theta_jet) == u.Quantity:
-            self._theta_jet= theta_jet.to('degree').value
+            self._theta_jet = theta_jet.to('degree').value
         else:
             self._theta_jet = theta_jet
         return
@@ -172,12 +176,12 @@ class Source(object):
             self._b = b.to('degree').value
         else:
             self._b =  b
-        self.set_ra_dec_l_b(self._ra,self._dec, l = self._l, b = self._b)
+        self.set_ra_dec_l_b(self._ra, self._dec, l=self._l, b=self._b)
         return
 
     def calc_doppler(self):
         """Calculate the Doppler factor of the plasma"""
-        self._doppler = 1./(self._bLorentz * ( 1. - np.sqrt(1. - 1./self._bLorentz**2.) * \
+        self._doppler = 1./(self._bLorentz * (1. - np.sqrt(1. - 1./self._bLorentz**2.) *
                             np.cos(np.radians(self.theta_obs))))
         return
 
@@ -254,8 +258,8 @@ class ALP(object):
 
 class NamedClassList(list):
     """
-    A list of classes indexable with an integer or classes's name.
-    As it a subclasses the built-in class ``list``, it provides all the methods of the
+    A list of classes indexable with an integer or class's name.
+    As it is a subclasses the built-in class ``list``, it provides all the methods of the
     standard ``list`` class.
     Adapted from
     https://github.com/s3rvac/blog/tree/master/en-2014-10-11-indexing-python-lists-with-integer-or-object-name
@@ -318,13 +322,11 @@ class ModuleList(object):
         source: `~gammaALPs.Source`
             `~gammaALPs.Source` object with source parameters
 
-        kwargs
-        ------
-        pin: `~numpy.ndarray`
+        pin: array-like
             3x3 dim matrix with initial polarization.
             Default: un-polarized photon beam
 
-        EGeV: `~numpy.ndarray`
+        EGeV: array-like
             n-dim numpy array with gamma-ray energies in GeV
             Default: log-spaced array between 1 GeV and 10 TeV
 
@@ -336,9 +338,9 @@ class ModuleList(object):
         self._source = source
         self._EGeV = EGeV
         # initialize final polarization states
-        self._px = np.diag((1.,0.,0.))
-        self._py = np.diag((0.,1.,0.))
-        self._pa = np.diag((0.,0.,1.))
+        self._px = np.diag((1., 0., 0.))
+        self._py = np.diag((0., 1., 0.))
+        self._pa = np.diag((0., 0., 1.))
         self._pin = pin
         self._modules = NamedClassList()
         self._seed = seed
@@ -429,8 +431,8 @@ class ModuleList(object):
         environ: str
             identifier for environment, see notes for possibilities
         order: int
-            the order of the environment, starting at zero, where
-            zero is closest to the source and highest value is closest to the
+            the order of the environment along the line of sight,
+            starting at zero, where zero is closest to the source and highest value is closest to the
             observer
 
         kwargs
@@ -490,8 +492,8 @@ class ModuleList(object):
                                                    **kwargs))
         elif environ == 'JetHelicalTangled':
             self._modules.insert(order, env.MixJetHelicalTangled(self.alp, self.source,
-                                                   EGeV=self.EGeV * (1. + self.source.z),
-                                                   **kwargs))
+                                                                 EGeV=self.EGeV * (1. + self.source.z),
+                                                                 **kwargs))
         elif environ == 'GMF':
             self._modules.insert(order, env.MixGMF(self.alp, self.source,
                                                    EGeV=self.EGeV,
@@ -553,7 +555,6 @@ class ModuleList(object):
                 self.modules[module_id].Delta = new_disp
             else:
                 raise ValueError("type_matrix must either be 'dispersion', 'absorption' or 'Delta'")
-            return
 
     def _check_modules_random_fields(self):
         """
@@ -577,7 +578,7 @@ class ModuleList(object):
         Helper function to multiply the transfer matrices
         of the different traversed environments
         """
-        for it,Tenv in enumerate(self._Tenv[istart:istop]):
+        for it, Tenv in enumerate(self._Tenv[istart:istop]):
             if self.__nsim_max == (self._all_nsim[istart:istop])[it]:
                 nn = n
             else:
@@ -588,13 +589,26 @@ class ModuleList(object):
                 Tsrc = np.matmul(Tsrc, Tenv[nn])
         return Tsrc
 
-    def run(self, multiprocess = 1):
+    def run(self, multiprocess=1):
         """
-        Run the calculation for all modules
-        """
+        Run the photon-ALP conversion probability calculation for all modules
 
-        self.EGeV = self._EGeV  # update energies of all modules
-                                # also accounts for changed redshift
+        Parameters
+        ----------
+        multiprocess: int
+            number of cores to perform calculation; only used when random B field is requested
+            by one of the modules and number of realizations is > 1
+
+        Returns
+        -------
+        tuple with N x M dim. arrays with final photon and ALP states (Px, Py, Pa).
+        Each P_i is of dimension (number of realizations x number of energy bins).
+        Flat arrays are returned when number of realizations = 1.
+        """
+        # update energies of all modules
+        # also accounts for changed redshift
+        self.EGeV = self._EGeV
+
         # Calculate the transfer matrices for each environment
         self._Tenv = []
 

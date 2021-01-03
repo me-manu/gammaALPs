@@ -56,6 +56,7 @@ def Fq(x, kL, kH, q):
     result[x < kL / kH] = F_low[x < kL / kH]
     return result
 
+
 # ========================================================== #
 # === Gaussian turbulent magnetic field ==================== #
 # ========================================================== #
@@ -63,7 +64,7 @@ class Bgaussian(object):
     """
     Class to calculate a magnetic field with gaussian turbulence and power-law spectrum
     """
-    def __init__(self,B,kH,kL,q,**kwargs):
+    def __init__(self, B, kH, kL, q, **kwargs):
         """
         Initialize gaussian turbulence B field spectrum. 
         Defaults assume values typical for a galaxy cluster.
@@ -80,9 +81,7 @@ class Bgaussian(object):
             should be of same size as the system (default = 1 / (100 kpc))
         q: float
             power-law turbulence spectrum (default: q = 11/3 is Kolmogorov type spectrum)
-        
-        kwargs
-        ------
+
         kMin: float
             minimum wave number in 1. / kpc,
             defualt 1e-3 * kL (the k interval runs from kMin to kH)
@@ -181,7 +180,7 @@ class Bgaussian(object):
         return
 
     @kH.setter
-    def kH(self,kH):
+    def kH(self, kH):
         if type(kH) == u.Quantity:
             self._kH = kH.to('kpc**-1').value
         else:
@@ -190,7 +189,7 @@ class Bgaussian(object):
         return
 
     @kL.setter
-    def kL(self,kL):
+    def kL(self, kL):
         if type(kL) == u.Quantity:
             self._kL = kL.to('kpc**-1').value
         else:
@@ -221,9 +220,10 @@ class Bgaussian(object):
         """
         Calculate the F_q function for given x,kL, and _kH
 
-        Arguments
-        ---------
-        x:        n-dim array, Ratio between k and _kH
+        Parameters
+        ----------
+        x: array-like
+            Ratio between k and _kH
 
         Returns
         -------
@@ -261,9 +261,10 @@ class Bgaussian(object):
         """
         Calculate the transversal correlation function for wave number k
 
-        Arguments
-        ---------
-        k: n-dim array, wave number
+        Parameters
+        ----------
+        k: array-like
+            wave number
 
         Returns
         -------
@@ -279,12 +280,12 @@ class Bgaussian(object):
 
         Arguments
         ---------
-        z: `~numpy.ndarray`
+        z: array-like
            m-dim array with distance traversed in magnetic field in kpc
 
         Return
         -------
-        m-dim `~numpy.ndarray` array with values of transversal field
+        m-dim array with values of transversal field
         """
         #t0 = time.time()
         zz, kk = meshgrid(z, self.__kn)
@@ -309,23 +310,23 @@ class Bgaussian(object):
 
         Parameters
         ----------
-        z: `~numpy.ndarray`
+        z: array-like
            m-dim array with distance traversed in magnetic field
 
         {options}
 
-        Bscale: `~numpy.ndarray` or float or None
+        Bscale: array-like or float or None
            if not None, float or m-dim array with scaling factor for magnetic field 
            along distance travelled 
 
         Returns
         -------
-        tuple with two m-dim  `~numpy.ndarray` array with absolute value of transversal field
+        tuple with two m-dim arrays with absolute value of transversal field
         and angles between total transversal magnetic field and x2 direction
         """
         seed(self.seed)
 
-        B, Psin = [],[]
+        B, Psin = [], []
 
         # if seed is integer
         # create a list of random integers which are then used
@@ -365,21 +366,21 @@ class Bgaussian(object):
 
         return B, Psin
 
-    def spatialCorr(self, z, steps=10000):
+    def spatial_correlation(self, z, steps=10000):
         """
-        Calculate the spatial coherence of the turbulent field
+        Calculate the spatial correlation of the turbulent field
 
         Arguments
         ---------
-        z:        m-dim array, distance traversed in magnetic field
+        z: array-like
+            distance traversed in magnetic field
 
-        kwargs
-        ------
-        steps:        integer, number of integration steps
+        steps: int
+            number of integration steps
 
         Returns
         -------
-        m-dim array with spatial coherences 
+        array with spatial correlation
         """
         if isscalar(z):
             z = array([z])

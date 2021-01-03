@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 import numpy as np
 from . import transfer as trans
 from ..bfields import cell, gauss, gmf, jet
@@ -8,7 +9,6 @@ from astropy import units as u
 from astropy import constants as c
 from astropy.cosmology import FlatLambdaCDM
 from ebltable.tau_from_model import OptDepth
-from scipy.special import jv
 from scipy.interpolate import UnivariateSpline as USpline
 import logging
 
@@ -28,10 +28,10 @@ class MixIGMFCell(trans.GammaALPTransfer):
 
         kwargs
         ------
-        EGeV: `~numpy.ndarray`
+        EGeV: arra-like
             Gamma-ray energies in GeV
 
-        dL: `~numpy.ndarray`
+        dL: arra-like
             Domain lengths. If not given, they will be automatically
             generated.
 
@@ -60,55 +60,59 @@ class MixIGMFCell(trans.GammaALPTransfer):
         nsim: int
             number of B field realizations
         """
-        kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
+        kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
         kwargs.setdefault('B0', 1.e-3)
         kwargs.setdefault('L0', 1.e3)
         kwargs.setdefault('n0', 1.e-7)
         kwargs.setdefault('nsim', 1)
-        kwargs.setdefault('dL', 'None')
+        kwargs.setdefault('dL', None)
         kwargs.setdefault('cosmo',FlatLambdaCDM(H0 = 70., Om0 = 0.3))
         kwargs.setdefault('eblmodel', 'dominguez')
         kwargs.setdefault('seed', None)
 
         self._source = source
-        self._t = OptDepth.readmodel(model = kwargs['eblmodel'])
+        self._t = OptDepth.readmodel(model=kwargs['eblmodel'])
         self._cosmo = kwargs['cosmo']
 
-        if kwargs['restore'] == None:
-            self._b = cell.Bcell(kwargs['B0'],kwargs['L0'], seed=kwargs['seed'])
-            B, psi, dL, self._zstep = self._b.new_Bcosmo(self._source.z,
-                                   cosmo = kwargs['cosmo'], nsim = kwargs['nsim'])
-            if not kwargs['dL'].lower() == 'none':
-                 if type(kwargs['dL']) == list or type(kwargs['dL']) == np.ndarray:
-                     dL = kwargs['dL']
-                 else:
-                     raise TypeError("dL kwarg must be list or numpy.ndarray")
+        if kwargs['restore'] is None:
+            self._Bfield_model = cell.Bcell(kwargs['B0'], kwargs['L0'], seed=kwargs['seed'])
+            B, psi, dL, self._z_step = self._Bfield_model.new_Bcosmo(self._source.z,
+                                                                     cosmo=kwargs['cosmo'],
+                                                                     nsim=kwargs['nsim'])
+            if kwargs['dL'] is not None:
+                if isinstance(kwargs['dL'], list) or isinstance(kwargs['dL'], np.ndarray):
+                    dL = kwargs['dL']
+                else:
+                    raise TypeError("dL kwarg must be list or numpy.ndarray")
 
-            self._zmean = self._zstep[:-1]
-            self._nel = kwargs['n0'] * (1. + self._zmean)**3.
+            self._z_mean = self._z_step[:-1]
+            self._nel = kwargs['n0'] * (1. + self._z_mean) ** 3.
 
-            dt = self._t.opt_depth(self._zstep[1:],kwargs['EGeV'] / 1.e3)  - \
-                 self._t.opt_depth(self._zstep[:-1],kwargs['EGeV'] / 1.e3)
+            dt = self._t.opt_depth(self._z_step[1:], kwargs['EGeV'] / 1.e3) - \
+                 self._t.opt_depth(self._z_step[:-1], kwargs['EGeV'] / 1.e3)
 
             # absorption rate in kpc^-1
             Gamma = dt.T / dL
             # init the transfer function with absorption
-            super(MixIGMFCell,self).__init__(kwargs['EGeV'], B, psi, self._nel,
-                                                     dL, alp, Gamma = Gamma, chi = None, Delta = None)
-            self._ee *= (1. + self._zmean) # transform energies to comoving frame
+            super(MixIGMFCell, self).__init__(kwargs['EGeV'], B, psi, self._nel,
+                                              dL, alp,
+                                              Gamma=Gamma,
+                                              chi=None,
+                                              Delta=None)
+            self._ee *= (1. + self._z_mean)  # transform energies to comoving frame
         else:
-            dL, self._zstep = trafo.cosmo_cohlength(z,kwargs['L0'] * u.kpc, cosmo = self._cosmo)
+            dL, self._z_step = trafo.cosmo_cohlength(self._source.z, kwargs['L0'] * u.kpc, cosmo=self._cosmo)
 
-            tra = super(MixIGMFCell,self).read_environ(
+            tra = super(MixIGMFCell, self).read_environ(
                                                 kwargs['restore'], alp,
-                                                filepath = kwargs['restore_path'],
+                                                filepath=kwargs['restore_path'],
                                                 )
-            super(MixIGMFCell,self).__init__(tra.EGeV, tra.B, tra.psin,
-                          tra.nel, tra.dL, tra.alp, Gamma = tra.Gamma, chi = tra.chi,
-                          Delta = tra.Delta)
-        return
+
+            super(MixIGMFCell, self).__init__(tra.EGeV, tra.B, tra.psin,
+                          tra.nel, tra.dL, tra.alp, Gamma=tra.Gamma, chi=tra.chi,
+                          Delta=tra.Delta)
 
     @property
     def t(self):
@@ -116,7 +120,7 @@ class MixIGMFCell(trans.GammaALPTransfer):
 
     @property
     def Bfield_model(self):
-        return self._b
+        return self._Bfield_model
 
     @property
     def nel_model(self):
@@ -127,7 +131,7 @@ class MixICMCell(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):
         """
         Initialize mixing in the intracluster magnetic field,
-        assuming that it follows a domain-like structre.
+        assuming that it follows a domain-like structure.
 
         Parameters
         ----------
@@ -136,7 +140,7 @@ class MixICMCell(trans.GammaALPTransfer):
 
         kwargs
         ------
-        EGeV: `~numpy.ndarray`
+        EGeV: array-like
             Gamma-ray energies in GeV
 
         restore: str or None
@@ -146,7 +150,7 @@ class MixICMCell(trans.GammaALPTransfer):
         restore_path: str
             full path to environment files
 
-        rbounds: list or `~numpy.ndarray`
+        rbounds: array-like
             bin bounds for steps along line of sight in kpc,
             default: linear range between 0. and r_abell with L0 as
             step size
@@ -167,8 +171,10 @@ class MixICMCell(trans.GammaALPTransfer):
 
         n0: float
             electron density in cm**-3 (default 1e-3)
+
         r_core: float
             core radius in kpc (default 10.)
+
         beta: float
             exponent of density profile (default: 1.)
 
@@ -207,29 +213,30 @@ class MixICMCell(trans.GammaALPTransfer):
         kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'], kwargs['L0']))
         if kwargs['r_abell'] <= kwargs['L0']:
            logging.warning("r_abell <= L0: assuming one domain from 0. to L0")
-           kwargs['rbounds'] = np.array([0.,kwargs['L0']])
-
+           kwargs['rbounds'] = np.array([0., kwargs['L0']])
 
         self._rbounds = kwargs['rbounds']
         self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
         dL = self._rbounds[1:] - self._rbounds[:-1]
         self._nel = icm.NelICM(**kwargs)
 
-        if kwargs['restore'] == None:
-            self._b = cell.Bcell(kwargs['B0'],kwargs['L0'])
-            B, psi = self._b.new_Bn(self._r.shape[0], Bscale = self._nel.Bscale(self._r),
-                                            nsim = kwargs['nsim'])
+        if kwargs['restore'] is None:
+            self._Bfield_model = cell.Bcell(kwargs['B0'], kwargs['L0'])
+            B, psi = self._Bfield_model.new_Bn(self._r.shape[0],
+                                               Bscale=self._nel.Bscale(self._r),
+                                               nsim=kwargs['nsim'])
 
-            # init the transfer function with absorption
-            super(MixICMCell,self).__init__(kwargs['EGeV'], B, psi, self._nel(self._r),
-                                                     dL, alp, Gamma = None, chi = None, Delta = None)
+            # init the transfer function
+            super(MixICMCell, self).__init__(kwargs['EGeV'], B, psi, self._nel(self._r),
+                                             dL, alp, Gamma=None, chi=None, Delta=None)
         else:
             tra = super(MixICMCell,self).read_environ(kwargs['restore'], alp,
-                                                      filepath = kwargs['restore_path'])
+                                                      filepath=kwargs['restore_path'])
             super(MixICMCell,self).__init__(tra.EGeV, tra.B, tra.psin,
-                          tra.nel, tra.dL, tra.alp, Gamma = tra.Gamma,
-                          chi = tra.chi, Delta = tra.Delta)
-        return
+                                            tra.nel, tra.dL, tra.alp,
+                                            Gamma=tra.Gamma,
+                                            chi=tra.chi,
+                                            Delta=tra.Delta)
 
     @property
     def r(self):
@@ -241,12 +248,11 @@ class MixICMCell(trans.GammaALPTransfer):
 
     @property
     def Bfield_model(self):
-        return self._b
+        return self._Bfield_model
 
     @property
     def nel_model(self):
         return self._nel
-
 
 
 class MixICMGaussTurb(trans.GammaALPTransfer):
@@ -262,7 +268,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
         kwargs
         ------
-        EGeV: `~numpy.ndarray`
+        EGeV: array-like
             Gamma-ray energies in GeV
 
         restore: str or None
@@ -271,9 +277,9 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         restore_path: str
             full path to environment files
 
-        rbounds: list or `~numpy.ndarray`
-            bin bounds for steps along line of sight in kpc,
-            default: linear range between 0. and r_abell
+        rbounds: larray-like
+            bin bounds for steps along line of sight in kpc.
+            Default: linear range between 0. and r_abell
             with 1/kH (min turbulence scale) as step size
 
         thinning: int
@@ -283,23 +289,30 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
         B0: float
             ICM at r = 0 in muG
+
         kH: float
             upper wave number cutoff,
             should be at at least > 1. / osc. wavelength (default = 1 / (1 kpc))
+
         kL: float
             lower wave number cutoff,
             should be of same size as the system (default = 1 / (100 kpc))
+
         q: float
             power-law turbulence spectrum (default: q = 11/3 is Kolmogorov type spectrum)
+
         kMin: float
             minimum wave number in 1. / kpc,
             default 1e-3 * kL (the k interval runs from kMin to kH)
+
         dkType:string
             either linear, log, or random. Determine the spacing of the dk intervals
+
         dkSteps: int
             number of dkSteps.
             For log spacing, number of steps per decade / number of decades ~ 10
             should be chosen.
+
         nsim: int
             number of B field realizations
 
@@ -307,16 +320,22 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
         n0: float
             electron density in cm**-3 (default 1e-3)
+
         r_core: float
             core radius in kpc (default 10.)
+
         beta: float
             exponent of density profile (default: 1.)
+
         eta: float
             exponent for scaling of B field with electron density (default = 2./3.)
+
         n2: float
             if > 0., use profile with this second density component
+
         r_core2: float
             if > 0., use profile with this second r_core value
+
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
         """
@@ -355,20 +374,21 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
         self._nelicm = icm.NelICM(**kwargs)
 
-        if kwargs['restore'] == None:
-            self._b = gauss.Bgaussian(kwargs['B0'], kwargs['kH'],
-                                      kwargs['kL'], kwargs['q'],
-                                      kMin=kwargs['kMin'],
-                                      dkType=kwargs['dkType'],
-                                      dkSteps=kwargs['dkSteps'],
-                                      seed=kwargs['seed'])
+        if kwargs['restore'] is None:
+            self._Bfield_model = gauss.Bgaussian(kwargs['B0'], kwargs['kH'],
+                                                 kwargs['kL'], kwargs['q'],
+                                                 kMin=kwargs['kMin'],
+                                                 dkType=kwargs['dkType'],
+                                                 dkSteps=kwargs['dkSteps'],
+                                                 seed=kwargs['seed'])
 
-            B, psi = self._b.new_Bn(self._r, Bscale=self._nelicm.Bscale(self._r),
-                                            nsim=kwargs['nsim'])
+            B, psi = self._Bfield_model.new_Bn(self._r,
+                                               Bscale=self._nelicm.Bscale(self._r),
+                                               nsim=kwargs['nsim'])
 
             # init the transfer function with absorption
             super(MixICMGaussTurb, self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),
-                                                     dL, alp, Gamma=None, chi=None, Delta=None)
+                                                  dL, alp, Gamma=None, chi=None, Delta=None)
         else:
             tra = super(MixICMGaussTurb, self).read_environ(kwargs['restore'], alp,
                                                             filepath=kwargs['restore_path'])
@@ -387,7 +407,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
     @property
     def Bfield_model(self):
-       return self._b
+        return self._Bfield_model
 
     @property
     def nel_model(self):
@@ -410,37 +430,44 @@ class MixJet(trans.GammaALPTransfer):
 
         kwargs
         ------
-        EGeV: `~numpy.ndarray`
+        EGeV: array-like
             Gamma-ray energies in GeV
 
         restore: str or None
             if str, identifier for files to restore environment.
             If None, initialize mixing with new B field
+
         restore_path: str
             full path to environment files
+
         rgam: float
             distance of gamma-ray emitting region to BH in pc (default: 0.1)
+
         sens: float
             sens > 0 and sens < 1., sets the number of domains,
             for the B field in the n-th domain, it will have changed by B_n = sens * B_{n-1}
+
         rbounds: list or `~numpy.ndarray`
             bin bounds for steps along line of sight in pc,
             default: log range between rgam and Rjet
             with step size chosen such that B field changes
             by sens parameter in each step
 
-
         B field kwargs:
 
         B0: float
             Jet field at r = R0 in G (default: 0.1)
+
         r0: float
             distance from BH where B = B0 in pc (default: 0.1)
+
         alpha: float
             exponent of toroidal mangetic field (default: -1.)
+
         psi: float
             Angle between one photon polarization state and B field.
             Assumed constant over entire jet. (default: pi / 4)
+
         helical: bool
             if True, use helical magnetic-field model from Clausen-Brown et al. (2011).
             In this case, the psi kwarg is treated is as the phi angle
@@ -451,14 +478,18 @@ class MixJet(trans.GammaALPTransfer):
 
         n0: float
             electron density at R0 in cm**-3 (default 1e3)
+
         beta: float
             exponent of electron density (default = -2.)
+
         equipartition: bool
             if true, assume equipartition between electrons and the B field.
             This will overwrite beta = 2 * alpha and set n0 given the minimum
             electron lorentz factor set with gamma_min
+
         gamma_min: float
             minimum lorentz factor of emitting electrons, only used if equipartition = True
+
         gamma_max: float
             maximum lorentz factor of emitting electrons, only used if equipartition = True
             by default assumed to be gamma_min * 1e4
@@ -467,10 +498,13 @@ class MixJet(trans.GammaALPTransfer):
 
         Rjet: float
             maximum jet length in pc (default: 1000.)
+
         theta_obs: float
             Angle between l.o.s. and jet axis in degrees (default: 3.)
+
         bulk_lorentz: float
             bulk lorentz factor of gamma-ray emitting plasma (default: 10.)
+
         theta_jet: float
             Jet opening angle in degrees. If not given, assumed to be 1./bulk_lorentz
         """
@@ -497,40 +531,44 @@ class MixJet(trans.GammaALPTransfer):
         self._psi = kwargs['psi']
         self._source = source
 
-        nsteps = int(np.ceil( kwargs['alpha'] * \
-                          np.log(self._Rjet /kwargs['rgam'] ) / np.log(kwargs['sens']) ))
+        nsteps = int(np.ceil( kwargs['alpha'] *
+                     np.log(self._Rjet / kwargs['rgam'] ) / np.log(kwargs['sens'])))
 
-        kwargs.setdefault('rbounds',np.logspace(np.log10(kwargs['rgam']),np.log10(self._Rjet),nsteps))
+        kwargs.setdefault('rbounds', np.logspace(np.log10(kwargs['rgam']), np.log10(self._Rjet), nsteps))
         self._rbounds = kwargs['rbounds']
-
 
         self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
         dL = self._rbounds[1:] - self._rbounds[:-1]
 
         if kwargs['restore'] is None:
-            self._b = jet.Bjet(kwargs['B0'], kwargs['r0'],
-                                                kwargs['alpha']
-                                            )
-            B, psi = self._b.new_Bn(self._r, psi = kwargs['psi'])
+            self._Bfield_model = jet.Bjet(kwargs['B0'], kwargs['r0'],
+                                          kwargs['alpha']
+                                          )
+            B, psi = self._Bfield_model.new_Bn(self._r, psi=kwargs['psi'])
+
             if kwargs['helical']:
-                 B, psi = self.Bjet_calc(B,psi)
+                B, psi = self._Bfield_model.transversal_component_helical(B, psi,
+                                                                          theta_jet=self._source.theta_jet,
+                                                                          theta_obs=self._source.theta_obs)
 
             if kwargs['equipartition']:
-                 kwargs['beta'] = kwargs['alpha'] * 2.
+                kwargs['beta'] = kwargs['alpha'] * 2.
 
-                 intp = USpline(np.log10(self._r), np.log10(B), k = 1, s = 0)
-                 B0 = 10.**intp(np.log10(kwargs['r0']))
-                 # see e.g.https://arxiv.org/pdf/1307.4100.pdf Eq. 2
-                 kwargs['n0'] = B0** 2. / 8. / np.pi \
-                              / kwargs['gamma_min'] / (c.m_e * c.c ** 2.).to('erg').value / \
-                              np.log(kwargs['gamma_max'] / kwargs['gamma_min'])
-                 logging.info("Assuming equipartion at r0: n0(r0) = {0[n0]:.3e} cm^-3".format(kwargs))
+                intp = USpline(np.log10(self._r), np.log10(B), k = 1, s = 0)
+                B0 = 10.**intp(np.log10(kwargs['r0']))
 
-            self._neljet = njet.NelJet(kwargs['n0'],kwargs['r0'],kwargs['beta'])
+                # see e.g.https://arxiv.org/pdf/1307.4100.pdf Eq. 2
+                kwargs['n0'] = B0 ** 2. / 8. / np.pi \
+                    / kwargs['gamma_min'] / (c.m_e * c.c ** 2.).to('erg').value / \
+                    np.log(kwargs['gamma_max'] / kwargs['gamma_min'])
+
+                logging.info("Assuming equipartion at r0: n0(r0) = {0[n0]:.3e} cm^-3".format(kwargs))
+
+            self._neljet = njet.NelJet(kwargs['n0'], kwargs['r0'], kwargs['beta'])
 
             # init the transfer function with absorption
             super(MixJet, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r),
-                                                     dL * 1e-3, alp, Gamma = None, chi = None, Delta = None)
+                                         dL * 1e-3, alp, Gamma=None, chi=None, Delta=None)
 
             # transform energies to stationary frame
             self._ee /= self._source._doppler
@@ -538,8 +576,8 @@ class MixJet(trans.GammaALPTransfer):
             tra = super(MixJet,self).read_environ(kwargs['restore'], alp,
                                                   filepath = kwargs['restore_path'])
             super(MixJet,self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel,
-                                                     tra.dL, tra.alp, Gamma = tra.Gamma,
-                                                     chi = tra.chi, Delta = tra.Delta)
+                                        tra.dL, tra.alp, Gamma=tra.Gamma,
+                                        chi=tra.chi, Delta=tra.Delta)
         return
 
     @property
@@ -556,7 +594,7 @@ class MixJet(trans.GammaALPTransfer):
 
     @property
     def Bfield_model(self):
-        return self._b
+        return self._Bfield_model
 
     @property
     def nel_model(self):
@@ -569,51 +607,6 @@ class MixJet(trans.GammaALPTransfer):
          else:
              self._Rjet = Rjet
          return
-
-    def Bjet_calc(self, B0, phi):
-        """
-        compute Jet magnetic field along line of sight that
-        forms observation angle theta_obs with jet axis.
-        Model assumes the helical jet structure of
-        Clausen-Brown, E., Lyutikov, M., and Kharb, P. (2011); arXiv:1101.5149
-
-        Parameters
-        -----------
-        B0: `~numpy.ndarray`
-            N-dim array with magnetic field strength along jet axis
-        phi: float
-            phi angle in degrees along with photons propagate along jet
-            (in cylindrical jet geometry)
-
-        Returns
-        -------
-        2-dim tuple containing:
-            N-dim np.array, field strength along line of sight
-            N-dim np.array, with psi angles between photon polarization states
-            and Jet Bfield
-        """
-        # Calculate normalized rho component, i.e. distance
-        # from line of sight to jet axis assuming a self similar jet
-        p, tj, to = np.radians(phi), np.radians(self._source.theta_jet), \
-                     np.radians(self._source.theta_obs)
-
-        rho_n = np.tan(to) / np.tan(tj)
-        k = 2.405  # pinch, set so that Bz = 0 at jet boundary
-
-        # compute bessel functions, see Clausen-Brown Eq. 2
-        j0 = jv(0., rho_n * k)
-        j1 = jv(1., rho_n * k)
-
-        # B-field along l.o.s.
-        Bn = np.cos(to) * j0 - np.sin(p)*np.sin(to) * j1
-        # B-field transversal to l.o.s.
-        Bt = np.cos(p) * j1
-        Bu = -(np.cos(to) * np.sin(p) * j1 + np.sin(to) * j0)
-
-        Btrans = B0 * np.sqrt(Bt**2. + Bu**2.)         # Abs value of transverse component in all domains
-        Psin = np.arctan2(B0*Bt,B0*Bu)         # arctan2 selects the right quadrant
-
-        return Btrans, Psin
 
 
 class MixJetHelicalTangled(trans.GammaALPTransfer):
@@ -631,12 +624,13 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         kwargs
         ------
-        EGeV: `~numpy.ndarray`
+        EGeV: arra-like
             Gamma-ray energies in GeV
 
         restore: str or None
             if str, identifier for files to restore environment.
             If None, initialize mixing with new B field
+
         restore_path: str
             full path to environment files
 
@@ -646,33 +640,43 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         ft: float
             fraction of magnetic field energy density in tangled field
+
         r_T: float
             radius at which helical field becomes toroidal in pc
+
         Bt_exp: float
             exponent of the transverse component of the helical field
             at r<=r_T. i.e. sin(pitch angle) ~ r^Bt_exp while r<r_T
             and pitch angle = pi/2 at r=r_T
+
         B0: float
             Bfield strength in G
+
         r0: float
             radius where B field is equal to b0 in pc
-        g0: float
-            jet lorenz factor at r0
+
         gmin: float
             jet lorenz factor at rjet
+
         rvhe:  float
             distance of gamma-ray emission region from BH in pc
+
         rjet: float
             jet length in pc
+
         alpha: float
             power-law index of electron energy distribution function
+
         l_tcor: float
             tangled field coherence average length in pc
+
         jwf: float
             jet width factor used when calculating l_tcor = jwf*jetwidth
+
         jwf_dist: string
             type of distribution for jet width factors (jwf) when
             calculating l_tcor with jwf*jetwidth
+
         tseed: float
             seed for random tangled domains
 
@@ -680,6 +684,7 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         n0: float
             electron density at R0 in cm**-3 (default 1e3)
+
         beta: float
             exponent of electron density (default = -2.)
 
@@ -707,55 +712,57 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         kwargs.setdefault('beta', -2.)
         # jet kwargs
         kwargs.setdefault('gmin', 2.)
-        kwargs.setdefault('g0', 9.)
         kwargs.setdefault('alpha', 1.68)
         kwargs.setdefault('rjet', 3206.3)
         kwargs.setdefault('rvhe', 0.3)
 
         self._rbounds = np.logspace(np.log10(kwargs['rvhe']),np.log10(kwargs['rjet']),kwargs['ndom'])
-        if kwargs['ft']>0. and kwargs['l_tcor'] != 'jetdom' and kwargs['l_tcor'] != 'jetwidth':
+
+        if kwargs['ft'] > 0. and kwargs['l_tcor'] != 'jetdom' and kwargs['l_tcor'] != 'jetwidth':
             while np.average(np.diff(self._rbounds)) > kwargs['l_tcor']:
                 kwargs['ndom']+=50
-                self._rbounds = np.logspace(np.log10(kwargs['rvhe']),np.log10(kwargs['rjet']),kwargs['ndom'])
-            print("Not enough jet doms to resolve tangled field. Increased to {}".format(kwargs['ndom']))
+                self._rbounds = np.logspace(np.log10(kwargs['rvhe']), np.log10(kwargs['rjet']), kwargs['ndom'])
+            logging.warning("Not enough jet doms to resolve tangled field. Increased to {}".format(kwargs['ndom']))
 
         self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
         dL = self._rbounds[1:] - self._rbounds[:-1]
 
-        self._b = jet.BjetHelicalTangled(kwargs['ft'],
-                            kwargs['r_T'],
-                            kwargs['Bt_exp'],
-                            kwargs['B0'],
-                            kwargs['r0'],
-                            kwargs['g0'],
-                            kwargs['rvhe'],
-                            kwargs['rjet'],
-                            kwargs['alpha'],
-                            kwargs['l_tcor'],
-                            kwargs['jwf'],
-                            kwargs['jwf_dist'],
-                            kwargs['tseed'])
+        self._Bfield_model = jet.BjetHelicalTangled(kwargs['ft'],
+                                                    kwargs['r_T'],
+                                                    kwargs['Bt_exp'],
+                                                    kwargs['B0'],
+                                                    kwargs['r0'],
+                                                    source.bLorentz,
+                                                    kwargs['rvhe'],
+                                                    kwargs['rjet'],
+                                                    kwargs['alpha'],
+                                                    kwargs['l_tcor'],
+                                                    kwargs['jwf'],
+                                                    kwargs['jwf_dist'],
+                                                    kwargs['tseed'])
 
-        B, psi = self._b.get_jet_props_gen(self._r)
+        B, psi = self._Bfield_model.get_jet_props_gen(self._r)
 
-        #change rs if they were not originally resolving the tangled field
+        # change rs if they were not originally resolving the tangled field
         try:
-            if self._b._trerun:
+            if self._Bfield_model.trerun:
                 try:
-                    self._rbounds = self._b._newbounds
+                    self._rbounds = self._Bfield_model.newbounds
                 except AttributeError:
-                    self._rbounds = self._b._tdoms
+                    self._rbounds = self._Bfield_model.tdoms
                 self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
                 dL = self._rbounds[1:] - self._rbounds[:-1]
         except AttributeError:
             pass
 
-
-        self._neljet = njet.NeleffectiveJetHelicalTangled(kwargs['n0'],kwargs['rvhe'],kwargs['alpha'],kwargs['beta'])
+        self._neljet = njet.NeleffectiveJetHelicalTangled(kwargs['n0'],
+                                                          kwargs['rvhe'],
+                                                          kwargs['alpha'],
+                                                          kwargs['beta'])
 
         # init the transfer function with absorption
         super(MixJetHelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r),
-                                                 dL * 1e-3, alp, Gamma = None, chi = None, Delta = None)
+                                                   dL * 1e-3, alp, Gamma=None, chi=None, Delta=None)
 
         # transform energies to stationary frame
         self._gammas = self.jet_gammas_scaled_gg(self._r, kwargs['rvhe'], kwargs['rjet'], kwargs['gmin'], kwargs['g0'])
@@ -764,35 +771,21 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         return
 
-    def jet_gammas_scaled(self,rs,r0,g0,rjet):
-        """
-        Function to get jet lorentz factors. Shape of function
-        from PC Jet model, scaled to r0, g0, and rjet.
-        """
-        gxs = rs
-        gz = 4. * (g0/9.)
-        gmx = 9. * (g0/9.)
-        gmn = 2. * (g0/9.)
-        xcon = 0.3 * (r0/0.3)
-        L = 3206.3 * (rjet/3206.3)
-        g1 = (gz + ((gmx - gz)/(xcon**(1-0.68)))* gxs**(1-0.68)) * (gxs<xcon)
-        g2 = (gmx - ((gmx-gmn)/np.log10(L/xcon))*np.log10(gxs/xcon)) * (gxs>=xcon)
-        return g1+g2
-
-    def jet_gammas_scaled_gg(self,rs,rvhe,rjet,gmin,gmax):
+    @staticmethod
+    def jet_gammas_scaled_gg(rs, rvhe, rjet, gmin, gmax):
         """
         Function to get jet lorentz factors. Shape of function
         from PC Jet model, scaled to r0, gmin, gmax and rjet.
         """
         gxs = rs
-        gz = 4. * (gmax/9.)
-        gmx = 9. * (gmax/9.)
-        gmn = 2. * (gmin/2.)
-        xcon = 0.3 * (rvhe/0.3)
-        L = 3206.3 * (rjet/3206.3)
-        g1 = (gz + ((gmx - gz)/(xcon**(1-0.68)))* gxs**(1-0.68)) * (gxs<xcon)
-        g2 = (gmx - ((gmx-gmn)/np.log10(L/xcon))*np.log10(gxs/xcon)) * (gxs>=xcon)
-        return g1+g2
+        gz = 4. * (gmax / 9.)
+        gmx = 9. * (gmax / 9.)
+        gmn = 2. * (gmin / 2.)
+        xcon = 0.3 * (rvhe / 0.3)
+        L = 3206.3 * (rjet / 3206.3)
+        g1 = (gz + ((gmx - gz) / (xcon ** (1. - 0.68))) * gxs**(1. - 0.68)) * (gxs < xcon)
+        g2 = (gmx - ((gmx - gmn) / np.log10(L / xcon)) * np.log10(gxs / xcon)) * (gxs >= xcon)
+        return g1 + g2
 
 
 class MixGMF(trans.GammaALPTransfer):
@@ -808,10 +801,9 @@ class MixGMF(trans.GammaALPTransfer):
         source: `~gammaALPs.Source`
             `~gammaALPs.Source` object with source parameters
 
-
         kwargs
         ------
-        EGeV: `~numpy.ndarray`
+        EGeV: array-like
             Gamma-ray energies in GeV
 
         restore: str or None
@@ -819,9 +811,9 @@ class MixGMF(trans.GammaALPTransfer):
             If None, initialize mixing with new B field
         restore_path: str
             full path to environment files
-        int_steps: interger (default = 100)
+        int_steps: int (default = 100)
             Number of integration steps
-        rbounds: list or `~numpy.ndarray`
+        rbounds: array-like
             bin bounds for steps along line of sight in kpc,
             default: lin range between end of Galactic Bfield and 0.
             with int_step steps
@@ -830,8 +822,10 @@ class MixGMF(trans.GammaALPTransfer):
 
         ra: float
             R.A. of the source (J2000)
+
         dec: float
             Declination of the source (J2000)
+
         galactic: float
             Distance of source to sun in kpc. If -1, source is extragalactic
 
@@ -840,15 +834,20 @@ class MixGMF(trans.GammaALPTransfer):
         rho_max: float
             maximal rho of GMF in kpc
             default: 20 kpc
+
         zmax: float
             maximal z of GMF in kpc
             default: 50 kpc
-        model: string (default = jansson)
+
+        model: str
+            (default = jansson)
             GMF model that is used. Currently the model by Jansson & Farrar (2012)
             (also with updates from Planck measurements)
             and Pshirkov et al. (2011) are implemented.
             Usage: model=[jansson12, jansson12b, jansson12c, pshirkov]
-        model_sym: string (default = ASS)
+
+        model_sym: str
+            (default = ASS)
             Only applies if pshirkov model is chosen:
             you can choose between the axis- and bisymmetric version by setting model_sym to ASS or BSS.
 
@@ -881,9 +880,9 @@ class MixGMF(trans.GammaALPTransfer):
         self._source = source
 
         if kwargs['model'].find('jansson') >= 0:
-            self._Bgmf = gmf.GMF(mode = kwargs['model'])         # Initialize the Bfield class
+            self._Bgmf = gmf.GMF(model=kwargs['model'])  # Initialize the Bfield class
         elif kwargs['model'] == 'pshirkov':
-            self._Bgmf = gmf.GMF_Pshirkov(mode = kwargs['model_sym'])
+            self._Bgmf = gmf.GMF_Pshirkov(model=kwargs['model_sym'])
         else:
             raise ValueError("Unknown GMF model chosen")
 
@@ -895,8 +894,10 @@ class MixGMF(trans.GammaALPTransfer):
         self._rbounds = kwargs['rbounds']
 
         self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
-        dL = self._rbounds[:-1] - self._rbounds[1:] # use other way round since we are beginning from
-                                                              # max distance and propagate to Earth
+
+        # use other way round since we are beginning from
+        # max distance and propagate to Earth
+        dL = self._rbounds[:-1] - self._rbounds[1:]
 
         # NE2001 code missing!
         self._nelgmf = kwargs['n0'] * np.ones(self._r.shape)
@@ -905,22 +906,23 @@ class MixGMF(trans.GammaALPTransfer):
             B, psi = self.Bgmf_calc()
 
             # init the transfer function with absorption
-            super(MixGMF,self).__init__(kwargs['EGeV'], B, psi, self._nelgmf,
-                                                     dL, alp, Gamma = None, chi = None, Delta = None)
+            super(MixGMF, self).__init__(kwargs['EGeV'], B, psi, self._nelgmf,
+                                         dL, alp, Gamma=None, chi=None, Delta=None)
         else:
-            tra = super(MixGMF,self).read_environ(kwargs['restore'], alp,
-                                                  filepath = kwargs['restore_path'])
-            super(MixGMF,self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel,
-                                                     tra.dL, tra.alp, Gamma = tra.Gamma,
-                                                     chi = tra.chi, Delta = tra.Delta)
-        return
+            tra = super(MixGMF, self).read_environ(kwargs['restore'], alp,
+                                                   filepath = kwargs['restore_path'])
+            super(MixGMF, self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel,
+                                         tra.dL, tra.alp,
+                                         Gamma=tra.Gamma,
+                                         chi=tra.chi,
+                                         Delta=tra.Delta)
 
     @property
     def galactic(self):
         return self._galactic
 
     @galactic.setter
-    def galactic(self,galactic):
+    def galactic(self, galactic):
         if type(galactic) == u.Quantity:
             self._galactic = galactic.to('kpc').value
         else:
@@ -964,7 +966,8 @@ class MixGMF(trans.GammaALPTransfer):
         self._b = np.radians(self._source.b)
         d = -1. * np.abs(self._Bgmf.Rsun)
 
-        if self.galactic < 0.:         # if source is extragalactic, calculate maximum distance that beam traverses GMF to Earth
+        # if source is extragalactic, calculate maximum distance that beam traverses GMF to Earth
+        if self.galactic < 0.:
             cl = np.cos(self._l)
             cb = np.cos(self._b)
             sb = np.sin(self._b)
@@ -998,27 +1001,30 @@ class MixGMF(trans.GammaALPTransfer):
             if not b:
                  b = self._b
 
-        rho = trafo.rho_HC2GC(self._r,l,b,-1. * np.abs(self._Bgmf.Rsun))         # compute rho in GC coordinates for s,l,b
-        phi = trafo.phi_HC2GC(self._r,l,b,-1. * np.abs(self._Bgmf.Rsun))         # compute phi in GC coordinates for s,l,b
-        z = trafo.z_HC2GC(self._r,l,b,-1. * np.abs(self._Bgmf.Rsun))         # compute z in GC coordinates for s,l,b
+        # compute rho in GC coordinates for s,l,b
+        rho = trafo.rho_HC2GC(self._r, l, b, -1. * np.abs(self._Bgmf.Rsun))
 
-        B = self._Bgmf.Bdisk(rho,phi,z)[0]          # add all field components
+        # compute phi in GC coordinates for s,l,b
+        phi = trafo.phi_HC2GC(self._r, l, b, -1. * np.abs(self._Bgmf.Rsun))
+        z = trafo.z_HC2GC(self._r, b)  # compute z in GC coordinates for s,l,b
+
+        B = self._Bgmf.Bdisk(rho,phi,z)[0]  # add all field components
         B += self._Bgmf.Bhalo(rho,z)[0]
         if self._model.find('jansson') >= 0:
             B += self._Bgmf.BX(rho,z)[0]
 
-        ### Single components for debugging ###
-        #B = self.Bgmf.Bdisk(rho,phi,z)[0]
-        #B = self.Bgmf.Bhalo(rho,z)[0]
-        #B = self.Bgmf.BX(rho,z)[0]
+        # Single components for debugging ###
+        # B = self.Bgmf.Bdisk(rho,phi,z)[0]
+        # B = self.Bgmf.Bhalo(rho,z)[0]
+        # B = self.Bgmf.BX(rho,z)[0]
 
-        Babs = np.sqrt(np.sum(B**2., axis = 0))         # compute overall field strength
-        #Bs, Bt, Bu         = trafo.GC2HCproj(B, self._r, self._l, self._b, d = -1. * np.abs(self._Bgmf.Rsun))
-        #TODO: what is correct for the Pshirkov model?
+        Babs = np.sqrt(np.sum(B**2., axis=0))         # compute overall field strength
+        # Bs, Bt, Bu         = trafo.GC2HCproj(B, self._r, self._l, self._b, d = -1. * np.abs(self._Bgmf.Rsun))
+        # TODO: what is correct for the Pshirkov model?
         Bs, Bt, Bu = trafo.GC2HCproj(B, self._r, self._l, self._b, d = self._Bgmf.Rsun)
 
         Btrans = np.sqrt(Bt**2. + Bu**2.)         # Abs value of transverse component in all domains
-        Psin = np.arctan2(Bt,Bu)         # arctan2 selects the right quadrant
+        Psin = np.arctan2(Bt, Bu)         # arctan2 selects the right quadrant
 
         return Btrans, Psin
 
@@ -1044,22 +1050,23 @@ class MixFromFile(trans.GammaALPTransfer):
 
         kwargs
         ------
-        EGeV: `~numpy.ndarray`
+        EGeV: array-like
             Gamma-ray energies in GeV
 
         restore: str or None
             if str, identifier for files to restore environment.
             If None, initialize mixing with new B field
+
         restore_path: str
             full path to environment files
 
         """
-        kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
+        kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
 
         data = np.loadtxt(filename)
-        self._rbounds = data[:,0]
+        self._rbounds = data[:, 0]
         self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
         dL = self._rbounds[1:] - self._rbounds[:-1]
 
@@ -1075,19 +1082,21 @@ class MixFromFile(trans.GammaALPTransfer):
         if kwargs['restore'] is None:
 
             # init the transfer function
-            super(MixFromFile,self).__init__(kwargs['EGeV'], Btrans, psi, n,
+            super(MixFromFile, self).__init__(kwargs['EGeV'], Btrans, psi, n,
                                                      dL, alp, Gamma = None, chi = None, Delta = None)
         else:
-            tra = super(MixFromFile,self).read_environ(kwargs['restore'], alp,
-                                                       filepath = kwargs['restore_path'])
-            super(MixFromFile,self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
-                                                     tra.dL, tra.alp, Gamma = tra.Gamma,
-                                                     chi = tra.chi, Delta = tra.Delta)
-        return
+            tra = super(MixFromFile, self).read_environ(kwargs['restore'], alp,
+                                                        filepath=kwargs['restore_path'])
+
+            super(MixFromFile, self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
+                                              tra.dL, tra.alp,
+                                              Gamma=tra.Gamma,
+                                              chi=tra.chi,
+                                              Delta=tra.Delta)
 
 
 class MixFromArray(trans.GammaALPTransfer):
-    def __init__(self, alp, Btrans, psi, nel, r, dL, **kwargs):
+    def __init__(self, alp, Btrans, psi, nel, dL, **kwargs):
         """
         Initialize mixing in environment given by numpy arrays
 
@@ -1095,25 +1104,26 @@ class MixFromArray(trans.GammaALPTransfer):
         ----------
         alp: `~gammaALPs.ALP`
             `~gammaALPs.ALP` object with ALP parameters
-        Btrans: `~numpy.ndarray`
-            n-dim or m x n-dim, absolute value of transversal B field, in muG
+
+        Btrans: array-like
+            n-dim or m x n-dim array with absolute value of transversal B field, in muG
             if m x n-dimensional, m realizations are assumed
-        psi: `~numpy.ndarray`
-            n-dim or m x n-dim, Angles between transversal direction and one polarization,
+
+        psi: array-like
+            n-dim or m x n-dim array with angles between transversal direction and one polarization,
             if m x n-dimensional, m realizations are assumed
-        nel: `~numpy.ndarray`
-            n-dim or m x n-dim, electron density, in cm^-3,
+
+        nel: array-like
+            n-dim or m x n-dim array electron density, in cm^-3,
             if m x n-dimensional, m realizations are assumed
-        r: `~numpy.ndarray`
-            n-dim, bin centers along line of sight in kpc,
-            if m x n-dimensional, m realizations are assumed
-        dL: `~numpy.ndarray`
-            n-dim, bin widths along line of sight in kpc,
+
+        dL: array-like
+            n-dim array with bin widths along line of sight in kpc,
             if m x n-dimensional, m realizations are assumed
 
         kwargs
         ------
-        EGeV: `~numpy.ndarray`
+        EGeV: array-like
             Gamma-ray energies in GeV
 
         restore: str or None
@@ -1123,7 +1133,7 @@ class MixFromArray(trans.GammaALPTransfer):
             full path to environment files
 
         """
-        kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
+        kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
 
@@ -1131,11 +1141,15 @@ class MixFromArray(trans.GammaALPTransfer):
 
             # init the transfer function
             super(MixFromArray, self).__init__(kwargs['EGeV'], Btrans, psi, nel,
-                                                     dL, alp, Gamma = None, chi = None, Delta = None)
+                                               dL, alp,
+                                               Gamma=None,
+                                               chi=None,
+                                               Delta=None)
         else:
-            tra = super(MixFromFile, self).read_environ(kwargs['restore'], alp,
-                                                        filepath = kwargs['restore_path'])
+            tra = super(MixFromArray, self).read_environ(kwargs['restore'], alp,
+                                                        filepath=kwargs['restore_path'])
             super(MixFromArray, self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
-                                                     tra.dL, tra.alp, Gamma = tra.Gamma,
-                                                     chi = tra.chi, Delta = tra.Delta)
-        return
+                                               tra.dL, tra.alp,
+                                               Gamma=tra.Gamma,
+                                               chi=tra.chi,
+                                               Delta=tra.Delta)

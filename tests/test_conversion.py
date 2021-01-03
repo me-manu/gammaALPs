@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from numpy.testing import assert_allclose
 from gammaALPs.core import Source, ALP, ModuleList
+from astropy import units as u
 from ebltable.tau_from_model import OptDepth
 
 
@@ -74,6 +75,44 @@ class TestConversionModules:
                           )
         # check access to module
         assert m.modules['JetHelicalTangled'] == m.modules[0]
+
+        # check conversion prop
+        px, py, pa = m.run(multiprocess=2)
+
+        assert_allclose(px + py + pa, np.ones_like(px), rtol=1e-6)
+
+    def test_jet(self):
+        EGeV = np.logspace(1., 3.5, 50)
+        pin = np.diag((1., 1., 0.)) * 0.5
+        src = Source(z=0.859000, ra='22h53m57.7s', dec='+16d08m54s',
+                     bLorentz=15.6, theta_obs=1.3)  # 3C454.3
+        alp = ALP(1., 1.)
+        m = ModuleList(alp, src, pin=pin, EGeV=EGeV)
+
+        gamma_min = 1.
+        m.add_propagation("Jet",
+                          0,  # position of module counted from the source.
+                          B0=0.32,  # Jet field at r = R0 in G
+                          r0=1.,  # distance from BH where B = B0 in pc
+                          rgam=3.19e17 * u.cm.to('pc'),  # distance of gamma-ray emitting region to BH
+                          alpha=-1,  # exponent of toroidal magnetic field (default: -1.)
+                          psi=np.pi / 4.,  # Angle between one photon polarization state and B field.
+                          # Assumed constant over entire jet.
+                          helical=True,  # if True, use helical magnetic-field model from Clausen-Brown et al. (2011).
+                          # In this case, the psi kwarg is treated is as the phi angle
+                          # of the photon trajectory in the cylindrical jet coordinate system
+                          equipartition=True,  # if true, assume equipartition between electrons and the B field.
+                          # This will overwrite the exponent of electron density beta = 2 * alpha
+                          # and set n0 given the minimum electron lorentz factor set with gamma_min
+                          gamma_min=gamma_min,
+                          # minimum lorentz factor of emitting electrons, only used if equipartition = True
+                          gamma_max=np.exp(10.) * gamma_min,
+                          # maximum lorentz factor of emitting electrons, only used if equipartition = True
+                          Rjet=40.,  # maximum jet length in pc (default: 1000.)
+                          n0=1e4, beta=-2.
+                          )
+        # check access to module
+        assert m.modules['Jet'] == m.modules[0]
 
         # check conversion prop
         px, py, pa = m.run(multiprocess=2)
@@ -177,10 +216,11 @@ class TestConversionModules:
         tau = OptDepth.readmodel(model='dominguez')
 
         # these numbers are pretty high,
-        # this is reported in an github issue
+        # this is reported in a github issue
         # and needs to be investigated further
         rtol = 0.2
         atol = 0.03
         for p in pgg:
             assert_allclose(p, np.exp(-tau.opt_depth(source.z, EGeV / 1e3)), rtol=rtol, atol=atol)
 
+# TODO add tests for modules initialized from files / arrays

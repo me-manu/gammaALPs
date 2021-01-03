@@ -10,7 +10,7 @@ from astropy import units as u
 
 class NelICM(object):
     """Class to set characteristics of electron density of intracluster medium"""
-    def __init__(self,**kwargs):
+    def __init__(self, **kwargs):
         """
         Initialize the class
 
@@ -121,7 +121,7 @@ class NelICM(object):
 
     @beta2.setter
     def beta2(self, beta2):
-        self._beta2 = beta
+        self._beta2 = beta2
         return
 
     @eta.setter
@@ -135,12 +135,12 @@ class NelICM(object):
 
         Parameters
         ----------
-        r: `~numpy.ndarray`
+        r: array
             n-dim array with distance from cluster center in kpc
 
         Returns
         -------
-        n-dim `~numpy.ndarray` with electron density in 10**-3 cm**-3
+        n-dim array with electron density in 10**-3 cm**-3
         """
 
         if self._beta2 > 0. and self._r_core2 > 0. and self._n2 > 0:
@@ -160,7 +160,7 @@ class NelICM(object):
 
         Parameters
         ----------
-        r: `~numpy.ndarray`
+        r: array
             n-dim array with distance from cluster center in kpc
 
         Returns
@@ -175,12 +175,12 @@ class NelICM(object):
 
         Parameters
         ----------
-        r: `~numpy.ndarray`
+        r: array-like
             n-dim array with distance from cluster center in kpc
 
         Returns
         -------
-        n-dim `~numpy.ndarray` with scaling of B field with electron density 
+        n-dim array with scaling of B field with electron density
         """
         if self._beta2 > 0. and self._r_core2 > 0. and self._n2 > 0:
             return (self.__call__(r) / (self._n0 + self._n2) )**self._eta
@@ -195,7 +195,7 @@ class NelICMFunction(object):
     Class to set characteristics of electron density of intracluster medium,
     where electron density is provided by a function
     """
-    def __init__(self, func, **kwargs):
+    def __init__(self, func, eta=1.):
         """
         Initialize the class
 
@@ -208,16 +208,11 @@ class NelICMFunction(object):
             exponent for scaling of B field with electron density (default = 1.)
 
         """
-        kwargs.setdefault('eta', 1.)
 
         self._func = func
-        self._eta = kwargs['eta']
+        self._eta = eta
 
         return
-
-    @property
-    def beta(self):
-        return self._beta
 
     @property
     def func(self):
@@ -238,12 +233,12 @@ class NelICMFunction(object):
 
         Parameters
         ----------
-        r: `~numpy.ndarray`
+        r: array-like
             n-dim array with distance from cluster center in kpc
 
         Returns
         -------
-        n-dim `~numpy.ndarray` with electron density in 10**-3 cm**-3
+        n-dim array with electron density in 10**-3 cm**-3
         """
 
         return self._func(r) * 1e-3
@@ -254,16 +249,14 @@ class NelICMFunction(object):
 
         Parameters
         ----------
-        r: `~numpy.ndarray`
+        r: array-like
             n-dim array with distance from cluster center in kpc
 
-        {options}
-
         r0: float
-        Normalization for scale factor in kpc. Default: 0.
+            Normalization for scale factor in kpc. Default: 0.
 
         Returns
         -------
-        n-dim `~numpy.ndarray` with scaling of B field with electron density
+        n-dim array with scaling of B field with electron density
         """
         return (self.__call__(r) / self.__call__(r0))**self._eta

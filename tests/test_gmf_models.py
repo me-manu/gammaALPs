@@ -96,7 +96,7 @@ def test_pshirkov(pshirkov_file):
     # index for y = 0 plane
     idy = np.argmin(np.abs(y))
 
-    pshirkov = gmf.GMF_Pshirkov(mode='ASS')
+    pshirkov = gmf.GMF_Pshirkov(model='ASS')
 
     # disk component
     Bdisk = np.zeros_like(rr[..., idz])

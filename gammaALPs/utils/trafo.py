@@ -4,7 +4,7 @@ from astropy.cosmology import FlatLambdaCDM
 from scipy.interpolate import interp1d
 
 
-def cosmo_cohlength(zmax,L0, cosmo=FlatLambdaCDM(H0=70., Om0=0.3)):
+def cosmo_cohlength(zmax, L0, cosmo=FlatLambdaCDM(H0=70., Om0=0.3)):
     """
     Calculate a grid of coherence lengths given a maximum
     redshift, coherence length, and cosmology
@@ -64,7 +64,7 @@ def norm(vec):
 
 
 class NewBase:
-    def __init__(self,d = 8.5):
+    def __init__(self, d=8.5):
         """ 
         Init new base
         old base in galactic coordinates l (galactic longitude) [0, 2pi]
@@ -84,7 +84,7 @@ class NewBase:
         self.u3 = np.zeros(3)                # new base vector 3
         return
 
-    def set_obase(self,l,b):
+    def set_obase(self, l, b):
         """
         set components of base in cartesian coordinates with angles l and b
         """
@@ -102,7 +102,7 @@ class NewBase:
 
         return
 
-    def set_nbase(self,l,b,s):
+    def set_nbase(self, l, b, s):
         """
         Calculate new set of basis vectors from the linear independent vectors -r + (d,0,0), theta and phi
         using the Gram-Schmidt process, see e.g. http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
@@ -121,9 +121,9 @@ class NewBase:
 
         return self.u1,self.u2, self.u3
 
-#---- Transformation of HC spherical galactical coordinates to CG cylindrical coordinates -----------------------------------------------------#
 
-#---- Functions --------------------#
+# ---- Transformation of HC spherical galactical coordinates to CG cylindrical coordinates ---- #
+# ---- Functions ----- #
 def rho_HC2GC(s,l,b,d=-8.5):
     """
     rho in GC cylindircal coordinates for distance s (measured from the sun in kpc) in galactic coordinates l and b
@@ -136,6 +136,7 @@ def rho_HC2GC(s,l,b,d=-8.5):
         return np.sqrt(s**2*cos(b)**2 + d**2*np.ones(s.shape[0]) + 2.*s*d*cos(l)*cos(b))
     else:
         return np.sqrt(s**2*cos(b)**2 + d**2 + 2.*s*d*cos(l)*cos(b))
+
 
 def phi_HC2GC(s,l,b,d=-8.5):
     """
@@ -150,13 +151,14 @@ def phi_HC2GC(s,l,b,d=-8.5):
     else:
         return np.arctan2(s * sin(l)*cos(b),(s * cos(l)*cos(b) + d))
 
-def z_HC2GC(s,l,b,d=-8.5):
+
+def z_HC2GC(s, b):
     """
     z in GC cylindircal coordinates for distance s (measured from the sun in kpc) in galactic coordinates l and b
     """
     return s*sin(b)
 
-def x_HC2GC(s,l,b,d=-8.5):
+def x_HC2GC(s, l, b, d=-8.5):
     """
     x in GC cylindircal coordinates for distance s (measured from the sun in kpc) in galactic coordinates l and b
     """
@@ -169,25 +171,28 @@ def x_HC2GC(s,l,b,d=-8.5):
     else:
         return s*cos(l)*cos(b) + d
 
-def y_HC2GC(s,l,b,d=-8.5):
+def y_HC2GC(s, l, b):
     """
     y in GC cylindircal coordinates for distance s (measured from the sun in kpc) in galactic coordinates l and b
     """
     return s*sin(l)*cos(b)
 
+
 #---- (s,l,b) unit vectors ---------#
-def HC_base(l,b):
+def HC_base(l, b):
     """
     Computes cartesian basis for galactic coordinates
 
     Parameters
     ----------
-    l: N-dim np.arrays or scalar, galactic longitude
-    b: N-dim np.arrays or scalar, galactic latitude
+    l: array-like or scalar
+        N-dim array with galactic longitude in radians
+    b: array-like or scalar,
+        N-dim array with galactic latitude in radians
 
     Returns
     -------
-    Three (3,N) np.arrays, unit vectors in s,l and b direction
+    Three (3,N) np.arrays, unit vectors in s, l, and b direction
     """
     if np.isscalar(l):
         l = np.array([l])
@@ -199,25 +204,33 @@ def HC_base(l,b):
     unit_l = np.array([-sin(l),cos(l),np.zeros(l.shape[0])])
     return unit_s,unit_b,unit_l
 
-#---- Project a vector in GCCC to HCSC in cartesian basis -----#
-def GC2HCproj(V,s,l,b,d=-8.5):
+
+# ---- Project a vector in GCCC to HCSC in cartesian basis ----- #
+def GC2HCproj(V, s, l, b, d=-8.5):
     """
     Project a Vector in GC cylindrical coordinates to HC galactic coordinates in cartesian basis
 
     Parameters
     ----------
-    V: (3,N) np.array, Vector with GC components (V_rho , V_phi , V_z)
-    s: distance from the sun
-    l: galactic longitude
-    b: galactic latitude
-    d (optional): origin of HC coordinates along x axis in GC coordinates in kpc, 
-    default is position of the sun at -8.5 kpc
+    V: array-like
+        (3,N) dim vector with GC components (V_rho , V_phi , V_z)
+
+    s: array-like or scalar
+        distance from the sun
+    l: array-like or scalar
+        galactic longitude
+    b: array-like or scalar
+        galactic latitude
+    d: float
+        origin of HC coordinates along x axis in GC coordinates in kpc,
+        default is position of the sun at -8.5 kpc
 
     Returns
     -------
-    result[0] = < V, s >
-    result[1] = < V, b >
-    result[2] = < V, l >
+    tuple with vector components:
+    - result[0] = < V, s >
+    - result[1] = < V, b >
+    - result[2] = < V, l >
     """
     if np.isscalar(l):
         l = np.array([l])
