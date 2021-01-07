@@ -23,7 +23,3 @@ You can use pip to install the package::
 
 Example scripts and notebooks are provided on the github page in the
 example/ and notebooks/ folder, https://github.com/me-manu/gammaALPs
-
-License
--------
-gammaALPs is distributed under the modified BSD License.
