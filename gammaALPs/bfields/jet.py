@@ -375,7 +375,7 @@ class BjetHelicalTangled(object):
                     d += np.random.uniform(self._l_tcor/20.,self._l_tcor*20.)
                 self._tdoms = np.array(self._tdoms)
 
-            elif self._ft > 0 and self._l_tcor == 'jetwidth':
+            elif self._l_tcor == 'jetwidth': #self._ft > 0 and
 
                 theta_m1_interp = USpline(np.log10(z),gammas)
 
@@ -454,13 +454,20 @@ class BjetHelicalTangled(object):
 
             h_phi = np.pi/2. #just align helix phi with one axis, why not?
             if l <= self._r_T: #Set section size
-                B_hel *= BhelrT*(l/self._r_T)**(self._Bt_exp + 1.) #make B_hel go like Bt_exp (make 1 '-a')
+                # B_hel *= BhelrT*(l/self._r_T)**(self._Bt_exp + 1.) #make B_hel go like Bt_exp (make 1 '-a')
+
+                fact = (BhelrT*(l/self._r_T)**(self._Bt_exp))/B_hel
+                B_hel *= np.where(fact>1.,1.,fact)
 
             # if i == int(len(z)/2):
                 # t7 = time.time()
 
             #tangled field angles
             if self._ft>0. and len(z)!=len(self._tdoms)-1:
+                #could probably be faster
+                t_phi = self._tphis[np.argmin([l-tl for tl in self._tdoms if l>=tl])]
+                t_the = self._tthes[np.argmin([l-tl for tl in self._tdoms if l>=tl])]
+            elif self._l_tcor == 'jetwidth' and len(z)!=len(self._tdoms)-1:
                 #could probably be faster
                 t_phi = self._tphis[np.argmin([l-tl for tl in self._tdoms if l>=tl])]
                 t_the = self._tthes[np.argmin([l-tl for tl in self._tdoms if l>=tl])]
