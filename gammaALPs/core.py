@@ -26,18 +26,14 @@ class Source(object):
         ----------
         z: float
             source redshift
-        kwargs
-        ------
-        EGeV: `~numpy.ndarray`
-            array that contains gamma-ray energies in GeV
         ra: float or string
-            Right Ascension compatible with `~astropy.coordinates.SkyCoord` object
+            Right Ascension compatible with :py:class:`~astropy.coordinates.SkyCoord` object
         dec: float or string
-            Declination compatible with `~astropy.coordinates.SkyCoord` object
+            Declination compatible with :py:class:`~astropy.coordinates.SkyCoord` object
         l: float
-            Galactic longitude or 'None'. If given, overwrites ra and dec
+            Galactic longitude or None. If given, overwrites ra and dec
         b: float
-            Galactic latitude or 'None'. If given, overwrites ra and dec
+            Galactic latitude or None. If given, overwrites ra and dec
         theta_obs: float
             Angle between l.o.s. and jet axis in degrees (default: 3.)
         bLorentz: float
@@ -210,10 +206,6 @@ class Source(object):
 class ALP(object):
     """
     Class to store the ALP parameters
-
-    Units used are:
-    ALP mass: neV
-    photon-ALP coupling: 10^-11 GeV^-1
     """
     def __init__(self, m, g):
         """
@@ -225,7 +217,7 @@ class ALP(object):
             ALP mass in neV.
 
         g: float
-            photon-ALP couplint in 10^-11 GeV^-1.
+            photon-ALP coupling in 10^-11 GeV^-1.
         """
         self._m = m
         self._g = g
@@ -308,19 +300,19 @@ class ModuleList(object):
     def __init__(self,
                  alp,
                  source,
-                 pin=np.diag((1.,1.,0.)) * 0.5,
-                 EGeV=np.logspace(0.,4.,100),
+                 pin=None,
+                 EGeV=None,
                  seed=None):
         """
         Initialize the class, energy range, and polarization matrices
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
 
-        source: `~gammaALPs.Source`
-            `~gammaALPs.Source` object with source parameters
+        source: :py:class:`~gammaALPs.Source`
+            :py:class:`~gammaALPs.Source` object with source parameters
 
         pin: array-like
             3x3 dim matrix with initial polarization.
@@ -336,12 +328,18 @@ class ModuleList(object):
         """
         self._alp = alp
         self._source = source
-        self._EGeV = EGeV
+        if EGeV is None:
+            self._EGeV = np.logspace(0., 4., 100)
+        else:
+            self._EGeV = EGeV
         # initialize final polarization states
         self._px = np.diag((1., 0., 0.))
         self._py = np.diag((0., 1., 0.))
         self._pa = np.diag((0., 0., 1.))
-        self._pin = pin
+        if pin is None:
+            self._pin = np.diag((1., 1., 0.)) * 0.5
+        else:
+            self._pin = pin
         self._modules = NamedClassList()
         self._seed = seed
         self._px_src = None
@@ -435,32 +433,39 @@ class ModuleList(object):
             starting at zero, where zero is closest to the source and highest value is closest to the
             observer
 
-        kwargs
-        ------
-        kwargs are passed to the specific environment
-
         Notes
         -----
-        Available environments are the classes given in `gammaALPs.base.environs`,
+        kwargs are passed to the specific environment.
+
+        Available environments are the classes given in :py:class:`~gammaALPs.base.environs`,
         where all the specific options are listed.
         The identifiers for the environments are:
-        - IGMF: initializes `~gammaALPs.base.environs.MixIGMFCell` for mixing
+
+        - IGMF: initializes :py:class:`~gammaALPs.base.environs.MixIGMFCell` for mixing
             in intergalactic magnetic field (IGMF) which is assumed to be of a cell-like structure
-        - ICMCell: initializes `~gammaALPs.base.environs.MixICMCell` for mixing
+
+        - ICMCell: initializes :py:class:`~gammaALPs.base.environs.MixICMCell` for mixing
             in intra-cluster medium which is assumed to be of a cell-like structure
-        - ICMGaussTurb: initializes `~gammaALPs.base.environs.MixICMGaussTurb` for mixing
+
+        - ICMGaussTurb: initializes :py:class:`~gammaALPs.base.environs.MixICMGaussTurb` for mixing
             in intra-cluster medium which is assumed to follow a Gaussian turbulence spectrum
-        - Jet: initializes `~gammaALPs.base.environs.MixJet` for mixing
+
+        - Jet: initializes :py:class:`~gammaALPs.base.environs.MixJet` for mixing
             in the AGN jet, where the field is assumed to be coherent
-        - JetHelicalTangled: initializes `~gammaALPs.base.environs.MixJetHelicalTangled` for mixing
+
+        - JetHelicalTangled: initializes :py:class:`~gammaALPs.base.environs.MixJetHelicalTangled` for mixing
             in the AGN jet with two field components (tangled and helical)
-        - GMF: initializes `~gammaALPs.base.environs.MixGMF` for mixing
+
+        - GMF: initializes :py:class:`~gammaALPs.base.environs.MixGMF` for mixing
             in the Galactic magnetic field (GMF) of the Milky Way
-        - File: initializes `~gammaALPs.base.environs.MixFromFile` for mixing
+
+        - File: initializes :py:class:`~gammaALPs.base.environs.MixFromFile` for mixing
             in a magnetic field given by a data file
-        - Array: initializes `~gammaALPs.base.environs.MixFromArray` for mixing
+
+        - Array: initializes :py:class:`~gammaALPs.base.environs.MixFromArray` for mixing
             in a magnetic field given by a numpy arrays for B,psi,nel,r, and dL
-        - EBL: initializes `~ebltable.tau_from_model.OptDepth` for EBL attenuation,
+
+        - EBL: initializes :py:class:`~ebltable.tau_from_model.OptDepth` for EBL attenuation,
             i.e. no photon-ALP mixing in the intergalactic medium
         """
         kwargs.setdefault('eblmodel', 'dominguez')
@@ -517,23 +522,20 @@ class ModuleList(object):
 
             Parameters
             ----------
-            EGeV: `~numpy.ndarray`
+            EGeV: array-like
                 n-dim array with gamma-ray energies in GeV at which dispersion/absorption/momentum difference matrix
                 is calculated
 
-            r_kpc: `~numpy.ndarray`
+            r_kpc: array-like
                 m-dim array with distnaces in kpc at which dispersion/absorption/momentum difference matrix
                 is calculated
 
-
-            disp: `~numpy.ndarray`
+            disp: array-like
                 n x m-dim array with dispersion (unitless) / absorption (in kpc^-1) / momentum difference (in kpc^-1)
 
             module_id: int
-            id of module to which dispersion / absorption /momentum difference is added
+                id of module to which dispersion / absorption /momentum difference is added
 
-            kwargs
-            ------
             type_matrix: str
                 either 'dispersion', 'absorption', or 'Delta', specifies type of matrix disp
             """
@@ -601,9 +603,10 @@ class ModuleList(object):
 
         Returns
         -------
-        tuple with N x M dim. arrays with final photon and ALP states (Px, Py, Pa).
-        Each P_i is of dimension (number of realizations x number of energy bins).
-        Flat arrays are returned when number of realizations = 1.
+        Px, Py, Pa: tuple with :py:class:`numpy.ndarray`
+            N x M dim. arrays with final photon and ALP states (Px, Py, Pa).
+            Each P_i is of dimension (number of realizations x number of energy bins).
+            Flat arrays are returned when number of realizations = 1.
         """
         # update energies of all modules
         # also accounts for changed redshift

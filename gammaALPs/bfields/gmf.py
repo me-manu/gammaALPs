@@ -3,9 +3,12 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import warnings
 # --------------------------------- #
-
-signum = lambda x: (x < 0.) * -1. + (x >= 0) * 1.
 pi = np.pi
+
+
+def signum(x):
+    """Return the sign of each entry of an array"""
+    return (x < 0.) * -1. + (x >= 0) * 1.
 
 class GMF(object):
     """
@@ -13,39 +16,111 @@ class GMF(object):
     galactic magnetic field according to the model of Jannson & Farrar (2012)
 
     Only the regular field components are implemented. 
-    The striated field component is missing .
+    The striated field component is absent.
 
     Attributes
     ----------
-    Rsun: assumed position of the sun along the x axis in kpc
+    Rsun: float
+        Assumed position of the sun along the x axis in kpc
 
-    Disk:
-        bring, bring_unc: floats, field strength in ring at 3 kpc < rho < 5 kpc
-        hdisk, hdisk_unc: float, disk/halo transition height
-        wdisk, wdisk_unc: floats, transition width
-        b, b_unc: (8,1)-dim np.arrays, field strengths of spiral arms at 5 kpc
-        rx: (8,1)-dim np.array, dividing
-                                    lines of spiral arms, coordinates of neg. x-axes that intersect with arm 
-        idisk: float, spiral arms opening angle
-    Halo:
-        Bn, Bn_unc: floats, field strength northern halo
-        Bs, Bs_unc: floats, field strength southern halo
-        rhon, rhon_unc: floats, transition radius north
-        rhos, rhos_unc: floats, transition radius south, lower limit
-        whalo, whalo_unc: floats, transition width
-        z0, z0_unc: floats, vertical scale height
-    Out of plane or "X" component:
-        BX0, BX_unc: floats, field strength at origin
-        ThetaX0, ThetaX0_unc: floats, elev. angle at z = 0, rho > rhoXc
-        rhoXc, rhoXc_unc: floats, radius where thetaX = thetaX0
-        rhoX, rhoX_unca: floats, exponential scale length
+    bring: float
+        field strength in ring at 3 kpc < rho < 5 kpc
 
-    striated field:
-        gamma, gamma_unc: floats striation and / or rel. elec. number dens. rescaling
+    bring_unc: float
+        associated uncertainty of field strength in ring at 3 kpc < rho < 5 kpc
+
+    hdisk: float hdisk_unc: float,
+        disk/halo transition height
+
+    hdisk_unc: float
+        associated uncertainty disk/halo transition height
+
+    wdisk: float
+        transition width
+
+    wdisk_unc: float, wdisk_unc: floats,
+        associated uncertainty of transition width
+
+    b: :py:class:`~numpy.ndarray`
+        arrays with field strengths of spiral arms at 5 kpc
+
+    b_unc: :py:class:`~numpy.ndarray`
+        associated uncertainties with field strengths of spiral arms at 5 kpc
+
+    rx: :py:class:`~numpy.ndarray`
+        dividing lines of spiral arms, coordinates of neg. x-axes that intersect with arm
+
+    idisk: float
+        spiral arms opening angle
+
+    bn, bn_unc: float
+        field strength northern halo
+
+    bn_unc: float
+        associated uncertainty of field strength northern halo
+
+    Bs: float
+        field strength southern halo
+
+    Bs_unc: float
+        associated uncertainty of field strength southern halo
+
+    rhon: float
+        transition radius in northern hemisphere
+
+    rhon_unc: float
+        associated uncertainty of transition radius in northern hemisphere
+
+    rhos: float
+        transition radius in southern heisphere
+
+    rhos_unc: float
+        associated uncertainty of transition radius in southern hemisphere
+
+    whalo: float
+        transition width
+
+    whalo_unc: float
+        associated uncertainty of transition width
+
+    z0: float
+        vertical scale height
+
+    z0_unc: float
+        associated uncertainty of vertical scale height
+
+    BX0: float
+        field strength at origin of X component
+
+    BX0_unc: float
+        associated uncertainty of field strength at origin of X component
+
+    ThetaX0: float
+        elev. angle at z = 0, rho > rhoXc
+
+    ThetaX0_unc: float
+        associated uncertainty of elev. angle at z = 0, rho > rhoXc
+
+    rhoXc: float
+        radius where thetaX = thetaX0
+
+    rhoXc_unc: float
+        associated uncertainty of radius where thetaX = thetaX0
+
+    rhoX: float,
+        exponential scale length
+
+    rhoX_unc: float,
+        associated uncertainty of exponential scale length
+
+    gamma: float
+        striation and / or rel. elec. number dens. rescaling
+
+    gamma_unc: float
+        associated uncertainty striation and / or rel. elec. number dens. rescaling
 
     Notes
     -----
-    Paper:
     see http://adsabs.harvard.edu/abs/2012ApJ...757...14J
     Jansson & Farrar (2012)
     """
@@ -102,23 +177,25 @@ class GMF(object):
         """
         Transition function, see Jansson & Farrar Eq. 5
 
-        Parameters:
-        -----------
-        z: scalar or array-like
+        Parameters
+        ----------
+        z: float or array-like
             array with positions (height above disk, z; distance from center, rho)
-        h: scalar
+        h: float
             height parameter
-        w: scalar
+        w: float
             width parameter
 
-        Returns:
-        --------
-        array or float (depending on z input) with transition function values
+        Returns
+        -------
+        L: :py:class:`~numpy.ndarray`
+            array or float (depending on z input) with transition function values
         """
         if np.isscalar(z):
             z = np.array([z])
         ones = np.ones(z.shape[0])
-        return np.squeeze(1./(ones + np.exp(-2. * (np.abs(z) - h) / w)))
+        L = np.squeeze(1./(ones + np.exp(-2. * (np.abs(z) - h) / w)))
+        return  L
 
     def r_log_spiral(self, phi):
         """
@@ -131,7 +208,8 @@ class GMF(object):
 
         Returns
         -------
-        r(phi) = rx * exp(b * phi) as an array
+        result: :py:class:`~numpy.ndarray`
+            logarithmic spiral result with r(phi) = rx * exp(b * phi) as an array
 
         Notes
         -----
@@ -167,9 +245,10 @@ class GMF(object):
 
         Returns
         -------
-        tuple containing the magnetic field of the disk as a (3,N)-dim array with (rho,phi,z)
-        components of disk field for each coordinate tuple and absolute value of the field as
-        N-dim array
+        Bdisk, Bdisk_abs: tuple of :py:class:`~numpy.ndarray`
+            tuple containing the magnetic field of the disk as a (3,N)-dim array with (rho,phi,z)
+            components of disk field for each coordinate tuple and absolute value of the field as
+            N-dim array
         """
         if (not rho.shape[0] == phi.shape[0]) and (not z.shape[0] == phi.shape[0]):
             warnings.warn("List do not have equal shape!", RuntimeWarning)
@@ -218,9 +297,10 @@ class GMF(object):
 
         Returns
         -------
-        tuple containing the magnetic field of the halo as a (3,N)-dim array with (rho,phi,z)
-        components of disk field for each coordinate tuple and absolute value of the field as
-        N-dim array
+        Bhalo, Bhalo_abs: tuple of :py:class:`~numpy.ndarray`
+            tuple containing the magnetic field of the halo as a (3,N)-dim array with (rho,phi,z)
+            components of disk field for each coordinate tuple and absolute value of the field as
+            N-dim array
         """
 
         if not rho.shape[0] == z.shape[0]:
@@ -255,9 +335,10 @@ class GMF(object):
 
         Returns
         -------
-        tuple containing the magnetic field of the X component as a (3,N)-dim array with (rho,phi,z)
-        components of disk field for each coordinate tuple and absolute value of the field as
-        N-dim array
+        BX, BX_abs: tuple of :py:class:`~numpy.ndarray`
+            tuple containing the magnetic field of the X component as a (3,N)-dim array with (rho,phi,z)
+            components of disk field for each coordinate tuple and absolute value of the field as
+            N-dim array
         """
 
         if (not rho.shape[0] == z.shape[0]):
@@ -295,7 +376,7 @@ class GMF(object):
         return BX, np.sqrt(np.sum(BX**2.,axis=0))
 
 
-class GMF_Pshirkov(object):
+class GMFPshirkov(object):
     """
     Class with analytical functions that describe the 
     galactic magnetic field according to the model of Pshirkov et al. (2011)
@@ -304,24 +385,50 @@ class GMF_Pshirkov(object):
 
     Attributes
     ----------
-    Rsun        = scalar, position of the sun in kpc along x axis
-    Disk:
-        p        = pitch angle, dictionary with entries 'ASS' and 'BSS', in radian
-        z0        = scalar, height of disk in kpc
-        d        = scalar, value if field reversal in kpc
-        B0        = scalar, Value of B field at position of the sun, in muG
-    Halo - North:
-        z0n        = scalar, position of northern halo in kpc
-        Bn        = scalar, northern halo in muG
-        r0n        = scalar, northern halo
-        z1n        = scalar, scale height of halo toward galactic plane, |z| < z0n
-        z2n        = scalar, scale height of halo away from galactic plane, |z| >= z0n
-    Halo - North:
-        z0s        = scalar, position of northern halo in kpc
-        Bs        = pitch angle, dictionary with entries 'ASS' and 'BSS', in radian
-        r0s        = scalar, northern halo
-        z1s        = scalar, scale height of halo toward galactic plane, |z| < z0n
-        z2s        = scalar, scale height of halo away from galactic plane, |z| >= z0n
+    Rsun:  float
+        position of the sun in kpc along x axis
+
+    p: dict
+        pitch angle, dictionary with entries 'ASS' and 'BSS', in radian
+
+    z0: float
+        height of disk in kpc
+
+    d: float
+        value if field reversal in kpc
+
+    B0: float
+        Value of B field at position of the sun, in muG
+
+    z0n: float
+        position of northern halo in kpc
+
+    Bn: float
+        northern halo field in muG
+
+    r0n: float
+        northern halo
+
+    z1n: float
+        scale height of halo toward galactic plane, |z| < z0n
+
+    z2n: float
+        scale height of northern halo away from galactic plane, |z| >= z0n
+
+    z0s: float
+        position of southern halo in kpc
+
+    Bs: float
+        southern halo field in muG
+
+    r0s: float
+        southern halo
+
+    z1s: float
+        scale height of southern halo toward galactic plane, |z| < z0s
+
+    z2s: float
+        scale height of southern halo away from galactic plane, |z| >= z0n
 
     Notes
     -----
@@ -381,16 +488,19 @@ class GMF_Pshirkov(object):
         ----------
         rho: array-like
             N-dim array with distance from origin in GC cylindrical coordinates, is in kpc
-        z: array-like
-            N-dim array with height in kpc in GC cylindrical coordinates
+
         phi: array-like
             N-dim array with polar angle in GC cylindircal coordinates, in radian
 
+        z: array-like
+            N-dim array with height in kpc in GC cylindrical coordinates
+
         Returns
         -------
-        tuple containing the magnetic field of the disk as a (3,N)-dim array with (rho,phi,z)
-        components of disk field for each coordinate tuple and absolute value of the field as
-        N-dim array
+        Bdisk, Bdisk_abs: tuple of :py:class:`~numpy.ndarray`
+            tuple containing the magnetic field of the disk as a (3,N)-dim array with (rho,phi,z)
+            components of disk field for each coordinate tuple and absolute value of the field as
+            N-dim array
 
         Notes
         -----
@@ -435,14 +545,16 @@ class GMF_Pshirkov(object):
         ----------
         rho: array-like
             N-dim array with distance from origin in GC cylindrical coordinates, is in kpc
+
         z: array-like
             N-dim array with height in kpc in GC cylindrical coordinates
 
         Returns
         -------
-        tuple containing the magnetic field of the halo as a (3,N)-dim array with (rho,phi,z)
-        components of disk field for each coordinate tuple and absolute value of the field as
-        N-dim array
+        Bhalo, Bhalo_abs: tuple of :py:class:`~numpy.ndarray`
+            tuple containing the magnetic field of the halo as a (3,N)-dim array with (rho,phi,z)
+            components of disk field for each coordinate tuple and absolute value of the field as
+            N-dim array
         """
 
         if not rho.shape[0] == z.shape[0]:

@@ -36,8 +36,8 @@ def EminGeV(m_neV, g11, n_cm3, BmuG):
     Includes momentum difference terms Delta_pl, Delta_a and Delta_ag.
     If input parameters are provided as arrays, they all need to have the same shape.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     m_neV: float or array-like
         ALP mass in neV
 
@@ -52,7 +52,8 @@ def EminGeV(m_neV, g11, n_cm3, BmuG):
 
     Returns
     -------
-    minimum energy of strong mixing regime in GeV as float or array.
+    Emin_GeV: float or array-like
+        minimum energy of strong mixing regime in GeV as float or array.
     """
     return np.abs(2.6 * m_neV**2. - 3.6e-3 * n_cm3) / g11 / BmuG
 
@@ -63,8 +64,8 @@ def EmaxGeV(g11, BmuG):
     Includes momentum difference terms Delta_CMB, Delta_QED (without high order corrections) and Delta_ag.
     If input parameters are provided as arrays, they all need to have the same shape.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     m_neV: float or array-like
         ALP mass in neV
 
@@ -76,7 +77,8 @@ def EmaxGeV(g11, BmuG):
 
     Returns
     -------
-    maximum energy of strong mixing regime in GeV as float or array.
+    Emax_GeV: float or array-like
+        maximum energy of strong mixing regime in GeV as float or array.
     """
     return 4e5 * g11 * BmuG / (2e-1 * BmuG**2. + 1.)
     #return 2.1e6 * g11 / BmuG  # no CMB term
@@ -178,6 +180,7 @@ class GammaALPTransfer(object):
         self._T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
         self._T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
         self._T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+        self._Tn = None
 
         # init meshgrid arrays
         self._ee, self._bb = np.meshgrid(self._EGeV, self._B, indexing = 'ij')
@@ -592,7 +595,7 @@ class GammaALPTransfer(object):
 
         Returns
         -------
-        List with n x 3 x 3 dim `~numpy.ndarray` with transfer matrix for all energies.
+        List with n x 3 x 3 dim :py:class:`~numpy.ndarray` with transfer matrix for all energies. \\
         Length of list is equal to number of requested B-field realizations.
         """
         Tn = self.fill_transfer()
@@ -622,7 +625,7 @@ class GammaALPTransfer(object):
 
         Returns
         -------
-        n x 3 x 3 dim `~numpy.ndarray` with transfer matrix for all energies
+        n x 3 x 3 dim :py:class:`~numpy.ndarray` with transfer matrix for all energies
         """
         if nprocess < 1:
             raise ValueError("nprocess must be >= 1, not {0:n}".format(nprocess))

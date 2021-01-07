@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8c180f48-b499-471e-a2f9-f872eebf9e4c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/gammaALPs/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/gammaALPs/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gammaALPs/base/environs.py" beforeDir="false" afterPath="$PROJECT_DIR$/gammaALPs/base/environs.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gammaALPs/base/transfer.py" beforeDir="false" afterPath="$PROJECT_DIR$/gammaALPs/base/transfer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gammaALPs/bfields/cell.py" beforeDir="false" afterPath="$PROJECT_DIR$/gammaALPs/bfields/cell.py" afterDir="false" />
@@ -12,8 +12,8 @@
       <change beforePath="$PROJECT_DIR$/gammaALPs/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/gammaALPs/core.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gammaALPs/nel/icm.py" beforeDir="false" afterPath="$PROJECT_DIR$/gammaALPs/nel/icm.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gammaALPs/nel/jet.py" beforeDir="false" afterPath="$PROJECT_DIR$/gammaALPs/nel/jet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gammaALPs/utils/trafo.py" beforeDir="false" afterPath="$PROJECT_DIR$/gammaALPs/utils/trafo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_conversion.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_conversion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/example_AGN_jet.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/example_GMF.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/example_GMF.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_gmf_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_gmf_models.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -25,72 +25,12 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/gammaALPs/nel/icm.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1845">
-              <caret line="123" column="26" selection-start-line="123" selection-start-column="26" selection-end-line="123" selection-end-column="26" />
-              <folding>
-                <element signature="e#38#56#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/gammaALPs/base/transfer.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="11565">
-              <caret line="771" column="46" selection-start-line="771" selection-start-column="46" selection-end-line="771" selection-end-column="46" />
-              <folding>
-                <element signature="e#30#94#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/gammaALPs/utils/interp2d.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="576">
-              <caret line="47" column="29" selection-start-line="47" selection-start-column="29" selection-end-line="47" selection-end-column="29" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/gammaALPs/utils/trafo.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="12" column="13" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/gauss.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1315">
-              <caret line="382" column="37" selection-start-line="382" selection-start-column="37" selection-end-line="382" selection-end-column="37" />
+            <state relative-caret-position="6165">
+              <caret line="411" selection-start-line="411" selection-end-line="411" />
               <folding>
                 <element signature="e#38#56#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/gmf.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-4638">
-              <caret line="60" column="15" selection-start-line="60" selection-start-column="15" selection-end-line="60" selection-end-column="15" />
-              <folding>
-                <element signature="e#38#102#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -99,8 +39,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gammaALPs/base/environs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="444">
-              <caret line="737" column="67" selection-start-line="737" selection-start-column="67" selection-end-line="737" selection-end-column="67" />
+            <state relative-caret-position="353">
+              <caret line="335" column="53" selection-start-line="335" selection-start-column="53" selection-end-line="335" selection-end-column="53" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -109,10 +49,40 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/jet.py">
+        <entry file="file://$PROJECT_DIR$/docs/tutorials/index.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/docs/index.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/docs/electrondens/index.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/docs/environments.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/docs/module.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/docs/bfields/index.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/gmf.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="645">
-              <caret line="271" column="13" selection-start-line="271" selection-start-column="13" selection-end-line="271" selection-end-column="13" />
+            <state relative-caret-position="-5032">
+              <caret line="9" column="47" selection-start-line="9" selection-start-column="47" selection-end-line="9" selection-end-column="47" />
               <folding>
                 <element signature="e#38#102#0" expanded="true" />
               </folding>
@@ -123,20 +93,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gammaALPs/core.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="6495">
-              <caret line="497" column="72" selection-start-line="497" selection-start-column="72" selection-end-line="497" selection-end-column="72" />
-              <folding>
-                <element signature="e#0#64#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tests/test_conversion.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3375">
-              <caret line="225" column="59" selection-start-line="225" selection-start-column="59" selection-end-line="225" selection-end-column="59" />
+            <state relative-caret-position="-3264">
+              <caret line="331" column="48" selection-start-line="331" selection-start-column="48" selection-end-line="331" selection-end-column="48" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -166,25 +124,44 @@
         <option value="$PROJECT_DIR$/gammaALPs/utils/interp2d.py" />
         <option value="$PROJECT_DIR$/tests/test_gmf_models.py" />
         <option value="$PROJECT_DIR$/gammaALPs/__init__.py" />
-        <option value="$PROJECT_DIR$/gammaALPs/bfields/cell.py" />
-        <option value="$PROJECT_DIR$/gammaALPs/nel/jet.py" />
-        <option value="$PROJECT_DIR$/gammaALPs/bfields/gmf.py" />
-        <option value="$PROJECT_DIR$/gammaALPs/nel/icm.py" />
-        <option value="$PROJECT_DIR$/gammaALPs/bfields/gauss.py" />
         <option value="$PROJECT_DIR$/gammaALPs/utils/trafo.py" />
+        <option value="$PROJECT_DIR$/tests/test_conversion.py" />
+        <option value="$PROJECT_DIR$/gammaALPs/base/__init__.py" />
+        <option value="$PROJECT_DIR$/docs/electrondens/jet.rst" />
+        <option value="$PROJECT_DIR$/docs/electrondens/icm.rst" />
+        <option value="$PROJECT_DIR$/docs/bfields/index.rst" />
+        <option value="$PROJECT_DIR$/docs/electrondens/index.rst" />
+        <option value="$PROJECT_DIR$/docs/theory.rst" />
+        <option value="$PROJECT_DIR$/docs/gammaalps.rst" />
+        <option value="$PROJECT_DIR$/docs/environments.rst" />
+        <option value="$PROJECT_DIR$/docs/installation.rst" />
+        <option value="$PROJECT_DIR$/gammaALPs/bfields/cell.py" />
+        <option value="$PROJECT_DIR$/docs/bfields/cell.rst" />
+        <option value="$PROJECT_DIR$/docs/bfields/gauss.rst" />
+        <option value="$PROJECT_DIR$/docs/references.rst" />
         <option value="$PROJECT_DIR$/gammaALPs/bfields/jet.py" />
+        <option value="$PROJECT_DIR$/docs/bfields/gmf.rst" />
+        <option value="$PROJECT_DIR$/gammaALPs/bfields/gmf.py" />
+        <option value="$PROJECT_DIR$/docs/electrondens/icm_nel.rst" />
+        <option value="$PROJECT_DIR$/docs/conf.py" />
+        <option value="$PROJECT_DIR$/gammaALPs/nel/icm.py" />
+        <option value="$PROJECT_DIR$/docs/bfields/jet.rst" />
+        <option value="$PROJECT_DIR$/docs/electrondens/jet_nel.rst" />
+        <option value="$PROJECT_DIR$/gammaALPs/nel/jet.py" />
+        <option value="$PROJECT_DIR$/gammaALPs/base/transfer.py" />
         <option value="$PROJECT_DIR$/gammaALPs/base/environs.py" />
         <option value="$PROJECT_DIR$/gammaALPs/core.py" />
-        <option value="$PROJECT_DIR$/tests/test_conversion.py" />
-        <option value="$PROJECT_DIR$/gammaALPs/base/transfer.py" />
+        <option value="$PROJECT_DIR$/gammaALPs/bfields/gauss.py" />
+        <option value="$PROJECT_DIR$/docs/tutorials/index.rst" />
+        <option value="$PROJECT_DIR$/docs/module.rst" />
+        <option value="$PROJECT_DIR$/docs/index.rst" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="10" />
-    <option name="y" value="29" />
-    <option name="width" value="1420" />
-    <option name="height" value="865" />
+  <component name="ProjectFrameBounds">
+    <option name="y" value="23" />
+    <option name="width" value="1374" />
+    <option name="height" value="877" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -198,6 +175,17 @@
             <path>
               <item name="gammaALPs" type="b2602c69:ProjectViewProjectNode" />
               <item name="gammaALPs" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="gammaALPs" type="b2602c69:ProjectViewProjectNode" />
+              <item name="gammaALPs" type="462c0819:PsiDirectoryNode" />
+              <item name="docs" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="gammaALPs" type="b2602c69:ProjectViewProjectNode" />
+              <item name="gammaALPs" type="462c0819:PsiDirectoryNode" />
+              <item name="docs" type="462c0819:PsiDirectoryNode" />
+              <item name="electrondens" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="gammaALPs" type="b2602c69:ProjectViewProjectNode" />
@@ -231,6 +219,11 @@
             <path>
               <item name="gammaALPs" type="b2602c69:ProjectViewProjectNode" />
               <item name="gammaALPs" type="462c0819:PsiDirectoryNode" />
+              <item name="notebooks" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="gammaALPs" type="b2602c69:ProjectViewProjectNode" />
+              <item name="gammaALPs" type="462c0819:PsiDirectoryNode" />
               <item name="tests" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -242,6 +235,11 @@
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -305,10 +303,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="877" extended-state="6" />
+    <frame x="0" y="23" width="1374" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.11275546" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.20916481" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -359,58 +357,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gammaALPs/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="18" selection-start-column="18" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gammaALPs/nel/jet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="1" selection-start-line="1" selection-end-line="1" />
-          <folding>
-            <element signature="e#38#102#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/cell.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="1" selection-start-line="1" selection-end-line="1" />
-          <folding>
-            <element signature="e#38#102#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test_gmf_models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-466">
           <folding>
             <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/gmf.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4638">
-          <caret line="60" column="15" selection-start-line="60" selection-start-column="15" selection-end-line="60" selection-end-column="15" />
-          <folding>
-            <element signature="e#38#102#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/gauss.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1315">
-          <caret line="382" column="37" selection-start-line="382" selection-start-column="37" selection-end-line="382" selection-end-column="37" />
-          <folding>
-            <element signature="e#38#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -435,20 +386,120 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/jet.py">
+    <entry file="file://$PROJECT_DIR$/gammaALPs/base/__init__.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gammaALPs/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="645">
-          <caret line="271" column="13" selection-start-line="271" selection-start-column="13" selection-end-line="271" selection-end-column="13" />
+        <state>
+          <caret column="18" selection-start-column="18" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/gammaalps.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/installation.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/theory.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/bfields/cell.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/bfields/gauss.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/references.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/bfields/gmf.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/conf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="394">
+          <caret line="50" column="23" selection-start-line="50" selection-start-column="23" selection-end-line="50" selection-end-column="23" />
+          <folding>
+            <element signature="e#553#562#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/electrondens/icm_nel.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/electrondens/jet_nel.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/cell.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1111">
+          <caret line="83" selection-start-line="83" selection-end-line="83" />
           <folding>
             <element signature="e#38#102#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_conversion.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="703">
+          <caret line="89" column="51" selection-start-line="89" selection-start-column="51" selection-end-line="89" selection-end-column="51" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/bfields/jet.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/jet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4545">
+          <caret line="431" column="47" selection-start-line="431" selection-start-column="47" selection-end-line="431" selection-end-column="47" />
+          <folding>
+            <element signature="e#38#102#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gammaALPs/base/transfer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2284">
+          <caret line="448" column="13" selection-start-line="448" selection-start-column="13" selection-end-line="448" selection-end-column="13" />
+          <folding>
+            <element signature="e#30#94#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gammaALPs/nel/jet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3120">
+          <caret line="208" column="48" selection-start-line="208" selection-start-column="48" selection-end-line="208" selection-end-column="48" />
+          <folding>
+            <element signature="e#38#102#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gammaALPs/nel/icm.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="162">
+          <caret line="182" column="63" selection-start-line="182" selection-start-column="63" selection-end-line="182" selection-end-column="63" />
+          <folding>
+            <element signature="e#38#56#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/gammaALPs/base/environs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="444">
-          <caret line="737" column="67" selection-start-line="737" selection-start-column="67" selection-end-line="737" selection-end-column="67" />
+        <state relative-caret-position="353">
+          <caret line="335" column="53" selection-start-line="335" selection-start-column="53" selection-end-line="335" selection-end-column="53" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>
@@ -457,43 +508,51 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gammaALPs/core.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6495">
-          <caret line="497" column="72" selection-start-line="497" selection-start-column="72" selection-end-line="497" selection-end-column="72" />
+        <state relative-caret-position="-3264">
+          <caret line="331" column="48" selection-start-line="331" selection-start-column="48" selection-end-line="331" selection-end-column="48" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test_conversion.py">
+    <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/gauss.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3375">
-          <caret line="225" column="59" selection-start-line="225" selection-start-column="59" selection-end-line="225" selection-end-column="59" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gammaALPs/nel/icm.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1845">
-          <caret line="123" column="26" selection-start-line="123" selection-start-column="26" selection-end-line="123" selection-end-column="26" />
+        <state relative-caret-position="6165">
+          <caret line="411" selection-start-line="411" selection-end-line="411" />
           <folding>
             <element signature="e#38#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gammaALPs/base/transfer.py">
+    <entry file="file://$PROJECT_DIR$/gammaALPs/bfields/gmf.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="11565">
-          <caret line="771" column="46" selection-start-line="771" selection-start-column="46" selection-end-line="771" selection-end-column="46" />
+        <state relative-caret-position="-5032">
+          <caret line="9" column="47" selection-start-line="9" selection-start-column="47" selection-end-line="9" selection-end-column="47" />
           <folding>
-            <element signature="e#30#94#0" expanded="true" />
+            <element signature="e#38#102#0" expanded="true" />
           </folding>
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/tutorials/index.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/bfields/index.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/environments.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/electrondens/index.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/module.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/index.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
     </entry>
   </component>
 </project>

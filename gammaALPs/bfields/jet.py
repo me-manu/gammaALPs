@@ -71,17 +71,18 @@ class Bjet(object):
 
         Parameters
         ----------
-        z: `~numpy.ndarray`
+        z: array-like
             n-dim array with distance from r0 in pc
-
-        {options}
 
         psi: float
             angle between transversal magnetic field and x2 direction. Default: pi/4
 
         Returns
         -------
-        tuple with n-dim `~numpy.ndarray` with B field in G and psi angles
+        B, Psi: tuple with :py:class:`numpy.ndarray`
+            N-dim array with field strength along line of sight
+            N-dim array with psi angles between photon polarization states
+            and jet B field
         """
         B = self._B0 * np.power(z / self._r0, self._alpha)
         psi = np.ones(B.shape[0]) * psi
@@ -112,10 +113,10 @@ class Bjet(object):
 
         Returns
         -------
-        2-dim tuple containing:
-            N-dim np.array, field strength along line of sight
-            N-dim np.array, with psi angles between photon polarization states
-            and Jet Bfield
+        Btrans, Psi: tuple with :py:class:`numpy.ndarray`
+            N-dim array with field strength along line of sight
+            N-dim array with psi angles between photon polarization states
+            and jet B field
         """
         # Calculate normalized rho component, i.e. distance
         # from line of sight to jet axis assuming a self similar jet
@@ -427,7 +428,10 @@ class BjetHelicalTangled(object):
 
         Returns
         -------
-        tuple with n-dim arrays with B field in G and psi angles
+        B, Psi: tuple with :py:class:`numpy.ndarray`
+            N-dim array with field strength in G along line of sight
+            N-dim array with psi angles between photon polarization states
+            and jet B field
         """
         # t1 = time.time()
         # get Bs from PC shape function

@@ -14,12 +14,14 @@ class NelICM(object):
         """
         Initialize the class
 
-        kwargs
-        ------
+        Parameters
+        ----------
         n0: float
             electron density in cm**-3 (default 1e-3)
+
         r_core: float
             core radius in kpc (default 10.)
+
         beta: float
             exponent of density profile (default: 2. / 3.)
 
@@ -140,15 +142,16 @@ class NelICM(object):
 
         Returns
         -------
-        n-dim array with electron density in 10**-3 cm**-3
+        nel: :py:class:`~numpy.ndarray`
+            n-dim array with electron density in 10**-3 cm**-3
         """
 
         if self._beta2 > 0. and self._r_core2 > 0. and self._n2 > 0:
             res = self._n0 * (1. + r**2./self._r_core**2.)**(-1.5 * self._beta) +\
                     self._n2 * (1. + r**2./self._r_core2**2.)**(-1.5 * self._beta2) 
         elif self._r_core2 > 0. and self._n2 > 0:
-            res = np.sqrt(self._n0**2. * (1. + r**2./self._r_core**2.)**(-3. * self._beta) + \
-                            self._n2**2. * (1. + r**2./self._r_core2**2.)**(-3. * self._beta) )
+            res = np.sqrt(self._n0**2. * (1. + r**2./self._r_core**2.)**(-3. * self._beta) +
+                            self._n2**2. * (1. + r**2./self._r_core2**2.)**(-3. * self._beta))
         else:
             res = self._n0 * (1. + r**2./self._r_core**2.)**(-1.5 * self._beta)
 
@@ -165,7 +168,8 @@ class NelICM(object):
 
         Returns
         -------
-        n-dim `~numpy.ndarray` with electron density in 10**-3 cm**-3
+        nel: :py:class:`~numpy.ndarray`
+            n-dim array with electron density in 10**-3 cm**-3
         """
         return self._n0 * np.ones(r.shape[0])
 
@@ -180,7 +184,8 @@ class NelICM(object):
 
         Returns
         -------
-        n-dim array with scaling of B field with electron density
+        nel: :py:class:`~numpy.ndarray`
+            n-dim array with scaling of B field with electron density
         """
         if self._beta2 > 0. and self._r_core2 > 0. and self._n2 > 0:
             return (self.__call__(r) / (self._n0 + self._n2) )**self._eta
@@ -199,8 +204,8 @@ class NelICMFunction(object):
         """
         Initialize the class
 
-        kwargs
-        ------
+        Parameters
+        ----------
         func: function pointer
             function that takes radius in kpc and returns electron density in cm^-3
 
@@ -238,7 +243,8 @@ class NelICMFunction(object):
 
         Returns
         -------
-        n-dim array with electron density in 10**-3 cm**-3
+        nel: :py:class:`~numpy.ndarray`
+            n-dim array with electron density in 10**-3 cm**-3
         """
 
         return self._func(r) * 1e-3
@@ -257,6 +263,7 @@ class NelICMFunction(object):
 
         Returns
         -------
-        n-dim array with scaling of B field with electron density
+        nel: :py:class:`~numpy.ndarray`
+            n-dim array with scaling of B field with electron density
         """
         return (self.__call__(r) / self.__call__(r0))**self._eta

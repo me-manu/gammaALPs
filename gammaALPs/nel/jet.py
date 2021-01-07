@@ -79,12 +79,13 @@ class NelJet(object):
 
         Returns
         -------
-        n-dim `~numpy.ndarray` with electron density in cm**-3
+        nel: :py:class:`~numpy.ndarray`
+            n-dim array with electron density in cm**-3
         """
         return self._n0 * np.power(r / self._r0, self._beta)
 
 
-class NeleffectiveJetHelicalTangled(object):
+class NelJetHelicalTangled(object):
     """
     Class to get effective electron densities in jet, taking into account that
     the jet is not a cold plasma. i.e. the electron distribution is non-thermal.
@@ -167,6 +168,11 @@ class NeleffectiveJetHelicalTangled(object):
 
         ne: array-like
             electron density in cm^-3
+
+        Returns
+        -------
+        m_T_2: float
+            effective photon mass squared
         """
         def integrand(E, alpha, m_e):
             return E**(-alpha)/np.sqrt(E**2 - m_e**2)
@@ -195,7 +201,8 @@ class NeleffectiveJetHelicalTangled(object):
 
         Returns
         -------
-        n-dim `~numpy.ndarray` with effective electron density in cm**-3
+        nel: :py:class:`~numpy.ndarray`
+            n-dim array with electron density in cm**-3
         """
         actual_nes = self._n0 * np.power(r / self._r0, self._beta)
         eff_photon_masses2 = self.get_photon_mass_ne(self._alpha, actual_nes)  # eV^2

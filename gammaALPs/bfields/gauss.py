@@ -9,54 +9,6 @@ from astropy import units as u
 # --------------------------------- #
 
 
-def Fq(x, kL, kH, q):
-    """
-    Calculate the F_q function for given x,kL, and _kH
-
-    Arguments
-    ---------
-    x:        n-dim array, Ratio between k and _kH
-
-    Returns
-    -------
-    n-dim array with Fq values
-    """
-    if q == 0.:
-        F = 3. * kH ** 2. / (kH ** 3. - kL ** 3.) * \
-                    (0.5 * (1. - x*x) - x * x * np.log(x))
-
-        F_low = 3. * (0.5 * (kH ** 2. - kL ** 2.) + \
-                    (x * kH) * (x * kH) * np.log(kH / kL)) \
-                    / (kH ** 3. - kL ** 3.)
-
-    elif q == -2.:
-        F = (0.5 * (1. - x*x) - np.log(x)) / (kH - kL )
-        F_low = (np.log(kH / kL ) + (x * kH) * \
-                (x * kH) * 0.5 * (kL ** (-2) - kH ** (-2)) ) \
-                / (kH - kL )
-    elif q == -3.:
-        F = 1. / np.log(kH / kL) / kH / x / 3. * (-x*x*x - 3. * x + 4.)
-        F_low = ((kL ** (-2) - kH ** (-2)) + (x * kH) * \
-                (x * kH) / 3. * (kL ** (-3) - kH ** (-3)) ) / \
-                np.log(kH / kL )
-    else:
-        F = kH ** (q + 2.) / (kH ** (q + 3.) - \
-            kL ** (q + 3.)) * \
-            (q + 3.) / (q * (q + 2.)) * \
-            (q + x * x * ( 2. + q - 2. * (1. + q) * x ** q))
-
-        F_low = (q + 3.) * ( (kH ** (q + 2) - \
-                kL ** (q +2)) / (q + 2.) + \
-                (x * kH) * (x * kH) / q * \
-                (kH ** q - kL ** q)) / \
-                (kH ** (q + 3.) - kL**(q + 3))
-
-    result = np.zeros_like(x)
-    result[x >= kL / kH] = F[x >= kL / kH]
-    result[x < kL / kH] = F_low[x < kL / kH]
-    return result
-
-
 # ========================================================== #
 # === Gaussian turbulent magnetic field ==================== #
 # ========================================================== #
@@ -72,25 +24,31 @@ class Bgaussian(object):
         Parameters
         ----------
         B: float
-            rms B field strength, energy is B^2 / 4pi (default = 1 muG)
+            rms B field strength, energy is :math:`B^2 / 4 \pi` (default = 1 muG)
+
         kH: float
             upper wave number cutoff, 
             should be at at least > 1. / osc. wavelength (default = 1 / (1 kpc))
+
         kL: float
             lower wave number cutoff,
             should be of same size as the system (default = 1 / (100 kpc))
+
         q: float
             power-law turbulence spectrum (default: q = 11/3 is Kolmogorov type spectrum)
 
         kMin: float
             minimum wave number in 1. / kpc,
             defualt 1e-3 * kL (the k interval runs from kMin to kH)
+
         dkType: string
-            either linear, log, or random. Determine the spacing of the dk intervals         
+            either linear, log, or random. Determine the spacing of the dk intervals
+
         dkSteps: int
             number of dkSteps.
             For log spacing, number of steps per decade / number of decades ~ 10
             should be chosen.
+
         seed: int or None
             random seed
         """
@@ -218,7 +176,7 @@ class Bgaussian(object):
 
     def Fq(self, x):
         """
-        Calculate the F_q function for given x,kL, and _kH
+        Calculate the :math:`F_q` function for given :math:`x, k_L`, and :math:`k_H`
 
         Parameters
         ----------
@@ -227,7 +185,8 @@ class Bgaussian(object):
 
         Returns
         -------
-        n-dim array with Fq values
+        F: array-like
+            n-dim array with :math:`F_q(x)` values
         """
         if self._q == 0.:
             F = lambda x: 3. * self._kH **2. / (self._kH ** 3. - self._kL ** 3.) * \
@@ -268,9 +227,11 @@ class Bgaussian(object):
 
         Returns
         -------
-        n-dim array with values of the correlation function
+        spatial_corr: array-like
+            n-dim array with values of the correlation function
         """
-        return pi / 4. * self._B * self._B * self.Fq(k / self._kH)
+        spatial_corr = pi / 4. * self._B * self._B * self.Fq(k / self._kH)
+        return spatial_corr
         #return pi / 4. * self._B * self._B * Fq(k / self._kH, self._kL, self._kH, self._q)
 
     def Bgaus(self, z):
@@ -285,7 +246,8 @@ class Bgaussian(object):
 
         Return
         -------
-        m-dim array with values of transversal field
+        B: :py:class:`numpy.ndarray`
+            m-dim array with values of transversal field
         """
         #t0 = time.time()
         zz, kk = meshgrid(z, self.__kn)
@@ -313,16 +275,15 @@ class Bgaussian(object):
         z: array-like
            m-dim array with distance traversed in magnetic field
 
-        {options}
-
         Bscale: array-like or float or None
            if not None, float or m-dim array with scaling factor for magnetic field 
            along distance travelled 
 
         Returns
         -------
-        tuple with two m-dim arrays with absolute value of transversal field
-        and angles between total transversal magnetic field and x2 direction
+        B, Psin: tuple with :py:class:`~numpy.ndarray`
+            Two squeezed (nsim,m)-dim array with absolute value of transversal field,
+            as well as angles between total transversal magnetic field and the :math:`y` direction.
         """
         seed(self.seed)
 
@@ -380,7 +341,8 @@ class Bgaussian(object):
 
         Returns
         -------
-        array with spatial correlation
+        corr: array-like
+            array with spatial correlation
         """
         if isscalar(z):
             z = array([z])
@@ -388,7 +350,8 @@ class Bgaussian(object):
         tt, zz = meshgrid(t, z)
         kernel = self.Fq(tt) * cos(tt * zz * self._kH)
         # the self._kH factor comes from the substitution t = k / _kH
-        return self._B * self._B / 4. * simps(kernel * tt, log(tt), axis=1) * self._kH
+        corr = self._B * self._B / 4. * simps(kernel * tt, log(tt), axis=1) * self._kH
+        return corr
 
     def rotation_measure(self, z, n_el, Bscale=None, nsim=1):
         """
@@ -403,8 +366,6 @@ class Bgaussian(object):
         n_el: array-like
            m-dim array with electron density in cm^-3
 
-        {options}
-
         nsim: int
             number of B-field simulations
 
@@ -414,8 +375,8 @@ class Bgaussian(object):
 
         Returns
         -------
-        Rotation measure for each simulated B field as an `~numpy.ndarray` if nsim > 1
-        or as a scalar if nsim=1
+        rm: :py:class:`~numpy.ndarray` or float
+            Rotation measure for each simulated B field. Returned as array if nsim > 1
         """
         if Bscale is None:
             Bscale = np.ones_like(z)
@@ -448,5 +409,6 @@ class Bgaussian(object):
         if seeds is not None:
             self.seed = copy.deepcopy(seed_old)
 
-        return 812. * simps(kernel, z, axis=1)
+        rm = 812. * simps(kernel, z, axis=1)
+        return rm
 

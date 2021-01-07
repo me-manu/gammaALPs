@@ -20,15 +20,13 @@ class MixIGMFCell(trans.GammaALPTransfer):
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
 
-        source: `~gammaALPs.Source`
-            `~gammaALPs.Source` object with source parameters
+        source: :py:class:`~gammaALPs.Source`
+            :py:class:`~gammaALPs.Source` object with source parameters
 
-        kwargs
-        ------
-        EGeV: arra-like
+        EGeV: array-like
             Gamma-ray energies in GeV
 
         dL: arra-like
@@ -135,11 +133,9 @@ class MixICMCell(trans.GammaALPTransfer):
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
 
-        kwargs
-        ------
         EGeV: array-like
             Gamma-ray energies in GeV
 
@@ -263,11 +259,9 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
 
-        kwargs
-        ------
         EGeV: array-like
             Gamma-ray energies in GeV
 
@@ -339,7 +333,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
         """
-        kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
+        kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
         kwargs.setdefault('nsim', 1)
@@ -422,14 +416,12 @@ class MixJet(trans.GammaALPTransfer):
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
 
-        source: `~gammaALPs.Source`
-            `~gammaALPs.Source` object with source parameters
+        source: :py:class:`~gammaALPs.Source`
+            :py:class:`~gammaALPs.Source` object with source parameters
 
-        kwargs
-        ------
         EGeV: array-like
             Gamma-ray energies in GeV
 
@@ -616,15 +608,13 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
 
-        source: `~gammaALPs.Source`
-            `~gammaALPs.Source` object with source parameters
+        source: :py:class:`~gammaALPs.Source`
+            :py:class:`~gammaALPs.Source` object with source parameters
 
-        kwargs
-        ------
-        EGeV: arra-like
+        EGeV: array-like
             Gamma-ray energies in GeV
 
         restore: str or None
@@ -755,21 +745,50 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         except AttributeError:
             pass
 
-        self._neljet = njet.NeleffectiveJetHelicalTangled(kwargs['n0'],
-                                                          kwargs['rvhe'],
-                                                          kwargs['alpha'],
-                                                          kwargs['beta'])
+        self._neljet = njet.NelJetHelicalTangled(kwargs['n0'],
+                                                 kwargs['rvhe'],
+                                                 kwargs['alpha'],
+                                                 kwargs['beta'])
 
         # init the transfer function with absorption
         super(MixJetHelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r),
                                                    dL * 1e-3, alp, Gamma=None, chi=None, Delta=None)
 
         # transform energies to stationary frame
-        self._gammas = self.jet_gammas_scaled_gg(self._r, kwargs['rvhe'], kwargs['rjet'], kwargs['gmin'], kwargs['g0'])
+        self._gammas = self.jet_gammas_scaled_gg(self._r,
+                                                 kwargs['rvhe'],
+                                                 kwargs['rjet'],
+                                                 kwargs['gmin'],
+                                                 source.bLorentz)
 
         self._ee /= self._gammas
 
         return
+
+    @property
+    def r(self):
+        return self._r
+
+    @property
+    def rbounds(self):
+        return self._rbounds
+
+    @property
+    def Rjet(self):
+        return self._Rjet
+
+    @property
+    def Bfield_model(self):
+        return self._Bfield_model
+
+    @property
+    def nel_model(self):
+        return self._neljet
+
+    @property
+    def gammas(self):
+        return self._gammas
+
 
     @staticmethod
     def jet_gammas_scaled_gg(rs, rvhe, rjet, gmin, gmax):
@@ -795,14 +814,12 @@ class MixGMF(trans.GammaALPTransfer):
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
 
-        source: `~gammaALPs.Source`
-            `~gammaALPs.Source` object with source parameters
+        source: :py:class:`~gammaALPs.Source`
+            :py:class:`~gammaALPs.Source` object with source parameters
 
-        kwargs
-        ------
         EGeV: array-like
             Gamma-ray energies in GeV
 
@@ -882,7 +899,7 @@ class MixGMF(trans.GammaALPTransfer):
         if kwargs['model'].find('jansson') >= 0:
             self._Bgmf = gmf.GMF(model=kwargs['model'])  # Initialize the Bfield class
         elif kwargs['model'] == 'pshirkov':
-            self._Bgmf = gmf.GMF_Pshirkov(model=kwargs['model_sym'])
+            self._Bgmf = gmf.GMFPshirkov(model=kwargs['model_sym'])
         else:
             raise ValueError("Unknown GMF model chosen")
 
@@ -949,16 +966,6 @@ class MixGMF(trans.GammaALPTransfer):
     def set_coordinates(self):
         """
         Set the coordinates l,b and the the maximum distance smax where |GMF| > 0
-
-
-        Sets
-        ----
-        l: float
-            galactic longitude
-        b: float
-            galactic latitude
-        smax: float
-            maximum distance in kpc from sun considered here where |GMF| > 0
         """
 
         # Transformation RA, DEC -> L,B
@@ -977,22 +984,27 @@ class MixGMF(trans.GammaALPTransfer):
             self._smax = self._galactic
         return
 
-    def Bgmf_calc(self,l=0.,b=0.):
+    def Bgmf_calc(self, l=0., b=0.):
         """
         compute GMF at (s,l,b) position where origin at self.d along x-axis in GC coordinates is assumed
 
         Parameters
         -----------
-        s: N-dim np.array, distance from sun in kpc for all domains
-        l (optional): galactic longitude, scalar or N-dim np.array
-        b (optional): galactic latitude, scalar or N-dim np.array
+        s: array-like
+            N-dim array, distance from sun in kpc for all domains
+
+        l: float
+            galactic longitude, scalar or N-dim np.array
+
+        b: float
+            galactic latitude, scalar or N-dim np.array
 
         Returns
         -------
-        2-dim tuple containing:
-            (3,N)-dim np.parray containing GMF for all domains in
+        Btrans, Psin: tuple with :py:class:`~numpy.ndarray`
+            (3,N)-dim arrays containing GMF for all domains in
             galactocentric cylindrical coordinates (rho, phi, z)
-            N-dim np.array, field strength for all domains
+            and N-dim array with angles between propagation direction and line of sight.
         """
         if np.isscalar(l):
             if not l:
@@ -1043,13 +1055,12 @@ class MixFromFile(trans.GammaALPTransfer):
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
+
         filename: str
             full path to file with electron density and B field
 
-        kwargs
-        ------
         EGeV: array-like
             Gamma-ray energies in GeV
 
@@ -1102,8 +1113,8 @@ class MixFromArray(trans.GammaALPTransfer):
 
         Parameters
         ----------
-        alp: `~gammaALPs.ALP`
-            `~gammaALPs.ALP` object with ALP parameters
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
 
         Btrans: array-like
             n-dim or m x n-dim array with absolute value of transversal B field, in muG
@@ -1121,14 +1132,13 @@ class MixFromArray(trans.GammaALPTransfer):
             n-dim array with bin widths along line of sight in kpc,
             if m x n-dimensional, m realizations are assumed
 
-        kwargs
-        ------
         EGeV: array-like
             Gamma-ray energies in GeV
 
         restore: str or None
             if str, identifier for files to restore environment.
             If None, initialize mixing with new B field
+
         restore_path: str
             full path to environment files
 
