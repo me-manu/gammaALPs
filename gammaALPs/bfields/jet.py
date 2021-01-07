@@ -355,7 +355,7 @@ class BjetHelicalTangled(object):
 
     def jet_bfield_scaled_old(self,rs,r0,b0):
         """
-        Function to get jet B-field strength. Shape of function
+        Function to get jet B-field strength. Shape of function (defined by the constants)
         from PC Jet model, scaled to r0 and B0.
         """
         xs=rs
@@ -378,8 +378,9 @@ class BjetHelicalTangled(object):
 
     def jet_bfield_scaled(self,rs,rvhe,r0,b0):
         """
-        Function to get jet B-field strength. Shape of function
-        from PC Jet model, scaled to rvhe. Strength scaled to r0 and B0.
+        Function to get jet B-field strength. The function is an analytic
+        approximation, defined by the constants, to the shape of the B-field
+        vs. r from PC Jet model, scaled to rvhe. Strength scaled to r0 and B0.
         """
         xs=rs
         tr1 = np.log10((0.104778867386/0.3)*rvhe)
@@ -404,8 +405,10 @@ class BjetHelicalTangled(object):
 
     def jet_gammas_scaled(self,rs,r0,g0,rjet):
         """
-        Function to get jet lorentz factors. Shape of function
-        from PC Jet model, scaled to r0, g0, and rjet.
+        Function to get jet lorentz factors. The shape of the gammas
+        vs. r from PC Jet model, scaled to r0, g0 and rjet.
+        Jet accelerates in the parabolic base (up to rvhe),
+        then logarithmically decelerates in the conical jet.
         """
         gxs = rs
         gz = 4. * (g0/9.)

@@ -793,8 +793,10 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
     @staticmethod
     def jet_gammas_scaled_gg(rs, rvhe, rjet, gmin, gmax):
         """
-        Function to get jet lorentz factors. Shape of function
-        from PC Jet model, scaled to r0, gmin, gmax and rjet.
+        Function to get jet lorentz factors. The shape of the gammas
+        vs. r from PC Jet model, scaled to r0, gmin, gmax and rjet.
+        Jet accelerates in the parabolic base (up to rvhe),
+        then logarithmically decelerates in the conical jet.
         """
         gxs = rs
         gz = 4. * (gmax / 9.)

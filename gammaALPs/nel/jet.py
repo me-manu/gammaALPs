@@ -206,5 +206,5 @@ class NelJetHelicalTangled(object):
         """
         actual_nes = self._n0 * np.power(r / self._r0, self._beta)
         eff_photon_masses2 = self.get_photon_mass_ne(self._alpha, actual_nes)  # eV^2
-        eff_nes = eff_photon_masses2/1.3689e-21  # cm^-3
+        eff_nes = eff_photon_masses2/1.3689e-21  # cm^-3: w_pl^2 = ne * e^2/(e_o m) = ne (cm^-3) * 1.3689e-21 (cm^3 eV^2)
         return eff_nes
