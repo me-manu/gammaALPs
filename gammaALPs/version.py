@@ -126,7 +126,6 @@ def read_release_version():
             m = re.match("__version__ = '([^']+)'", line)
             if m:
                 ver = m.group(1)
-                print ("m", m, m.group(1), ver)
                 return ver
 
     except:
@@ -147,18 +146,14 @@ def get_git_version(abbrev=4):
 
     # Read in the version that's currently in _version.py.
     release_version = read_release_version()
-    print("rv",release_version)
 
     # First try to get the current version using “git describe”.
     git_version = call_git_describe(abbrev)
     git_version = render_pep440(git_version)
-    print("gv", git_version)
 
     # Try to deduce the version from keyword expansion
     keyword_version = read_release_keywords(_refname)
-    print("kv1", keyword_version)
     keyword_version = render_pep440(keyword_version)
-    print("kv2", keyword_version)
 
     # If that doesn't work, fall back on the value that's in
     # _version.py.
