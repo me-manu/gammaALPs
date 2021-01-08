@@ -10,6 +10,7 @@ def signum(x):
     """Return the sign of each entry of an array"""
     return (x < 0.) * -1. + (x >= 0) * 1.
 
+
 class GMF(object):
     """
     Class with analytical functions that describe the 
@@ -46,6 +47,9 @@ class GMF(object):
 
     b_unc: :py:class:`~numpy.ndarray`
         associated uncertainties with field strengths of spiral arms at 5 kpc
+
+    f_cov: :py:class:`~numpy.ndarray`
+        relative cross-sectional areas of the spirals (for a fixed radius)
 
     rx: :py:class:`~numpy.ndarray`
         dividing lines of spiral arms, coordinates of neg. x-axes that intersect with arm
@@ -143,8 +147,9 @@ class GMF(object):
         self.bring, self.bring_unc = 0.1, 0.1  # ring at 3 kpc < rho < 5 kpc
         self.hdisk, self.hdisk_unc = 0.4, 0.03  # disk/halo transition
         self.wdisk, self.wdisk_unc = 0.27, 0.08  # transition width
-        self.b = np.array([0.1, 3., -0.9, -0.8, -2.0, -4.2, 0., 2.7])  # field strength of spiral arms at 5 kpc
+        self.b = np.array([0.1, 3., -0.9, -0.8, -2.0, -4.2, 0., np.nan])  # field strength of spiral arms at 5 kpc
         self.b_unc = np.array([1.8, 0.6, 0.8, 0.3, 0.1, 0.5, 1.8, 1.8])
+        self.f_cov = np.array([0.130, 0.165, 0.094, 0.122, 0.13, 0.118, 0.084, 0.156])
         self.rx = np.array([5.1, 6.3, 7.1, 8.3, 9.8, 11.4, 12.7, 15.5])  # dividing lines of spiral lines
         self.idisk = 11.5 * pi/180.  # spiral arms opening angle
         # Halo
@@ -171,7 +176,10 @@ class GMF(object):
             self.Bs = -0.8
             self.BX0 = 3.
             self.b[1], self.b[3], self.b[4] = 2., 2., -3.
-        return
+
+        # calculate the magnetic field of the 8th spiral arm,
+        # see Jansson & Farrar Sec. 5.1.1.
+        self.b[-1] = - np.sum(self.f_cov[:-1] * self.b[:-1]) / self.f_cov[-1]
 
     def L(self, z, h, w):
         """
@@ -223,10 +231,17 @@ class GMF(object):
         # phi.shape = p
         # then result is given as (8,p)-dim array, each row stands for one rx
 
-        result = np.tensordot(self.rx , np.exp((phi - 3.*pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0)
-        result = np.vstack((result, np.tensordot(self.rx , np.exp((phi - pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0) ))
-        result = np.vstack((result, np.tensordot(self.rx , np.exp((phi + pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0) ))
-        result = np.vstack((result, np.tensordot(self.rx , np.exp((phi + 3.*pi*ones) / np.tan(pi/2. - self.idisk)),axes = 0) ))
+        result = np.tensordot(self.rx, np.exp((phi - 3.*pi*ones) / np.tan(pi/2. - self.idisk)),
+                              axes=0)
+        result = np.vstack((result,
+                            np.tensordot(self.rx, np.exp((phi - pi*ones) / np.tan(pi/2. - self.idisk)),
+                                         axes=0)))
+        result = np.vstack((result,
+                            np.tensordot(self.rx, np.exp((phi + pi*ones) / np.tan(pi/2. - self.idisk)),
+                                         axes=0)))
+        result = np.vstack((result,
+                            np.tensordot(self.rx, np.exp((phi + 3.*pi*ones) / np.tan(pi/2. - self.idisk)),
+                            axes=0)))
         return result
 
     def Bdisk(self, rho, phi, z):
