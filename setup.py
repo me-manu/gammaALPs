@@ -25,7 +25,7 @@ setup(
     author_email='me.manu@gmx.net',
 
     # Choose your license
-    license='BSD-3',
+    license='BSD',
 
     # See https://PyPI.python.org/PyPI?%3Aaction=list_classifiers
     classifiers=[
