@@ -1,6 +1,10 @@
 gammaALPs
 =========
 
+.. image:: https://img.shields.io/pypi/v/gammaALPs
+    :target: https://pypi.org/project/gammaALPs/
+    :alt: Latest release
+
 .. image:: https://img.shields.io/github/license/me-manu/gammaALPs
     :target: https://github.com/me-manu/gammaALPs
     :alt: License

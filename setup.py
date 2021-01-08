@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
-from gammaALPs.version import get_git_version
+from gammaALPs.version import get_git_version_pypi
 
 here = path.abspath(path.dirname(__file__))
 
@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='gammaALPs',
-    version=get_git_version(),
+    version=get_git_version_pypi(),
     include_package_data=True,
     description='Python code to calculate the conversion probability between photons and axions / axion-like'
                 'particles in astrophysical magnetic fields',
