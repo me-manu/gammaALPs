@@ -3,7 +3,18 @@ gammaALPs
 
 .. image:: https://img.shields.io/pypi/v/gammaALPs
     :target: https://pypi.org/project/gammaALPs/
-    :alt: Latest release
+    :alt: Latest Release
+
+.. image:: https://img.shields.io/travis/me-manu/gammaALPs
+    :target: https://img.shields.io/travis/me-manu/gammaALPs
+
+.. image:: https://readthedocs.org/projects/gammaalps/badge/?version=latest
+    :target: https://gammaalps.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. image:: https://img.shields.io/codecov/c/gh/me-manu/gammaALPs
+    :target: https://codecov.io/gh/me-manu/gammaALPs/
+    :alt: Code Coverage
 
 .. image:: https://img.shields.io/github/license/me-manu/gammaALPs
     :target: https://github.com/me-manu/gammaALPs
@@ -12,10 +23,6 @@ gammaALPs
 .. image:: https://img.shields.io/github/issues/me-manu/gammaALPs
     :target: https://github.com/me-manu/gammaALPs/issues
     :alt: Issues
-
-.. image:: https://readthedocs.org/projects/gammaalps/badge/?version=latest
-    :target: https://gammaalps.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
 
 Python packages to calculate the conversion probability between photons and axions / axion-like particles in
 various astrophysical magnetic fields.
