@@ -310,7 +310,7 @@ class BjetHelicalTangled(object):
         return
 
     @rvhe.setter
-    def rvhe(self,rjet):
+    def rvhe(self, rvhe):
         if type(rvhe) == u.Quantity:
             self._rvhe = rvhe .to('pc').value
         else:

@@ -1,0 +1,10 @@
+include README.rst
+include LICENSE
+
+recursive-include docs *
+
+prune build
+prune docs/_build
+prune docs/tutorials/.ipynb_checkpoints
+prune data
+prune notebooks

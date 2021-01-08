@@ -2,11 +2,21 @@ gammaALPs
 =========
 
 .. image:: https://img.shields.io/github/license/me-manu/gammaALPs
+    :target: https://github.com/me-manu/gammaALPs
     :alt: License
+    
+.. image:: https://img.shields.io/github/issues/me-manu/gammaALPs
+    :target: https://github.com/me-manu/gammaALPs/issues
+    :alt: Issues
 
+.. image:: https://gammaalps.readthedocs.io/en/latest/?badge=latest
+    :target: https://readthedocs.org/projects/gammaalps/?badge=latest
+    :alt: Documentation Status
 
 Python packages to calculate the conversion probability between photons and axions / axion-like particles in
 various astrophysical magnetic fields.
+
+For the documentation and full installation instructions see: https://gammaalps.readthedocs.io/en/latest
 
 Prerequisites
 -------------
