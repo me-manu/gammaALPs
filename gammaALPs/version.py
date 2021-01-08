@@ -74,7 +74,7 @@ def render_pep440(vcs):
     if len(tags) == 1:
         return tags[0]
     else:
-        return tags[0] + '+' + '.'.join([t for t in tags[1:] if not 'g' in t])
+        return tags[0] + '+' + '.'.join(tags[1:])
 
 
 def call_git_describe(abbrev=4):
@@ -178,6 +178,12 @@ def get_git_version(abbrev=4):
     # Finally, return the current version.
     return version
 
+
+def get_git_version_pypi(abbrev=4):
+    version = get_git_version(abbrev)
+
+    # return the pure git version
+    return version.split('+')[0]
 
 if __name__ == "__main__":
     print(get_git_version())
