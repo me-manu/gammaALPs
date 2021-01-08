@@ -26,6 +26,3 @@ calculation of the absorption of gamma rays on the extragalactic background ligh
 .. code-block:: bash
 
     pip install ebltable
-
-
-

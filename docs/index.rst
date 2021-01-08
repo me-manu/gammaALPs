@@ -30,7 +30,8 @@ magnetic field models described in the :ref:`bfields` section and electron densi
 Getting Help
 ------------
 
-If you encounter problems, please open a `GitHub Issue <https://github.com/me-manu/gammaALPs/issues>`_.
+If you encounter problems or if you have suggestions,
+please open a `GitHub Issue <https://github.com/me-manu/gammaALPs/issues>`_.
 
 Documentation Contents
 ======================

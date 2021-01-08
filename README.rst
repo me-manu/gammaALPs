@@ -39,8 +39,7 @@ You can use pip to install the package::
 
     pip install gammaALPs 
 
-Example scripts and notebooks are provided on the github page in the
-example/ and notebooks/ folder, https://github.com/me-manu/gammaALPs
+Check out full installation instructions at: https://gammaalps.readthedocs.io/en/latest/installation.html
 
 License
 -------
