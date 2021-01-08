@@ -7,7 +7,7 @@ from astropy.tests.helper import pytest
 
 
 @pytest.fixture(scope='module')
-def jannson_file(request, tmpdir_factory):
+def jansson_file(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
     outfile = "jansson_field_test.npy"
@@ -30,7 +30,7 @@ def pshirkov_file(request, tmpdir_factory):
     return outfile
 
 
-def test_jansson(jannson_file):
+def test_jansson(jansson_file):
 
     # 3D coordinates for galacto centric coordinate sys
     x = np.linspace(-20., 20., 300)
@@ -70,8 +70,9 @@ def test_jansson(jannson_file):
                        z=zz[i, idy, :])
         BX[:, i] = b[1]
 
-    #np.save("jansson_field_test", {"X": BX, "halo": Bhalo, "disk": Bdisk})
-    compare_fields = np.load(jannson_file, allow_pickle=True).flat[0]
+    #np.save("jansson_field_test_new", {"X": BX, "halo": Bhalo, "disk": Bdisk})
+    compare_fields = np.load(jansson_file, allow_pickle=True).flat[0]
+    #compare_fields = np.load("data/jansson_field_test.npy", allow_pickle=True).flat[0]
 
     assert_allclose(BX, compare_fields["X"], rtol=1e-6)
     assert_allclose(Bdisk, compare_fields["disk"], rtol=1e-6)
