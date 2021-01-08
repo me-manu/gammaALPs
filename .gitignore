@@ -153,3 +153,4 @@ cython_debug/
 
 # package specific
 gammaALPs/_version.py
+.DS_Store
