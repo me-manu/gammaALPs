@@ -9,8 +9,8 @@ gammaALPs
     :target: https://github.com/me-manu/gammaALPs/issues
     :alt: Issues
 
-.. image:: https://gammaalps.readthedocs.io/en/latest/?badge=latest
-    :target: https://readthedocs.org/projects/gammaalps/?badge=latest
+.. image:: https://readthedocs.org/projects/gammaalps/badge/?version=latest
+    :target: https://gammaalps.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
 Python packages to calculate the conversion probability between photons and axions / axion-like particles in
