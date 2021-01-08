@@ -16,6 +16,8 @@ sys.path.insert(0, os.path.abspath('../../gammaALPs'))
 sys.path.insert(0, os.path.abspath('../../gammaALPs/base'))
 sys.path.insert(0, os.path.abspath('../../gammaALPs/bfields'))
 sys.path.insert(0, os.path.abspath('../../gammaALPs/nel'))
+sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('..'))
 
 import gammaALPs
 
