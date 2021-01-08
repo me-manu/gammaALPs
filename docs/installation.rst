@@ -4,7 +4,7 @@ Installation
 ============
 
 Currently, only the installation via pip is supported, the installation through conda hopefully follows soon.
-The package is exclusively written in python and should support python versions 2.7 and 3.5 and above.
+The package is exclusively written in python and supports python version 3.6 and above.
 
 To install the package via pip, simply type
 

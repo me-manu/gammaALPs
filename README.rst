@@ -25,7 +25,7 @@ For the documentation and full installation instructions see: https://gammaalps.
 Prerequisites
 -------------
 
-Python 2.7 or 3.6 and the following packages 
+Python 3.6 or higher and the following packages
     - numpy 
     - scipy
     - astropy
