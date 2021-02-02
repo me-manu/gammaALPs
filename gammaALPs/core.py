@@ -652,19 +652,28 @@ class ModuleList(object):
                 self._py_src.append(calc_conv_prob(self.pin, self.py, Tsrc))
                 self._pa_src.append(calc_conv_prob(self.pin, self.pa, Tsrc))
 
-                # new polarization matrix close to observer after traversing EBL
-                pol = np.zeros((self.EGeV.size,3,3))
-                pol[:, 0, 0] = self._px_src[-1] * self._atten
-                pol[:, 1, 1] = self._py_src[-1] * self._atten
-                pol[:, 2, 2] = self._pa_src[-1]
+                if not idx==len(self._Tenv):
+                    # new polarization matrix close to observer after traversing EBL
+                    pol = np.zeros((self.EGeV.size,3,3))
+                    pol[:, 0, 0] = self._px_src[-1] * self._atten
+                    pol[:, 1, 1] = self._py_src[-1] * self._atten
+                    pol[:, 2, 2] = self._pa_src[-1]
 
-                # mutliply all matrices for observer environment
-                # all_sim and Tenv have one index less, since EBL not included
-                Tobs = self._multiply_env(idx,len(self._Tenv) + 1,n)
-                self._px_final.append(calc_conv_prob(pol, self.px, Tobs))
-                self._py_final.append(calc_conv_prob(pol, self.py, Tobs))
-                self._pa_final.append(calc_conv_prob(pol, self.pa, Tobs))
-                l, c = calc_lin_pol(pol, Tobs)
+                    # mutliply all matrices for observer environment
+                    # all_sim and Tenv have one index less, since EBL not included
+
+                    Tobs = self._multiply_env(idx,len(self._Tenv) + 1,n)
+                    self._px_final.append(calc_conv_prob(pol, self.px, Tobs))
+                    self._py_final.append(calc_conv_prob(pol, self.py, Tobs))
+                    self._pa_final.append(calc_conv_prob(pol, self.pa, Tobs))
+                    l, c = calc_lin_pol(pol, Tobs)
+                else:
+                    # if EBL is the final environment, just apply the attenuation
+                    self._px_final.append(self._px_src[-1] * self._atten)
+                    self._py_final.append(self._py_src[-1] * self._atten)
+                    self._pa_final.append(self._pa_src[-1])
+                    l, c = calc_lin_pol(self.pin, Tsrc)
+
                 self._lin_pol.append(l)
                 self._circ_pol.append(c)
 
