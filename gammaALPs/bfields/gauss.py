@@ -295,7 +295,7 @@ class Bgaussian(object):
         # create a list of random integers which are then used
         # to create nsim Bfield realizations
         if isinstance(self.seed, int):
-            high = 2**(math.log2(sys.maxsize) / 2) - 1
+            high = 2**int(math.log2(sys.maxsize) / 2) - 1
             seeds = randint(high, size=nsim)
             seed_old = copy.deepcopy(self.seed)
         else:
