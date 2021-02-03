@@ -1,6 +1,8 @@
 # --- Imports --------------------- #
 import numpy as np
 import copy
+import math
+import sys
 from numpy.random import rand, seed, randint
 from numpy import log, log10, pi, meshgrid, cos, sum, sqrt, array, isscalar, logspace
 from math import ceil
@@ -293,7 +295,8 @@ class Bgaussian(object):
         # create a list of random integers which are then used
         # to create nsim Bfield realizations
         if isinstance(self.seed, int):
-            seeds = randint(2**32 - 1, size=nsim)
+            high = 2**int(math.log2(sys.maxsize) / 2) - 1
+            seeds = randint(high, size=nsim)
             seed_old = copy.deepcopy(self.seed)
         else:
             seeds = None
