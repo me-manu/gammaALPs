@@ -1,12 +1,13 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
+import os
 from numpy.testing import assert_allclose
 from gammaALPs.core import Source, ALP, ModuleList
 from astropy.tests.helper import pytest
 
 
 @pytest.fixture(scope='module')
-def conv_ng1275_file(request, tmpdir_factory):
+def conv_ngc1275_file(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
     outfile = "conversion_prob_ngc1275.npy"
@@ -18,7 +19,7 @@ def conv_ng1275_file(request, tmpdir_factory):
 
 
 @pytest.fixture(scope='module')
-def conv_ng1275_file_no_ebl(request, tmpdir_factory):
+def conv_ngc1275_file_no_ebl(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
     outfile = "conversion_prob_ngc1275_no_ebl.npy"
