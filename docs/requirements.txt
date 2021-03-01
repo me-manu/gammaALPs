@@ -4,3 +4,6 @@ numba>=0.51
 astropy>=4.0
 ebltable>=0.2
 nbsphinx==0.7.1
+sphinx
+sphinx-astropy
+ipython
