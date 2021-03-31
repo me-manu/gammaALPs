@@ -147,7 +147,8 @@ class BjetHelicalTangled(object):
        1. A helical component transforming from poloidal to toroidal
        2. A tangled component
     """
-    def __init__(self, ft, r_T, Bt_exp, B0, r0, g0, rvhe, rjet, alpha, l_tcor, jwf, jwf_dist, tseed):
+    def __init__(self, ft, r_T, Bt_exp, B0, r0, gmax, gmin, rvhe, rjet,
+                 alpha, l_tcor, jwf, jwf_dist, tseed, rem):
         """
         Initialize the class
 
@@ -165,12 +166,17 @@ class BjetHelicalTangled(object):
             B-field strength in G
         r0: float
             radius where B field is equal to b0 in pc
-        g0: float
-            jet lorenz factor at r0
+        gmax: float
+            jet lorenz factor at rvhe
+        gmin: float
+            jet lorenz factor at rjet
         rvhe:  float
             distance of gamma-ray emission region from BH in pc
         rjet: float
             jet length in pc
+        rem: float
+            distance of gamma-ray emission region from BH if different
+            from large-scale jet transition region
         alpha: float
             power-law index of electron energy distribution function
         l_tcor: float
@@ -188,9 +194,11 @@ class BjetHelicalTangled(object):
         self._Bt_exp = Bt_exp
         self._B0 = B0
         self._r0 = r0
-        self._g0 = g0
+        self._gmax = gmax
+        self._gmin = gmin
         self._rvhe = rvhe
         self._rjet = rjet
+        self._rem = rem
         self._alpha = alpha
         self._l_tcor = l_tcor
         self._jwf = jwf
@@ -223,8 +231,12 @@ class BjetHelicalTangled(object):
         return self._r0
 
     @property
-    def g0(self):
-        return self._g0
+    def gmax(self):
+        return self._gmax
+
+    @property
+    def gmin(self):
+        return self._gmin
 
     @property
     def rvhe(self):
@@ -233,6 +245,10 @@ class BjetHelicalTangled(object):
     @property
     def rjet(self):
         return self._rjet
+
+    @property
+    def rem(self):
+        return self._rem
 
     @property
     def alpha(self):
@@ -270,6 +286,10 @@ class BjetHelicalTangled(object):
     def newbounds(self):
         return self._newbounds
 
+    @property
+    def tdoms(self):
+        return self._tdoms
+
     @ft.setter
     def ft(self, ft):
         self._ft = ft
@@ -304,9 +324,14 @@ class BjetHelicalTangled(object):
             self._r0 = r0
         return
 
-    @g0.setter
-    def g0(self, g0):
-        self._g0 = g0
+    @gmax.setter
+    def gmax(self, gmax):
+        self._gmax = gmax
+        return
+
+    @gmin.setter
+    def gmin(self, gmin):
+        self._gmin = gmin
         return
 
     @rvhe.setter
@@ -323,6 +348,14 @@ class BjetHelicalTangled(object):
             self._rjet = rjet .to('pc').value
         else:
             self._rjet = rjet
+        return
+
+    @rem.setter
+    def rem(self,rem):
+        if type(rem) == u.Quantity:
+            self._rem = rem .to('pc').value
+        else:
+            self._rem = rem
         return
 
     @alpha.setter
@@ -420,6 +453,23 @@ class BjetHelicalTangled(object):
         g2 = (gmx - ((gmx-gmn)/np.log10(L/xcon))*np.log10(gxs/xcon)) * (gxs>=xcon)
         return g1+g2
 
+    def jet_gammas_scaled_gg(self,rs, rvhe, rjet, gmin, gmax):
+        """
+        Function to get jet lorentz factors. The shape of the gammas
+        vs. r from PC Jet model, scaled to r0, gmin, gmax and rjet.
+        Jet accelerates in the parabolic base (up to rvhe),
+        then logarithmically decelerates in the conical jet.
+        """
+        gxs = rs
+        gz = 4. * (gmax / 9.)
+        gmx = 9. * (gmax / 9.)
+        gmn = 2. * (gmin / 2.)
+        xcon = 0.3 * (rvhe / 0.3)
+        L = 3206.3 * (rjet / 3206.3)
+        g1 = (gz + ((gmx - gz) / (xcon ** (1. - 0.68))) * gxs**(1. - 0.68)) * (gxs < xcon)
+        g2 = (gmx - ((gmx - gmn) / np.log10(L / xcon)) * np.log10(gxs / xcon)) * (gxs >= xcon)
+        return g1 + g2
+
     def get_jet_props_gen(self, z, tdoms_done=False):
         """
         Calculate the magnetic field as function of distance in the jet frame
@@ -438,8 +488,27 @@ class BjetHelicalTangled(object):
         """
         # t1 = time.time()
         # get Bs from PC shape function
+        if self._rem:
+            self._rfrom = self._rem
+        else:
+            self._rfrom = self._rvhe
+
         Bs = self.jet_bfield_scaled(z,self._rvhe,self._r0,self._B0)  # r0 and rvhe in pc, b0 in G
-        gammas = self.jet_gammas_scaled(z,self._r0,self._g0,self._rjet)
+        # gammas = self.jet_gammas_scaled(z,self._r0,self._g0,self._rjet)
+        gammas = self.jet_gammas_scaled_gg(z,self._rvhe,self._rjet,self._gmin,self._gmax)
+
+        theta_m1_interp = USpline(np.log10(z),gammas)
+
+        p = lambda r,rsw,c,a: c*(rsw+r)**a
+        con = lambda r,rvhe,the: np.tan(the)*(r-rvhe)
+
+        rsw = 1.e-5 * self._rvhe
+        C = 1.49*rsw**0.42
+        A = 0.58
+        jw_func = lambda rs,rvh,theta: p(rs, rsw, C, A)*(rs<=rvh) + (p(rvh, rsw, C, A) + con(rs, rvh, theta))*(rs>rvh)
+
+        self._widths = jw_func(z,self._rvhe,1./gammas)
+        self._width_rvhe = jw_func(self._rvhe,self._rvhe,1./gammas)
 
         if not tdoms_done:
             # t2 = time.time()
@@ -456,16 +525,9 @@ class BjetHelicalTangled(object):
 
             elif self._l_tcor == 'jetwidth': #self._ft > 0 and
 
-                theta_m1_interp = USpline(np.log10(z),gammas)
+                #self._tdoms=[self._rvhe]
 
-                p = lambda r,rsw,c,a: c*(rsw+r)**a
-                con = lambda r,rvhe,the: np.tan(the)*(r-rvhe)
-
-                rsw = 1.e-5 * self._rvhe
-                C = 1.49*rsw**0.42
-                A = 0.58
-
-                self._tdoms=[self._rvhe]
+                self._tdoms=[self._rfrom]
 
                 jwf_seeds = np.arange(4000+self._tseed,4000+1000+self._tseed,1)
                 np.random.seed(jwf_seeds)
@@ -485,9 +547,9 @@ class BjetHelicalTangled(object):
                         self._jwf = np.random.triangular(0.1,0.1,1.)
 
                     theta = 1./theta_m1_interp(np.log10(self._tdoms[-1]))
-                    self._tdoms.append(self._tdoms[-1] + self._jwf*(p(self._rvhe, rsw, C, A)
-                                       + con(self._tdoms[-1], self._rvhe, theta)))  # doms length is jetwidth
-
+                    #self._tdoms.append(self._tdoms[-1] + self._jwf*(p(self._rvhe, rsw, C, A)
+                    #                   + con(self._tdoms[-1], self._rvhe, theta)))  # doms length is jetwidth
+                    self._tdoms.append(self._tdoms[-1] + self._jwf*jw_func(self._tdoms[-1],self._rvhe,theta))
                 self._tdoms = np.array(self._tdoms)
 
                 if len(self._tdoms)-1 > len(z) or min(np.diff(z))>min(np.diff(self._tdoms)):
@@ -499,6 +561,7 @@ class BjetHelicalTangled(object):
 
                     if len(self._tdoms)-1 > len(z):
                         logging.info("rerunning with r = tdoms")
+
                         return self.get_jet_props_gen(np.sqrt(self._tdoms[1:] * self._tdoms[:-1]), tdoms_done=True)
                     else:
                         self._newbounds = self._tdoms
@@ -514,6 +577,7 @@ class BjetHelicalTangled(object):
 
             else:
                 self._tdoms = z
+
 
         # set up tangled field angles
         tthe_seeds = np.arange(0+self._tseed,len(self._tdoms)+self._tseed,1)

@@ -645,14 +645,15 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         r0: float
             radius where B field is equal to b0 in pc
 
-        gmin: float
-            jet lorenz factor at rjet
-
         rvhe:  float
             distance of gamma-ray emission region from BH in pc
 
         rjet: float
             jet length in pc
+
+        rem: float
+            distance of emission region from BH if different
+            from large-scale jet transition region in pc
 
         alpha: float
             power-law index of electron energy distribution function
@@ -680,8 +681,8 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         Jet kwargs:
 
-        g0: float
-            jet lorenz factor at r0
+        gmin: float
+            jet lorenz factor at rjet
         """
         kwargs.setdefault('EGeV', np.logspace(0.,5.,400))
         kwargs.setdefault('restore', None)
@@ -705,13 +706,23 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         kwargs.setdefault('alpha', 1.68)
         kwargs.setdefault('rjet', 3206.3)
         kwargs.setdefault('rvhe', 0.3)
+        kwargs.setdefault('rem',None)
 
-        self._rbounds = np.logspace(np.log10(kwargs['rvhe']),np.log10(kwargs['rjet']),kwargs['ndom'])
+        if kwargs['rem']:
+            self._rem = kwargs['rem']
+        else:
+            self._rem = kwargs['rvhe']
+        #self._rbounds = np.logspace(np.log10(kwargs['rvhe']),np.log10(kwargs['rjet']),kwargs['ndom'])
+
+        self._rbounds = np.logspace(np.log10(self._rem),np.log10(kwargs['rjet']),kwargs['ndom'])
 
         if kwargs['ft'] > 0. and kwargs['l_tcor'] != 'jetdom' and kwargs['l_tcor'] != 'jetwidth':
             while np.average(np.diff(self._rbounds)) > kwargs['l_tcor']:
                 kwargs['ndom']+=50
-                self._rbounds = np.logspace(np.log10(kwargs['rvhe']), np.log10(kwargs['rjet']), kwargs['ndom'])
+                #self._rbounds = np.logspace(np.log10(kwargs['rvhe']), np.log10(kwargs['rjet']), kwargs['ndom'])
+
+                self._rbounds = np.logspace(np.log10(self._rem),np.log10(kwargs['rjet']),kwargs['ndom'])
+
             logging.warning("Not enough jet doms to resolve tangled field. Increased to {}".format(kwargs['ndom']))
 
         self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
@@ -723,35 +734,43 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
                                                     kwargs['B0'],
                                                     kwargs['r0'],
                                                     source.bLorentz,
+                                                    kwargs['gmin'],
                                                     kwargs['rvhe'],
                                                     kwargs['rjet'],
                                                     kwargs['alpha'],
                                                     kwargs['l_tcor'],
                                                     kwargs['jwf'],
                                                     kwargs['jwf_dist'],
-                                                    kwargs['tseed'])
+                                                    kwargs['tseed'],
+                                                    kwargs['rem'])
 
         B, psi = self._Bfield_model.get_jet_props_gen(self._r)
 
         # change rs if they were not originally resolving the tangled field
         try:
             if self._Bfield_model.trerun:
-                try:
+                # try:
+                if np.array(self._Bfield_model.newbounds).any():
                     self._rbounds = self._Bfield_model.newbounds
-                except AttributeError:
+                # except AttributeError:
+                else:
                     self._rbounds = self._Bfield_model.tdoms
                 self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
                 dL = self._rbounds[1:] - self._rbounds[:-1]
         except AttributeError:
             pass
 
+        self._widths = self._Bfield_model._widths
+        self._width_rvhe = self._Bfield_model._width_rvhe
+
         self._neljet = njet.NelJetHelicalTangled(kwargs['n0'],
                                                  kwargs['rvhe'],
+                                                 self._width_rvhe,
                                                  kwargs['alpha'],
                                                  kwargs['beta'])
 
         # init the transfer function with absorption
-        super(MixJetHelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r),
+        super(MixJetHelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r, self._widths),
                                                    dL * 1e-3, alp, Gamma=None, chi=None, Delta=None)
 
         # transform energies to stationary frame
