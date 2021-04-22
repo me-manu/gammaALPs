@@ -90,7 +90,7 @@ class NelJetHelicalTangled(object):
     Class to get effective electron densities in jet, taking into account that
     the jet is not a cold plasma. i.e. the electron distribution is non-thermal.
     """
-    def __init__(self, n0, r0, alpha, beta):
+    def __init__(self, n0, r0, R0, alpha, beta):
         """
         Initialize the class
 
@@ -102,6 +102,9 @@ class NelJetHelicalTangled(object):
         r0: float
             radius where electron density is equal to n0 in pc
 
+        R0: float
+            jet width at r0 in pc
+
         alpha: float
             power-law index of electron energy distribution function
 
@@ -110,6 +113,7 @@ class NelJetHelicalTangled(object):
         """
         self._n0 = n0
         self._r0 = r0
+        self._R0 = R0
         self._alpha = alpha
         self._beta = beta
         return
@@ -121,6 +125,10 @@ class NelJetHelicalTangled(object):
     @property
     def r0(self):
         return self._r0
+
+    @property
+    def R0(self):
+        return self._R0
 
     @property
     def alpha(self):
@@ -144,6 +152,14 @@ class NelJetHelicalTangled(object):
             self._r0 = r0 .to('pc').value
         else:
             self._r0 = r0
+        return
+
+    @R0.setter
+    def R0(self, R0):
+        if type(R0) == u.Quantity:
+            self._R0 = R0 .to('pc').value
+        else:
+            self._R0 = R0
         return
 
     @alpha.setter
@@ -188,7 +204,7 @@ class NelJetHelicalTangled(object):
 
         return m_T_2
 
-    def __call__(self, r):
+    def __call__(self, r, R):
         """
         Calculate the effective electron density as function from cluster center.
         Done by finding actual electron density and actual photon effective masses,
@@ -197,14 +213,18 @@ class NelJetHelicalTangled(object):
         Parameters
         ----------
         r: array-like
-            n-dim array with distance from cluster center in pc
+            n-dim array with distance from BH in pc
+
+        R: array-like
+            n-dim array with jet widths at R in pc
 
         Returns
         -------
         nel: :py:class:`~numpy.ndarray`
             n-dim array with electron density in cm**-3
         """
-        actual_nes = self._n0 * np.power(r / self._r0, self._beta)
+        # actual_nes = self._n0 * np.power(r / self._r0, self._beta)
+        actual_nes = self._n0 * np.power(R / self._R0, self._beta)
         eff_photon_masses2 = self.get_photon_mass_ne(self._alpha, actual_nes)  # eV^2
         eff_nes = eff_photon_masses2/1.3689e-21  # cm^-3: w_pl^2 = ne * e^2/(e_o m) = ne (cm^-3) * 1.3689e-21 (cm^3 eV^2)
         return eff_nes
