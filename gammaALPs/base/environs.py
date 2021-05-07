@@ -10,6 +10,7 @@ from astropy import constants as c
 from astropy.cosmology import FlatLambdaCDM
 from ebltable.tau_from_model import OptDepth
 from scipy.interpolate import UnivariateSpline as USpline
+from scipy.interpolate import RectBivariateSpline as RBSpline
 import logging
 
 
@@ -683,6 +684,10 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         gmin: float
             jet lorenz factor at rjet
+
+        chi: <class 'scipy.interpolate.fitpack2.RectBivariateSpline'>
+            Spline function in (E [GeV], r [pc]) giving values of
+            photon-photon dispersion chi down the jet
         """
         kwargs.setdefault('EGeV', np.logspace(0.,5.,400))
         kwargs.setdefault('restore', None)
@@ -707,6 +712,7 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         kwargs.setdefault('rjet', 3206.3)
         kwargs.setdefault('rvhe', 0.3)
         kwargs.setdefault('rem',None)
+        kwargs.setdefault('chi',None)
 
         if kwargs['rem']:
             self._rem = kwargs['rem']
@@ -769,9 +775,15 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
                                                  kwargs['alpha'],
                                                  kwargs['beta'])
 
+        if type(kwargs['chi'])==RBSpline:
+            Chi = kwargs['chi'](kwargs['EGeV'],self._r)
+            logging.info("Using inputted chi")
+        else:
+            Chi = kwargs['chi']
+
         # init the transfer function with absorption
         super(MixJetHelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r, self._widths),
-                                                   dL * 1e-3, alp, Gamma=None, chi=None, Delta=None)
+                                                   dL * 1e-3, alp, Gamma=None, chi=Chi, Delta=None)
 
         # transform energies to stationary frame
         self._gammas = self.jet_gammas_scaled_gg(self._r,
