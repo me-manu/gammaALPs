@@ -368,14 +368,14 @@ class GammaALPTransfer(object):
             self._Dperp -= 0.5j * self._Gamma
             self._Dpar -= 0.5j * self._Gamma
 
-        if isinstance(self._chi, np.ndarray):
-            self._Dperp += Delta_CMB(self._ee) / chiCMB * self._chi
-            self._Dpar += Delta_CMB(self._ee) / chiCMB * self._chi
-
         if isinstance(self._Delta, np.ndarray):
             self._Dperp += self._Delta
             self._Dpar += self._Delta
 
+        if isinstance(self._chi, np.ndarray):
+            self._Dperp += Delta_CMB(self._ee) / chiCMB * self._chi
+            self._Dpar += Delta_CMB(self._ee) / chiCMB * self._chi
+            
         # no CMB: comment out next three lines
         else:
             # add CMB term
