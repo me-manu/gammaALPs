@@ -4,6 +4,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# ignore local downloads of npy files
+*.npy
+
 # ignore stuff created by example notebooks
 notebooks/*.png
 notebooks/*.pdf
