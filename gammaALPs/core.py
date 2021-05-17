@@ -302,7 +302,8 @@ class ModuleList(object):
                  source,
                  pin=None,
                  EGeV=None,
-                 seed=None):
+                 seed=None,
+                 log_level='info'):
         """
         Initialize the class, energy range, and polarization matrices
 
@@ -325,6 +326,9 @@ class ModuleList(object):
         seed: int, optional
             Seed for RandomState for numpy random numbers.
             Must be convertible to 32 bit unsigned integers.
+
+        log_level: str
+            level for logging, either 'debug', 'info', 'warning' or 'error'
         """
         self._alp = alp
         self._source = source
@@ -353,6 +357,7 @@ class ModuleList(object):
         self.__nsim_max = None
         self._atten = None
         self._eblnorm = None
+        self.__init_logger(log_level)
         return
 
     @property
@@ -419,6 +424,16 @@ class ModuleList(object):
     @seed.setter
     def seed(self, seed):
         self._seed = seed
+
+    def __init_logger(self, log_level):
+        logging.basicConfig(format='\033[0;36m%(filename)10s:\033'
+                                   '[0;35m%(lineno)4s\033[0;0m --- %(levelname)7s: %(message)s')
+        self._logger = logging.getLogger('gamma_alps')
+        self._logger.setLevel(log_level.upper())
+        logging.addLevelName(logging.DEBUG, "\033[1;32m%s\033[1;0m" % logging.getLevelName(logging.DEBUG))
+        logging.addLevelName(logging.INFO, "\033[1;36m%s\033[1;0m" % logging.getLevelName(logging.INFO))
+        logging.addLevelName(logging.WARNING, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARNING))
+        logging.addLevelName(logging.ERROR, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
 
     def add_propagation(self, environ, order, **kwargs):
         """

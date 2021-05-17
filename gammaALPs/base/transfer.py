@@ -1,6 +1,7 @@
 # --- Imports ------------- #
 from __future__ import absolute_import, division, print_function
 import numpy as np
+import warnings
 import logging
 from astropy import units as u
 from os import path
@@ -177,18 +178,21 @@ class GammaALPTransfer(object):
             self._nel = nel
 
         # init transfer matrices
-        self._T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
-        self._T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
-        self._T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+        self._T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), np.complex)
+        self._T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), np.complex)
+        self._T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), np.complex)
         self._Tn = None
 
         # init meshgrid arrays
-        self._ee, self._bb = np.meshgrid(self._EGeV, self._B, indexing = 'ij')
-        self._ll = np.meshgrid(self._EGeV, self._dL, indexing = 'ij')[1]
-        self._pp = np.meshgrid(self._EGeV, self._psi, indexing = 'ij')[1]
+        self._ee, self._bb = np.meshgrid(self._EGeV, self._B, indexing='ij')
+        self._ll = np.meshgrid(self._EGeV, self._dL, indexing='ij')[1]
+        self._pp = np.meshgrid(self._EGeV, self._psi, indexing='ij')[1]
         self._cpp = np.cos(self._pp)
         self._spp = np.sin(self._pp)
-        self._nn = np.meshgrid(self._EGeV, self._nel, indexing = 'ij')[1]
+        self._nn = np.meshgrid(self._EGeV, self._nel, indexing='ij')[1]
+
+        # init logging
+        self._logger = logging.getLogger('gamma_alps')
 
     # --- define properties ---- #
     @property
@@ -518,6 +522,9 @@ class GammaALPTransfer(object):
         g: float
             photon-ALP couplint in 10^-11 GeV^-1. Default in 1.
 
+        log_level: str
+            level for logging, either 'debug', 'info', 'warning' or 'error'
+
         """
         nel = np.load(path.join(filepath,name) + '_nel.npy')
         dL = np.load(path.join(filepath,name) + '_dL.npy')
@@ -538,8 +545,8 @@ class GammaALPTransfer(object):
         else:
             Delta = None
 
-        return GammaALPTransfer(EGeV, B, psi, nel, dL, alp, Gamma = Gamma,
-                                   chi = chi, Delta = Delta)
+        return GammaALPTransfer(EGeV, B, psi, nel, dL, alp, Gamma=Gamma,
+                                   chi=chi, Delta=Delta)
 
     def __set_transfer_matrices(self, nsim=-1):
         """Set the transfer matrices"""
@@ -739,7 +746,7 @@ def calc_conv_prob(pin, pout, T):
              axis1=1, axis2=2)))
 
 
-def calc_lin_pol(pin, T):
+def calc_lin_pol(pin, T, logger=None):
     """
     Calculate the the linear polarization degree of the final transfer matrix
 
@@ -769,7 +776,9 @@ def calc_lin_pol(pin, T):
 
 # need to check this:
     if not np.all(np.imag(lin_pol) == 0.):
-        logging.warning("Not all values of linear polarization are real values!")
+        warnings.warn("Not all values of linear polarization are real values!")
+
     if not np.all(np.imag(circ_pol) == 0.):
-        logging.warning("Not all values of circular polarization are real values!")
+        warnings.warn("Not all values of circular polarization are real values!")
+
     return np.real(lin_pol), np.real(circ_pol)  # number should be real already, this discards the zero imaginary part

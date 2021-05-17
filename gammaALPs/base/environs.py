@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
+import logging
 from . import transfer as trans
 from ..bfields import cell, gauss, gmf, jet
 from ..nel import icm
@@ -11,7 +12,6 @@ from astropy.cosmology import FlatLambdaCDM
 from ebltable.tau_from_model import OptDepth
 from scipy.interpolate import UnivariateSpline as USpline
 from scipy.interpolate import RectBivariateSpline as RBSpline
-import logging
 
 
 class MixIGMFCell(trans.GammaALPTransfer):
@@ -70,6 +70,8 @@ class MixIGMFCell(trans.GammaALPTransfer):
         kwargs.setdefault('cosmo',FlatLambdaCDM(H0 = 70., Om0 = 0.3))
         kwargs.setdefault('eblmodel', 'dominguez')
         kwargs.setdefault('seed', None)
+
+        logger = logging.getLogger('gamma_alps')
 
         self._source = source
         self._t = OptDepth.readmodel(model=kwargs['eblmodel'])
@@ -206,10 +208,12 @@ class MixICMCell(trans.GammaALPTransfer):
         kwargs.setdefault('r_core2', 0.)
         kwargs.setdefault('beta2', 0.)
         kwargs.setdefault('seed', None)
+        kwargs.setdefault('log_level', 'info')
+
+        logger = logging.getLogger('gamma_alps')
 
         kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'], kwargs['L0']))
         if kwargs['r_abell'] <= kwargs['L0']:
-           logging.warning("r_abell <= L0: assuming one domain from 0. to L0")
            kwargs['rbounds'] = np.array([0., kwargs['L0']])
 
         self._rbounds = kwargs['rbounds']
@@ -234,6 +238,7 @@ class MixICMCell(trans.GammaALPTransfer):
                                             Gamma=tra.Gamma,
                                             chi=tra.chi,
                                             Delta=tra.Delta)
+        logger.warning("r_abell <= L0: assuming one domain from 0. to L0")
 
     @property
     def r(self):
@@ -359,6 +364,8 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         kwargs.setdefault('n2', 0.)
         kwargs.setdefault('r_core2', 0.)
         kwargs.setdefault('beta2', 0.)
+
+        logger = logging.getLogger('gamma_alps')
 
         # step length is assumed to be 1. / kH -> minimum turbulence length scale
         kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'], 1. / kwargs['kH']))
@@ -519,6 +526,8 @@ class MixJet(trans.GammaALPTransfer):
         kwargs.setdefault('gamma_min', 1. )
         kwargs.setdefault('gamma_max', 1e4 * kwargs['gamma_min'])
 
+        logger = logging.getLogger('gamma_alps')
+
         # calculate doppler factor
         self._Rjet = kwargs['Rjet']
         self._psi = kwargs['psi']
@@ -555,7 +564,7 @@ class MixJet(trans.GammaALPTransfer):
                     / kwargs['gamma_min'] / (c.m_e * c.c ** 2.).to('erg').value / \
                     np.log(kwargs['gamma_max'] / kwargs['gamma_min'])
 
-                logging.info("Assuming equipartion at r0: n0(r0) = {0[n0]:.3e} cm^-3".format(kwargs))
+                logger.info("Assuming equipartion at r0: n0(r0) = {0[n0]:.3e} cm^-3".format(kwargs))
 
             self._neljet = njet.NelJet(kwargs['n0'], kwargs['r0'], kwargs['beta'])
 
@@ -566,11 +575,13 @@ class MixJet(trans.GammaALPTransfer):
             # transform energies to stationary frame
             self._ee /= self._source._doppler
         else:
-            tra = super(MixJet,self).read_environ(kwargs['restore'], alp,
+            tra = super(MixJet, self).read_environ(kwargs['restore'], alp,
                                                   filepath = kwargs['restore_path'])
-            super(MixJet,self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel,
+            super(MixJet, self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel,
                                         tra.dL, tra.alp, Gamma=tra.Gamma,
                                         chi=tra.chi, Delta=tra.Delta)
+
+
         return
 
     @property
@@ -711,8 +722,10 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         kwargs.setdefault('alpha', 1.68)
         kwargs.setdefault('rjet', 3206.3)
         kwargs.setdefault('rvhe', 0.3)
-        kwargs.setdefault('rem',None)
-        kwargs.setdefault('chi',None)
+        kwargs.setdefault('rem', None)
+        kwargs.setdefault('chi', None)
+
+        logger = logging.getLogger('gamma_alps')
 
         if kwargs['rem']:
             self._rem = kwargs['rem']
@@ -724,12 +737,14 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
 
         if kwargs['ft'] > 0. and kwargs['l_tcor'] != 'jetdom' and kwargs['l_tcor'] != 'jetwidth':
             while np.average(np.diff(self._rbounds)) > kwargs['l_tcor']:
+
                 kwargs['ndom']+=50
                 #self._rbounds = np.logspace(np.log10(kwargs['rvhe']), np.log10(kwargs['rjet']), kwargs['ndom'])
 
-                self._rbounds = np.logspace(np.log10(self._rem),np.log10(kwargs['rjet']),kwargs['ndom'])
+                logger.warning("Not enough jet doms to resolve tangled field."
+                               " Increased to {}".format(kwargs['ndom']))
 
-            logging.warning("Not enough jet doms to resolve tangled field. Increased to {}".format(kwargs['ndom']))
+                self._rbounds = np.logspace(np.log10(self._rem),np.log10(kwargs['rjet']),kwargs['ndom'])
 
         self._r = np.sqrt(self._rbounds[1:] * self._rbounds[:-1])
         dL = self._rbounds[1:] - self._rbounds[:-1]
@@ -776,10 +791,11 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
                                                  kwargs['beta'])
 
         if type(kwargs['chi'])==RBSpline:
-            Chi = kwargs['chi'](kwargs['EGeV'],self._r)
-            logging.info("Using inputted chi")
+            Chi = kwargs['chi'](kwargs['EGeV'], self._r)
+            logger.info("Using interpolated chi")
         else:
             Chi = kwargs['chi']
+            logger.info("Using inputted chi")
 
         # init the transfer function with absorption
         super(MixJetHelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r, self._widths),
@@ -909,7 +925,7 @@ class MixGMF(trans.GammaALPTransfer):
         kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
-        kwargs.setdefault('int_steps',100)
+        kwargs.setdefault('int_steps', 100)
 
         # Bfield kwargs
         kwargs.setdefault('galactic',-1.)
@@ -919,6 +935,8 @@ class MixGMF(trans.GammaALPTransfer):
         kwargs.setdefault('model_sym','ASS')
         self._model = kwargs['model']
         self._galactic = kwargs['galactic']
+
+        logger = logging.getLogger('gamma_alps')
 
         # Nel kwargs
         kwargs.setdefault('n0', 1e1)
@@ -960,7 +978,8 @@ class MixGMF(trans.GammaALPTransfer):
                                          dL, alp, Gamma=None, chi=None, Delta=None)
         else:
             tra = super(MixGMF, self).read_environ(kwargs['restore'], alp,
-                                                   filepath = kwargs['restore_path'])
+                                                   filepath=kwargs['restore_path'])
+
             super(MixGMF, self).__init__(tra.EGeV, tra.B, tra.psi, tra.nel,
                                          tra.dL, tra.alp,
                                          Gamma=tra.Gamma,
@@ -1108,6 +1127,9 @@ class MixFromFile(trans.GammaALPTransfer):
         kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
+        kwargs.setdefault('log_level', 'info')
+
+        logger = logging.getLogger('gamma_alps')
 
         data = np.loadtxt(filename)
         self._rbounds = data[:, 0]
@@ -1127,7 +1149,8 @@ class MixFromFile(trans.GammaALPTransfer):
 
             # init the transfer function
             super(MixFromFile, self).__init__(kwargs['EGeV'], Btrans, psi, n,
-                                                     dL, alp, Gamma = None, chi = None, Delta = None)
+                                              dL, alp, Gamma = None, chi = None, Delta=None)
+
         else:
             tra = super(MixFromFile, self).read_environ(kwargs['restore'], alp,
                                                         filepath=kwargs['restore_path'])
@@ -1136,7 +1159,8 @@ class MixFromFile(trans.GammaALPTransfer):
                                               tra.dL, tra.alp,
                                               Gamma=tra.Gamma,
                                               chi=tra.chi,
-                                              Delta=tra.Delta)
+                                              Delta=tra.Delta
+                                              )
 
 
 class MixFromArray(trans.GammaALPTransfer):
@@ -1179,6 +1203,9 @@ class MixFromArray(trans.GammaALPTransfer):
         kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
+        kwargs.setdefault('log_level', 'info')
+
+        logger = logging.getLogger('gamma_alps')
 
         if kwargs['restore'] is None:
 
@@ -1190,7 +1217,8 @@ class MixFromArray(trans.GammaALPTransfer):
                                                Delta=None)
         else:
             tra = super(MixFromArray, self).read_environ(kwargs['restore'], alp,
-                                                        filepath=kwargs['restore_path'])
+                                                         filepath=kwargs['restore_path'])
+
             super(MixFromArray, self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
                                                tra.dL, tra.alp,
                                                Gamma=tra.Gamma,

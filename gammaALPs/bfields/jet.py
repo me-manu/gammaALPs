@@ -208,6 +208,7 @@ class BjetHelicalTangled(object):
         self._tphis = None
         self._trerun = None
         self._newbounds = None
+        self._logger = logging.getLogger("gamma_alps")
         return
 
     @property
@@ -553,14 +554,14 @@ class BjetHelicalTangled(object):
                 self._tdoms = np.array(self._tdoms)
 
                 if len(self._tdoms)-1 > len(z) or min(np.diff(z))>min(np.diff(self._tdoms)):
-                    logging.warning("Not resolving tangled field: min z step is {}"
+                    self._logger.warning("Not resolving tangled field: min z step is {}"
                                     "pc but min tangled length is {} pc".format(
                                         min(np.diff(z)),min(np.diff(self._tdoms))))
-                    logging.warning("# of z doms is {} but # tangled doms is {}".format(len(z), len(self._tdoms)))
+                    self._logger.warning("# of z doms is {} but # tangled doms is {}".format(len(z), len(self._tdoms)))
                     self._trerun = True
 
                     if len(self._tdoms)-1 > len(z):
-                        logging.info("rerunning with r = tdoms")
+                        self._logger.info("rerunning with r = tdoms")
 
                         return self.get_jet_props_gen(np.sqrt(self._tdoms[1:] * self._tdoms[:-1]), tdoms_done=True)
                     else:
@@ -569,7 +570,7 @@ class BjetHelicalTangled(object):
                             btwn = (self._newbounds[1:] + self._newbounds[:-1])/2.
                             self._newbounds = np.sort(np.concatenate((self._newbounds, btwn)))
 
-                        logging.info("rerunning with {} domains. new min z step is {} pc".format(
+                        self._logger.info("rerunning with {} domains. new min z step is {} pc".format(
                               len(self._newbounds), min(np.diff(self._newbounds))))
 
                         return self.get_jet_props_gen(np.sqrt(self._newbounds[1:] * self._newbounds[:-1]),
