@@ -90,6 +90,7 @@ class TestConversionModules:
         # check conversion prop using multiprocessing
         px, py, pa = m.run(multiprocess=4)
 
+        # uncomment these lines if you need to regenerate the files
         #np.save("conversion_prob_ngc1275", {"px": px, "py": py, "pa": pa})
         #conv_ngc1275_file = "conversion_prob_ngc1275.npy"
 
@@ -133,6 +134,7 @@ class TestConversionModules:
         # check conversion prop using multiprocessing
         px, py, pa = m.run(multiprocess=4)
 
+        # uncomment these lines if you need to regenerate the files
         #np.save("conversion_prob_ngc1275_no_ebl", {"px": px, "py": py, "pa": pa})
         #conv_ngc1275_file_no_ebl = "conversion_prob_ngc1275_no_ebl.npy"
 
@@ -205,6 +207,7 @@ class TestConversionModules:
         # check conversion prop using multiprocessing
         px, py, pa = m.run(multiprocess=4)
 
+        # uncomment these lines if you need to regenerate the files
         #np.save("conversion_prob_los", {"px": px, "py": py, "pa": pa})
         #conv_prob_los_file = "conversion_prob_los.npy"
 
@@ -269,6 +272,7 @@ class TestConversionModules:
         # check conversion prop using multiprocessing
         px, py, pa = m.run(multiprocess=4)
 
+        # uncomment these lines if you need to regenerate the files
         #np.save("conversion_prob_los_ebl", {"px": px, "py": py, "pa": pa})
         #conv_prob_los_ebl_file = "conversion_prob_los_ebl.npy"
 
