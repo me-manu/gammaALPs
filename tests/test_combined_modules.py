@@ -9,9 +9,9 @@ from astropy.tests.helper import pytest
 
 @pytest.fixture(scope='module')
 def conv_ngc1275_file(request, tmpdir_factory):
-    path = tmpdir_factory.mktemp('data')
+    path = tmpdir_factory.mktemp('tmp')
 
-    outfile = "conversion_prob_ngc1275.npy"
+    outfile = os.path.join(path, "conversion_prob_ngc1275.npy")
     url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_ngc1275.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
@@ -23,7 +23,7 @@ def conv_ngc1275_file(request, tmpdir_factory):
 def conv_ngc1275_file_no_ebl(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
-    outfile = "conversion_prob_ngc1275_no_ebl.npy"
+    outfile = os.path.join(path, "conversion_prob_ngc1275_no_ebl.npy")
     url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_ngc1275_no_ebl.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
@@ -35,7 +35,7 @@ def conv_ngc1275_file_no_ebl(request, tmpdir_factory):
 def conv_prob_los_file(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
-    outfile = "conversion_prob_los.npy"
+    outfile = os.path.join(path, "conversion_prob_los.npy")
     url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_los.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
@@ -47,7 +47,7 @@ def conv_prob_los_file(request, tmpdir_factory):
 def conv_prob_los_ebl_file(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
-    outfile = "jansson_field_test.npy"
+    outfile = os.path.join(path, "conversion_prob_los_ebl.npy")
     url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_los_ebl.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
@@ -217,8 +217,6 @@ class TestConversionModules:
                                           #"data/conversion_prob_los.npy")
         #np.save(conv_prob_los_file,
                 #{"px": px, "py": py, "pa": pa})
-
-        conv_prob_los_file = "conversion_prob_los.npy"
 
         compare_conv_prob = np.load(conv_prob_los_file, allow_pickle=True).flat[0]
 

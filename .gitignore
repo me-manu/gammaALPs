@@ -10,9 +10,6 @@ notebooks/*.pdf
 notebooks/*.fits
 notebooks/.DS_Store
 
-# ignore npy files in parent directory
-*.npy
-
 # C extensions
 *.so
 
