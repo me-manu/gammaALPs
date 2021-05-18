@@ -4,14 +4,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# ignore local downloads of npy files
-*.npy
-
 # ignore stuff created by example notebooks
 notebooks/*.png
 notebooks/*.pdf
 notebooks/*.fits
 notebooks/.DS_Store
+
+# ignore npy files in parent directory
+*.npy
 
 # C extensions
 *.so

@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import os
+import gammaALPs
 from numpy.testing import assert_allclose
 from gammaALPs.bfields import gmf
 from astropy.tests.helper import pytest
@@ -70,9 +71,14 @@ def test_jansson(jansson_file):
                        z=zz[i, idy, :])
         BX[:, i] = b[1]
 
-    #np.save("jansson_field_test_new", {"X": BX, "halo": Bhalo, "disk": Bdisk})
+    # uncomment these lines if you need to regenerate the files
+    jansson_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+                                "data/jansson_field_test.npy")
+    np.save(jansson_file,
+            {"X": BX, "halo": Bhalo, "disk": Bdisk})
+
     compare_fields = np.load(jansson_file, allow_pickle=True).flat[0]
-    #compare_fields = np.load("data/jansson_field_test.npy", allow_pickle=True).flat[0]
+
 
     assert_allclose(BX, compare_fields["X"], rtol=1e-6)
     assert_allclose(Bdisk, compare_fields["disk"], rtol=1e-6)
@@ -112,7 +118,12 @@ def test_pshirkov(pshirkov_file):
                           z=zz[i, idy, :])
         Bhalo[:, i] = b[1]
 
-    #np.save("pshirkov_field_test", {"halo": Bhalo, "disk": Bdisk})
+    # uncomment these lines if you need to regenerate the files
+    pshirkov_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+                                 "data/pshirkov_field_test.npy")
+    np.save(pshirkov_file,
+            {"halo": Bhalo, "disk": Bdisk})
+
     compare_fields = np.load(pshirkov_file, allow_pickle=True).flat[0]
 
     assert_allclose(Bdisk, compare_fields["disk"], rtol=1e-6)
