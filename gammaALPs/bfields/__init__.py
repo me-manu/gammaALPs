@@ -1,1 +1,1 @@
-__all__ = ['jet','gauss','cell','gmf']
+__all__ = ['jet','gauss','cell','gmf', 'struc']

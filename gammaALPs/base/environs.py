@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import logging
 from . import transfer as trans
-from ..bfields import cell, gauss, gmf, jet
+from ..bfields import cell, gauss, gmf, jet, struc
 from ..nel import icm
 from ..nel import jet as njet
 from ..utils import trafo
@@ -397,6 +397,137 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
             super(MixICMGaussTurb, self).__init__(tra.EGeV, tra.Bn, tra.psin, tra.nel,
                                                   tra.dL, tra.alp, Gamma=tra.Gamma,
                                                   chi=tra.chi, Delta=tra.Delta)
+        return
+
+    @property
+    def r(self):
+        return self._r
+
+    @property
+    def rbounds(self):
+        return self._rbounds
+
+    @property
+    def Bfield_model(self):
+        return self._Bfield_model
+
+    @property
+    def nel_model(self):
+        return self._nelicm
+
+
+class MixICMStructured(trans.GammaALPTransfer):
+    def __init__(self, alp, **kwargs):
+        """
+        Initialize mixing in the intracluster magnetic field,
+        assuming that it follows a structured field, see https://arxiv.org/pdf/1008.5353.pdf
+
+        Parameters
+        ----------
+        alp: :py:class:`~gammaALPs.ALP`
+            :py:class:`~gammaALPs.ALP` object with ALP parameters
+
+        EGeV: array-like
+            Gamma-ray energies in GeV
+
+        restore: str or None
+            if str, identifier for files to restore environment.
+            If None, initialize mixing with new B field
+
+        restore_path: str
+            full path to environment files
+
+        B0: float
+            ICM at r = 0 in muG
+
+        R: float
+            Radius of cavity, B field vanishes at r=R, in kpc
+
+        theta: float
+            Angle of B field symmetry axis w.r.t. line of sight in degrees
+            To get consistent results with 1908.03084 paper, add 180° to the
+            actual value you want to use, weird angle definition? I don't know.
+
+        radians: bool
+            If True, theta is considered to be expressed in radians.
+
+
+        ICM kwargs:
+
+        n0: float
+            electron density in cm**-3 (default 1e-3)
+
+        r_core: float
+            core radius in kpc (default 10.)
+
+        beta: float
+            exponent of density profile (default: 1.)
+
+        eta: float
+            exponent for scaling of B field with electron density (default = 0.)
+            Not sure if this is actually applicable here, the B field solution
+            of the referenced paper does not specifiy this in any way!
+            Should use 0 for no scaling at all.
+
+        n2: float
+            if > 0., use profile with this second density component
+
+        r_core2: float
+            if > 0., use profile with this second r_core value
+
+        beta2: float
+            if > 0., use profile with this second beta value as for NGC1275
+        """
+        kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
+        kwargs.setdefault('restore', None)
+        kwargs.setdefault('restore_path', './')
+        kwargs.setdefault('nsim', 1)
+
+        # Bfield kwargs
+        kwargs.setdefault('B0', 1.)
+        kwargs.setdefault('R', 100.)
+        kwargs.setdefault('theta', 0)
+        kwargs.setdefault('radians', False)
+        kwargs.setdefault('cell_num', 100)
+
+        # ICM kwargs
+        kwargs.setdefault('n0', 1e-3)
+        kwargs.setdefault('r_core', 10.)
+        kwargs.setdefault('r_abell', 500.)
+        kwargs.setdefault('eta', 0.)
+        kwargs.setdefault('beta', 0)
+        kwargs.setdefault('n2', 0.)
+        kwargs.setdefault('r_core2', 0.)
+        kwargs.setdefault('beta2', 0.)
+        kwargs.setdefault('seed', None)
+
+        logger = logging.getLogger('gamma_alps')
+        # kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'], kwargs['L0']))
+
+        self._nelicm = icm.NelICM(**kwargs)
+
+        if kwargs['restore'] is None:
+            self._Bfield_model = struc.structured_field(kwargs['B0'], kwargs['R'],
+                                                        kwargs['theta'], kwargs['radians'],
+                                                        kwargs['cell_num'])
+            dL = self._Bfield_model.dL_vec
+            self._r = self._Bfield_model.r
+            B = self._Bfield_model.b_trans * self._Bfield_model.bscale(self._nelicm(self._r), kwargs['eta'])
+            psi = self._Bfield_model.angle
+            
+            
+            
+            # init the transfer function
+            super(MixICMStructured, self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),
+                                             dL, alp, Gamma=None, chi=None, Delta=None)
+        else:
+            tra = super(MixICMStructured,self).read_environ(kwargs['restore'], alp,
+                                                      filepath=kwargs['restore_path'])
+            super(MixICMStructured,self).__init__(tra.EGeV, tra.B, tra.psin,
+                                             tra.nel, tra.dL, tra.alp,
+                                             Gamma=tra.Gamma,
+                                             chi=tra.chi,
+                                             Delta=tra.Delta)
         return
 
     @property
