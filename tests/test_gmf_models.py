@@ -72,10 +72,10 @@ def test_jansson(jansson_file):
         BX[:, i] = b[1]
 
     # uncomment these lines if you need to regenerate the files
-    jansson_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
-                                "data/jansson_field_test.npy")
-    np.save(jansson_file,
-            {"X": BX, "halo": Bhalo, "disk": Bdisk})
+    #jansson_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+                                #"data/jansson_field_test.npy")
+    #np.save(jansson_file,
+            #{"X": BX, "halo": Bhalo, "disk": Bdisk})
 
     compare_fields = np.load(jansson_file, allow_pickle=True).flat[0]
 
@@ -119,10 +119,10 @@ def test_pshirkov(pshirkov_file):
         Bhalo[:, i] = b[1]
 
     # uncomment these lines if you need to regenerate the files
-    pshirkov_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
-                                 "data/pshirkov_field_test.npy")
-    np.save(pshirkov_file,
-            {"halo": Bhalo, "disk": Bdisk})
+    #pshirkov_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+                                 #"data/pshirkov_field_test.npy")
+    #np.save(pshirkov_file,
+            #{"halo": Bhalo, "disk": Bdisk})
 
     compare_fields = np.load(pshirkov_file, allow_pickle=True).flat[0]
 
