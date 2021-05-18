@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import os
+import gammaALPs
 from numpy.testing import assert_allclose
 from gammaALPs.core import Source, ALP, ModuleList
 from astropy.tests.helper import pytest
@@ -8,9 +9,9 @@ from astropy.tests.helper import pytest
 
 @pytest.fixture(scope='module')
 def conv_ngc1275_file(request, tmpdir_factory):
-    path = tmpdir_factory.mktemp('data')
+    path = tmpdir_factory.mktemp('tmp')
 
-    outfile = "conversion_prob_ngc1275.npy"
+    outfile = os.path.join(path, "conversion_prob_ngc1275.npy")
     url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_ngc1275.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
@@ -22,7 +23,7 @@ def conv_ngc1275_file(request, tmpdir_factory):
 def conv_ngc1275_file_no_ebl(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
-    outfile = "conversion_prob_ngc1275_no_ebl.npy"
+    outfile = os.path.join(path, "conversion_prob_ngc1275_no_ebl.npy")
     url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_ngc1275_no_ebl.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
@@ -34,7 +35,7 @@ def conv_ngc1275_file_no_ebl(request, tmpdir_factory):
 def conv_prob_los_file(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
-    outfile = "conversion_prob_los.npy"
+    outfile = os.path.join(path, "conversion_prob_los.npy")
     url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_los.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
@@ -46,7 +47,7 @@ def conv_prob_los_file(request, tmpdir_factory):
 def conv_prob_los_ebl_file(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('data')
 
-    outfile = "jansson_field_test.npy"
+    outfile = os.path.join(path, "conversion_prob_los_ebl.npy")
     url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_los_ebl.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
@@ -90,8 +91,11 @@ class TestConversionModules:
         # check conversion prop using multiprocessing
         px, py, pa = m.run(multiprocess=4)
 
-        #np.save("conversion_prob_ngc1275", {"px": px, "py": py, "pa": pa})
-        #conv_ngc1275_file = "conversion_prob_ngc1275.npy"
+        # uncomment these lines if you need to regenerate the files
+        #conv_ngc1275_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+                                         #"data/conversion_prob_ngc1275.npy")
+        #np.save(conv_ngc1275_file,
+                #{"px": px, "py": py, "pa": pa})
 
         compare_conv_prob = np.load(conv_ngc1275_file, allow_pickle=True).flat[0]
 
@@ -133,8 +137,11 @@ class TestConversionModules:
         # check conversion prop using multiprocessing
         px, py, pa = m.run(multiprocess=4)
 
-        #np.save("conversion_prob_ngc1275_no_ebl", {"px": px, "py": py, "pa": pa})
-        #conv_ngc1275_file_no_ebl = "conversion_prob_ngc1275_no_ebl.npy"
+        # uncomment these lines if you need to regenerate the files
+        #conv_ngc1275_file_no_ebl = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+                                                #"data/conversion_prob_ngc1275_no_ebl.npy")
+        #np.save(conv_ngc1275_file_no_ebl,
+                #{"px": px, "py": py, "pa": pa})
 
         compare_conv_prob = np.load(conv_ngc1275_file_no_ebl, allow_pickle=True).flat[0]
 
@@ -205,8 +212,11 @@ class TestConversionModules:
         # check conversion prop using multiprocessing
         px, py, pa = m.run(multiprocess=4)
 
-        #np.save("conversion_prob_los", {"px": px, "py": py, "pa": pa})
-        #conv_prob_los_file = "conversion_prob_los.npy"
+        # uncomment these lines if you need to regenerate the files
+        #conv_prob_los_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+                                          #"data/conversion_prob_los.npy")
+        #np.save(conv_prob_los_file,
+                #{"px": px, "py": py, "pa": pa})
 
         compare_conv_prob = np.load(conv_prob_los_file, allow_pickle=True).flat[0]
 
@@ -269,8 +279,11 @@ class TestConversionModules:
         # check conversion prop using multiprocessing
         px, py, pa = m.run(multiprocess=4)
 
-        #np.save("conversion_prob_los_ebl", {"px": px, "py": py, "pa": pa})
-        #conv_prob_los_ebl_file = "conversion_prob_los_ebl.npy"
+        # uncomment these lines if you need to regenerate the files
+        #conv_prob_los_ebl_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+                                              #"data/conversion_prob_los_ebl.npy")
+        #np.save(conv_prob_los_ebl_file,
+                #{"px": px, "py": py, "pa": pa})
 
         compare_conv_prob = np.load(conv_prob_los_ebl_file, allow_pickle=True).flat[0]
 
