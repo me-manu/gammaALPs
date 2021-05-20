@@ -585,11 +585,11 @@ class ModuleList(object):
             else:
                 # only one realization of EBL
                 self._all_nsim.append(1)
-        logging.debug(self._all_nsim)
-        logging.debug(np.array(self._all_nsim) > 1)
+        self._logger.debug(self._all_nsim)
+        self._logger.debug(np.array(self._all_nsim) > 1)
         if np.sum(np.array(self._all_nsim) > 1) > 1:
-            logging.error("More than one module has multiple B-field realizations, not supported")
-            logging.error("Number of realizations for the ALP modules: {0}".format(self._all_nsim))
+            self._logger.error("More than one module has multiple B-field realizations, not supported")
+            self._logger.error("Number of realizations for the ALP modules: {0}".format(self._all_nsim))
             raise RuntimeError
         return
 
@@ -636,12 +636,12 @@ class ModuleList(object):
         self._check_modules_random_fields()
         for im, m in enumerate(self.modules):
             if not type(m) == OptDepth:
-                logging.info('Running Module {0:n}: {1}'.format(im, type(m)))
-                logging.debug('Photon-ALP mixing in {0}: {1:.3e}'.format(type(m), m.alp.g))
-                logging.debug('ALP mass in {0}: {1:.3e}'.format(type(m), m.alp.m))
-                logging.debug('Energy range in {0}: {1:.3e}-{2:.3e}, n = {2:n}'.format(
+                self._logger.info('Running Module {0:n}: {1}'.format(im, type(m)))
+                self._logger.debug('Photon-ALP mixing in {0}: {1:.3e}'.format(type(m), m.alp.g))
+                self._logger.debug('ALP mass in {0}: {1:.3e}'.format(type(m), m.alp.m))
+                self._logger.debug('Energy range in {0}: {1:.3e}-{2:.3e}, n = {2:n}'.format(
                                             type(m), m.EGeV[0], m.EGeV[-1], m.EGeV.size))
-                logging.debug('Number of B-field real. in {0}: {1:n}'.format(type(m), m.nsim))
+                self._logger.debug('Number of B-field real. in {0}: {1:n}'.format(type(m), m.nsim))
                 if multiprocess > 1:
                     T = m.calc_transfer_multi(nprocess=multiprocess)
                 else:
