@@ -214,9 +214,9 @@ class TestConversionModules:
 
         # uncomment these lines if you need to regenerate the files
         #conv_prob_los_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
-                                          #"data/conversion_prob_los.npy")
+        #                                  "data/conversion_prob_los.npy")
         #np.save(conv_prob_los_file,
-                #{"px": px, "py": py, "pa": pa})
+        #        {"px": px, "py": py, "pa": pa})
 
         compare_conv_prob = np.load(conv_prob_los_file, allow_pickle=True).flat[0]
 
