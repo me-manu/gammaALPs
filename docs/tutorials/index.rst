@@ -39,3 +39,4 @@ such as the calculation of rotation measures for magnetic fields in galaxy clust
 
 - `Calculating the coherence length and rotation measure for Gaussian turbulent field <rotation_measure_gauss.html>`__ | *rotation_measure_gauss.ipynb*
 - `Accessing the components of the Galactic magnetic field models <accessing_GMF_components.html>`__ | *accessing_GMF_components.ipynb*
+- `Manually including energy- and distance-dependent photon-photon dispersion <photon_dispersion.html>`__ | *photon_dispersion.ipynb*
