@@ -33,6 +33,7 @@ Additional features for magnetic-field environments
 
     rotation_measure_gauss.ipynb
     accessing_GMF_components.ipynb
+    photon_dispersion.ipynb
 
 These tutorials take a closer look at some magnetic-field environments and demonstrate additional features
 such as the calculation of rotation measures for magnetic fields in galaxy clusters.
