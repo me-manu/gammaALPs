@@ -596,7 +596,12 @@ class ModuleList(object):
     def _multiply_env(self,istart,istop,n):
         """
         Helper function to multiply the transfer matrices
-        of the different traversed environments
+        of the different traversed environments.
+
+        The equations of motions give :math:`P_i = \mathrm{Tr}(\rho_i \mathcal{T} \rho_0 \mathcal{T}^\dagger`
+        and the total transfer matrix is given by :math:`\mathcal{T} = \mathcal{T}_n \ldots \mathcal{T}_0`
+        such that the transfer matrix corresponding to environment closest to source (subscript 0)
+        is also closest to initical polarization matrix :math:`\rho_0`.
         """
         for it, Tenv in enumerate(self._Tenv[istart:istop]):
             if self.__nsim_max == (self._all_nsim[istart:istop])[it]:
@@ -606,7 +611,7 @@ class ModuleList(object):
             if not it:
                 Tsrc = Tenv[nn]
             else:
-                Tsrc = np.matmul(Tsrc, Tenv[nn])
+                Tsrc = np.matmul(Tenv[nn], Tsrc)
         return Tsrc
 
     def run(self, multiprocess=1):
