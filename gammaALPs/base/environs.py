@@ -30,7 +30,7 @@ class MixIGMFCell(trans.GammaALPTransfer):
         EGeV: array-like
             Gamma-ray energies in GeV
 
-        dL: arra-like
+        dL: array-like
             Domain lengths. If not given, they will be automatically
             generated.
 
@@ -50,6 +50,10 @@ class MixIGMFCell(trans.GammaALPTransfer):
         n0: float
             electron density of intergalactic medium at z=0 in cm^-3
 
+        chi: `~scipy.interpolate.RectBivariateSpline`
+            Spline function in (E [GeV], z) giving values of
+            photon-photon dispersion chi at redshift z.
+
         eblmodel: string
             name of the used EBL model (default: Dominguez et al. 2011 Model)
 
@@ -67,6 +71,7 @@ class MixIGMFCell(trans.GammaALPTransfer):
         kwargs.setdefault('n0', 1.e-7)
         kwargs.setdefault('nsim', 1)
         kwargs.setdefault('dL', None)
+        kwargs.setdefault('chi', None)
         kwargs.setdefault('cosmo',FlatLambdaCDM(H0 = 70., Om0 = 0.3))
         kwargs.setdefault('eblmodel', 'dominguez')
         kwargs.setdefault('seed', None)
@@ -96,11 +101,22 @@ class MixIGMFCell(trans.GammaALPTransfer):
 
             # absorption rate in kpc^-1
             Gamma = dt.T / dL
+
+            if type(kwargs['chi'])==RBSpline:
+                Chi = kwargs['chi'](kwargs['EGeV'], self._z_mean)
+                logger.info("Using interpolated chi")
+            elif kwargs['chi'] is not None:
+                logger.info("Using inputted chi")
+                Chi = kwargs['chi']
+            else:
+                # energy density of the CMB ~ (1+z)^4
+                Chi = trans.chiCMB * (1. + self._z_mean) ** 4.
+
             # init the transfer function with absorption
             super(MixIGMFCell, self).__init__(kwargs['EGeV'], B, psi, self._nel,
                                               dL, alp,
                                               Gamma=Gamma,
-                                              chi=None,
+                                              chi=Chi,
                                               Delta=None)
             self._ee *= (1. + self._z_mean)  # transform energies to comoving frame
         else:
@@ -188,6 +204,11 @@ class MixICMCell(trans.GammaALPTransfer):
 
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
+
+        chi: `~scipy.interpolate.RectBivariateSpline`
+            Spline function in (E [GeV], r [kpc]) giving values of
+            photon-photon dispersion chi along the line of sight
+            through the cluster
         """
         kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
@@ -209,6 +230,7 @@ class MixICMCell(trans.GammaALPTransfer):
         kwargs.setdefault('beta2', 0.)
         kwargs.setdefault('seed', None)
         kwargs.setdefault('log_level', 'info')
+        kwargs.setdefault('chi', None)
 
         logger = logging.getLogger('gamma_alps')
 
@@ -226,6 +248,13 @@ class MixICMCell(trans.GammaALPTransfer):
             B, psi = self._Bfield_model.new_Bn(self._r.shape[0],
                                                Bscale=self._nel.Bscale(self._r),
                                                nsim=kwargs['nsim'])
+
+            if type(kwargs['chi'])==RBSpline:
+                Chi = kwargs['chi'](kwargs['EGeV'], self._r)
+                logger.info("Using interpolated chi")
+            else:
+                Chi = kwargs['chi']
+                logger.info("Using inputted chi")
 
             # init the transfer function
             super(MixICMCell, self).__init__(kwargs['EGeV'], B, psi, self._nel(self._r),
@@ -338,6 +367,11 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
 
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
+
+        chi: `~scipy.interpolate.RectBivariateSpline`
+            Spline function in (E [GeV], r [kpc]) giving values of
+            photon-photon dispersion chi along the line of sight
+            through the cluster
         """
         kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
@@ -364,6 +398,7 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
         kwargs.setdefault('n2', 0.)
         kwargs.setdefault('r_core2', 0.)
         kwargs.setdefault('beta2', 0.)
+        kwargs.setdefault('chi', None)
 
         logger = logging.getLogger('gamma_alps')
 
@@ -388,9 +423,15 @@ class MixICMGaussTurb(trans.GammaALPTransfer):
                                                Bscale=self._nelicm.Bscale(self._r),
                                                nsim=kwargs['nsim'])
 
+            if type(kwargs['chi'])==RBSpline:
+                Chi = kwargs['chi'](kwargs['EGeV'], self._r)
+                logger.info("Using interpolated chi")
+            else:
+                Chi = kwargs['chi']
+                logger.info("Using inputted chi")
             # init the transfer function with absorption
             super(MixICMGaussTurb, self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),
-                                                  dL, alp, Gamma=None, chi=None, Delta=None)
+                                                  dL, alp, Gamma=None, chi=Chi, Delta=None)
         else:
             tra = super(MixICMGaussTurb, self).read_environ(kwargs['restore'], alp,
                                                             filepath=kwargs['restore_path'])
@@ -638,12 +679,17 @@ class MixJet(trans.GammaALPTransfer):
 
         theta_jet: float
             Jet opening angle in degrees. If not given, assumed to be 1./bulk_lorentz
+
+        chi: `~scipy.interpolate.RectBivariateSpline`
+            Spline function in (E [GeV], r [pc]) giving values of
+            photon-photon dispersion chi down the jet
         """
         kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
         kwargs.setdefault('sens', 0.99)
         kwargs.setdefault('rgam', 0.1)
+        kwargs.setdefault('chi', None)
         # Bfield kwargs
         kwargs.setdefault('helical', True)
         kwargs.setdefault('B0', 0.1)
@@ -699,9 +745,16 @@ class MixJet(trans.GammaALPTransfer):
 
             self._neljet = njet.NelJet(kwargs['n0'], kwargs['r0'], kwargs['beta'])
 
+            if type(kwargs['chi'])==RBSpline:
+                Chi = kwargs['chi'](kwargs['EGeV'], self._r)
+                logger.info("Using interpolated chi")
+            else:
+                Chi = kwargs['chi']
+                logger.info("Using inputted chi")
+
             # init the transfer function with absorption
             super(MixJet, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r),
-                                         dL * 1e-3, alp, Gamma=None, chi=None, Delta=None)
+                                         dL * 1e-3, alp, Gamma=None, chi=Chi, Delta=None)
 
             # transform energies to stationary frame
             self._ee /= self._source._doppler
@@ -827,7 +880,7 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         gmin: float
             jet lorenz factor at rjet
 
-        chi: <class 'scipy.interpolate.fitpack2.RectBivariateSpline'>
+        chi: `~scipy.interpolate.RectBivariateSpline`
             Spline function in (E [GeV], r [pc]) giving values of
             photon-photon dispersion chi down the jet
         """
@@ -1015,6 +1068,10 @@ class MixGMF(trans.GammaALPTransfer):
             default: lin range between end of Galactic Bfield and 0.
             with int_step steps
 
+        chi: `~scipy.interpolate.RectBivariateSpline`
+            Spline function in (E [GeV], r [kpc]) giving values of
+            photon-photon dispersion chi along the line of sight
+
         Source parameters:
 
         ra: float
@@ -1057,6 +1114,7 @@ class MixGMF(trans.GammaALPTransfer):
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
         kwargs.setdefault('int_steps', 100)
+        kwargs.setdefault('chi', None)
 
         # Bfield kwargs
         kwargs.setdefault('galactic',-1.)
@@ -1104,9 +1162,16 @@ class MixGMF(trans.GammaALPTransfer):
         if kwargs['restore'] is None:
             B, psi = self.Bgmf_calc()
 
+            if type(kwargs['chi'])==RBSpline:
+                Chi = kwargs['chi'](kwargs['EGeV'], self._r[::-1] - self.rbounds[:-1])
+                logger.info("Using interpolated chi")
+            else:
+                Chi = kwargs['chi']
+                logger.info("Using inputted chi")
+
             # init the transfer function with absorption
             super(MixGMF, self).__init__(kwargs['EGeV'], B, psi, self._nelgmf,
-                                         dL, alp, Gamma=None, chi=None, Delta=None)
+                                         dL, alp, Gamma=None, chi=Chi, Delta=None)
         else:
             tra = super(MixGMF, self).read_environ(kwargs['restore'], alp,
                                                    filepath=kwargs['restore_path'])
@@ -1330,21 +1395,30 @@ class MixFromArray(trans.GammaALPTransfer):
         restore_path: str
             full path to environment files
 
+        chi: array-like
+            n x m -dim numpy array with photon dispersion rate at
+            energy E and distance L
+
         """
         kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
         kwargs.setdefault('log_level', 'info')
+        kwargs.setdefault('chi', None)
 
         logger = logging.getLogger('gamma_alps')
 
         if kwargs['restore'] is None:
 
+            Chi = kwargs['chi']
+            if kwargs['chi'] is not None:
+                logger.info("Using inputted chi")
+
             # init the transfer function
             super(MixFromArray, self).__init__(kwargs['EGeV'], Btrans, psi, nel,
                                                dL, alp,
                                                Gamma=None,
-                                               chi=None,
+                                               chi=Chi,
                                                Delta=None)
         else:
             tra = super(MixFromArray, self).read_environ(kwargs['restore'], alp,

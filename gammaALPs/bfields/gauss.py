@@ -125,11 +125,11 @@ class Bgaussian(object):
 
     @property
     def kL(self):
-        return self._kH
+        return self._kL
 
     @property
     def q(self):
-        return self._kH
+        return self._q
 
     @B.setter
     def B(self,B):
@@ -176,9 +176,65 @@ class Bgaussian(object):
         self.__Vn = rand(self.__kn.shape[0])
         return
 
+    def normalization_B(self):
+        """
+        Calculate the normalization constant :math:`A` for the turbulent magnetic field.
+        See Eq. A15 in [Meyer2014]_
+
+        Returns
+        -------
+        B-field normalization as a scalar, depending on turbulence index :math:`q`
+        """
+        if self._q == -3:
+            normalization = 1. / log(self._kH / self._kL)
+        else:
+            normalization = (self._q + 3.) / (self._kH ** (self._q + 3.) - self._kL ** (self._q + 3.))
+
+        return normalization
+
     def Fq(self, x):
         """
         Calculate the :math:`F_q` function for given :math:`x, k_L`, and :math:`k_H`
+        for the transversal components of the B field
+
+        Parameters
+        ----------
+        x: array-like
+            Ratio between k and _kH
+
+        Returns
+        -------
+        F: array-like
+            n-dim array with :math:`F_q(x)` values
+        """
+        result = np.zeros_like(x)
+        m = x >= self._kL / self._kH
+        if self._q == 0.:
+            result[m] = self._kH ** 2. * (0.5 * (1. - x[m]*x[m]) - x[m] * x[m] * log(x[m]))
+            result[~m] = (0.5 * (self._kH ** 2. - self._kL ** 2.) +
+                                (x[~m] * self._kH) * (x[~m] * self._kH) * log(self._kH / self._kL))
+
+        elif self._q == -2.:
+            result[m] = (0.5 * (1. - x[m] * x[m]) - log(x[m]))
+            result[~m] = (log(self._kH / self._kL) +
+                          0.5 * (x[~m] * self._kH) * (x[~m] * self._kH) * (self._kL ** (-2) - self._kH ** (-2)))
+
+        else:
+            result[m] = self._kH ** (self._q + 2.) * (
+                (1. - x[m] ** (self._q + 2.)) / (self._q + 2.) +
+                x[m] * x[m] * (1. - x[m] ** self._q) / self._q
+            )
+
+            result[~m] = (self._kH ** (self._q + 2.) - self._kL ** (self._q + 2.)) / (self._q + 2.) + \
+                x[~m] * x[~m] * self._kH * self._kH / self._q * (self._kH ** self._q - self._kL ** self._q)
+
+        result *= self.normalization_B()
+        return result
+
+    def Fq_old(self, x):
+        """
+        Calculate the :math:`F_q` function for given :math:`x, k_L`, and :math:`k_H`
+        Deprecated version.
 
         Parameters
         ----------
@@ -203,7 +259,7 @@ class Bgaussian(object):
                             / (self._kH  - self._kL )
         elif self._q == -3.:
             F = lambda x:  1. / log(self._kH / self._kL) / self._kH / x  / 3. * (-x*x*x - 3. * x + 4.)
-            F_low = lambda x: ( (self._kL ** (-2) - self._kH ** (-2)) + (x * self._kH) * \
+            F_low = lambda x: ( (self._kL ** (-1) - self._kH ** (-1)) + (x * self._kH) * \
                             (x * self._kH) / 3. * (self._kL ** (-3) - self._kH ** (-3)) ) / \
                             log(self._kH / self._kL )
         else:
@@ -218,7 +274,47 @@ class Bgaussian(object):
                                     (self._kH ** (self._q + 3.) - self._kL**(self._q + 3) ) 
         return F(x) * (x >= self._kL / self._kH) + F_low(x) * (x < self._kL / self._kH)
 
-    def __corrTrans(self, k):
+    def Fq_longitudinal(self, x):
+        """
+        Calculate the :math:`F_q` function for given :math:`x, k_L`, and :math:`k_H`
+        for the longitudinal component of the B field
+
+        Parameters
+        ----------
+        x: array-like
+            Ratio between k and _kH
+
+        Returns
+        -------
+        F: array-like
+            n-dim array with :math:`F_q(x)` values
+        """
+        result = np.zeros_like(x)
+        m = x >= self._kL / self._kH
+        if self._q == 0.:
+            result[m] = self._kH ** 2. * (0.5 * (1. - x[m]*x[m]) + x[m] * x[m] * log(x[m]))
+            result[~m] = (0.5 * (self._kH ** 2. - self._kL ** 2.) -
+                          (x[~m] * self._kH) * (x[~m] * self._kH) * log(self._kH / self._kL))
+
+        elif self._q == -2.:
+            result[m] = (0.5 * (x[m] * x[m] - 1.) - log(x[m]))
+            result[~m] = (log(self._kH / self._kL) +
+                          0.5 * (x[~m] * self._kH) * (x[~m] * self._kH) * (self._kH ** (-2) - self._kL ** (-2)))
+
+        else:
+            result[m] = self._kH ** (self._q + 2.) * (
+                    (1. - x[m] ** (self._q + 2.)) / (self._q + 2.) -
+                    x[m] * x[m] * (1. - x[m] ** self._q) / self._q
+            )
+
+            result[~m] = (self._kH ** (self._q + 2.) - self._kL ** (self._q + 2.)) / (self._q + 2.) - \
+                         x[~m] * x[~m] * self._kH * self._kH / self._q * (self._kH ** self._q - self._kL ** self._q)
+
+        result *= self.normalization_B()
+        return result
+
+
+    def __corr_transversal(self, k):
         """
         Calculate the transversal correlation function for wave number k
 
@@ -234,9 +330,25 @@ class Bgaussian(object):
         """
         spatial_corr = pi / 4. * self._B * self._B * self.Fq(k / self._kH)
         return spatial_corr
-        #return pi / 4. * self._B * self._B * Fq(k / self._kH, self._kL, self._kH, self._q)
 
-    def Bgaus(self, z):
+    def __corr_longitudinal(self, k):
+        """
+        Calculate the longitudinal correlation function for wave number k
+
+        Parameters
+        ----------
+        k: array-like
+            wave number
+
+        Returns
+        -------
+        spatial_corr: array-like
+            n-dim array with values of the correlation function
+        """
+        spatial_corr = pi / 2. * self._B * self._B * self.Fq_longitudinal(k / self._kH)
+        return spatial_corr
+
+    def Bgaus(self, z, longitudinal=False):
         """
         Calculate the magnetic field for a gaussian turbulence field
         along the line of sight direction, denoted by z.
@@ -246,25 +358,28 @@ class Bgaussian(object):
         z: array-like
            m-dim array with distance traversed in magnetic field in kpc
 
+        longitudinal: bool
+            if True, calculate the longitudinal B field component and the transversal component otherwise.
+            Default: False
+
         Return
         -------
         B: :py:class:`numpy.ndarray`
             m-dim array with values of transversal field
         """
-        #t0 = time.time()
         zz, kk = meshgrid(z, self.__kn)
         _, dd = meshgrid(z, self.__dk)
         _, uu = meshgrid(z, self.__Un)
         _, vv = meshgrid(z, self.__Vn)
 
-        #t1 = time.time()
+        if longitudinal:
+            corr = self.__corr_longitudinal(kk)
+        else:
+            corr = self.__corr_transversal(kk)
 
-        corr_trans = self.__corrTrans(kk)
-        #t2 = time.time()
-        B = sum(sqrt(corr_trans / pi * dd * 2. * log(1. / uu))
+        B = sum(sqrt(corr / pi * dd * 2. * log(1. / uu))
                 * cos(kk * zz + 2. * pi * vv), axis=0)
-        #t3 = time.time()
-        #print ("t3-t2", t3-t2, "t2-t1", t2-t1, "t1-t0", t1-t0)
+
         return B
 
     def new_Bn(self, z, Bscale=None, nsim=1):
@@ -330,7 +445,7 @@ class Bgaussian(object):
 
         return B, Psin
 
-    def spatial_correlation(self, z, steps=10000):
+    def spatial_correlation(self, z, steps=10000, longitudinal=False):
         """
         Calculate the spatial correlation of the turbulent field
 
@@ -342,6 +457,10 @@ class Bgaussian(object):
         steps: int
             number of integration steps
 
+        longitudinal: bool
+            if True, calculate the longitudinal B field component and the transversal component otherwise.
+            Default: False
+
         Returns
         -------
         corr: array-like
@@ -351,7 +470,12 @@ class Bgaussian(object):
             z = array([z])
         t = logspace(-9., 0., steps)
         tt, zz = meshgrid(t, z)
-        kernel = self.Fq(tt) * cos(tt * zz * self._kH)
+
+        if longitudinal:
+            kernel = self.Fq_longitudinal(tt) * cos(tt * zz * self._kH) * 2.
+        else:
+            kernel = self.Fq(tt) * cos(tt * zz * self._kH)
+
         # the self._kH factor comes from the substitution t = k / _kH
         corr = self._B * self._B / 4. * simps(kernel * tt, log(tt), axis=1) * self._kH
         return corr
@@ -398,14 +522,8 @@ class Bgaussian(object):
         for i in range(nsim):
             if seeds is not None:
                 self.seed = seeds[i]
-            # calculate the longitudinal component
-            # this is sqrt(2) * one of the transversal components,
-            # see Eq. A8 in https://arxiv.org/pdf/1406.5972.pdf
-            # and the fact that the correlation factor of long. comp.
-            # is twice the one of the trans. component and enters
-            # the B field in sqrt
             self.new_random_numbers()
-            B = np.sqrt(2.) * self.Bgaus(z)
+            B = self.Bgaus(z, longitudinal=True)
             kernel.append(B * Bscale * n_el)
 
         # restore old seed
