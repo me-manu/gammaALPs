@@ -465,6 +465,10 @@ class ModuleList(object):
         - ICMGaussTurb: initializes :py:class:`~gammaALPs.base.environs.MixICMGaussTurb` for mixing
             in intra-cluster medium which is assumed to follow a Gaussian turbulence spectrum
 
+        - ICMStructured: initializes :py:class:`~gammaALPs.base.environs.MixICMStructured`for mixing
+            in intra-cluster medium which is assumed to be structured
+            with radial, poloidal and toroidal components, see 1008.5353 and 1908.03084
+
         - Jet: initializes :py:class:`~gammaALPs.base.environs.MixJet` for mixing
             in the AGN jet, where the field is assumed to be coherent
 
@@ -506,6 +510,10 @@ class ModuleList(object):
             self._modules.insert(order, env.MixICMGaussTurb(self.alp,
                                                             EGeV=self.EGeV * (1. + self.source.z),
                                                             **kwargs))
+        elif environ == 'ICMStructured':
+            self._modules.insert(order, env.MixICMStructured(self.alp,
+                                                             EGeV=self.EGeV * (1. + self.source.z),
+                                                             **kwargs))
         elif environ == 'Jet':
             self._modules.insert(order, env.MixJet(self.alp, self.source,
                                                    EGeV=self.EGeV * (1. + self.source.z),
