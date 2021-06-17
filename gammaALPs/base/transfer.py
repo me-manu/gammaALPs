@@ -21,7 +21,7 @@ Delta_CMB = lambda E: 0.8e-7*E
 #Delta_QED = lambda B,E: 4.1e-9*E*B**2.
 # with correction factors of Perna et al. 2012
 Delta_QED = lambda B,E: 4.1e-9*E*B**2. * (1. + 1.2e-6 * B / Bcrit) / \
-                                    (1. + 1.33e-6*B / Bcrit + 0.59e-6 * (B / Bcrit)**2.)
+                                    (1. + 1.33e-6*B / Bcrit + 0.56e-6 * (B / Bcrit)**2.)
 chiCMB = 0.511e-42
 # --------------------------------------- #
 #Plasma freq in 10^-9 eV
@@ -453,7 +453,6 @@ class GammaALPTransfer(object):
         self._Tn = np.exp(-1.j * ew1ll) * self._T1 + \
                        np.exp(-1.j * ew2ll) * self._T2 + \
                        np.exp(-1.j * ew3ll) * self._T3
-        self._Tn = np.round(self._Tn, 8)
         return
 
     def write_environ(self, name, filepath ='./'):
