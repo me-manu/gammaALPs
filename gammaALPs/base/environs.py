@@ -522,14 +522,17 @@ class MixICMStructured(trans.GammaALPTransfer):
         kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
+        # no useful definition of nsim, keep for consistency?
         kwargs.setdefault('nsim', 1)
 
         # Bfield kwargs
         kwargs.setdefault('B0', 1.)
         kwargs.setdefault('R', 100.)
         kwargs.setdefault('theta', 0)
-        kwargs.setdefault('radians', False)
-        kwargs.setdefault('cell_num', 100)
+        kwargs.setdefault('theta_rad', False)
+        kwargs.setdefault('pa', 0)
+        kwargs.setdefault('pa_rad', False)
+        kwargs.setdefault('cell_num', 1000)
 
         # ICM kwargs
         kwargs.setdefault('n0', 1e-3)
@@ -549,12 +552,14 @@ class MixICMStructured(trans.GammaALPTransfer):
 
         if kwargs['restore'] is None:
             self._Bfield_model = struc.structured_field(kwargs['B0'], kwargs['R'],
-                                                        kwargs['theta'], kwargs['radians'],
+                                                        kwargs['theta'], kwargs['theta_rad'],
                                                         kwargs['cell_num'])
             dL = self._Bfield_model.dL_vec
             self._r = self._Bfield_model.r
-            B = self._Bfield_model.b_trans * self._Bfield_model.bscale(self._nelicm(self._r), kwargs['eta'])
+            
+            B = self._Bfield_model.b_trans # * self._Bfield_model.bscale(self._nelicm(self._r), kwargs['eta'])
             psi = self._Bfield_model.angle
+            psi -= kwargs['pa'] if kwargs['pa_rad'] else np.radians(kwargs['pa'])
             
             
             
@@ -573,11 +578,7 @@ class MixICMStructured(trans.GammaALPTransfer):
 
     @property
     def r(self):
-        return self._r
-
-    @property
-    def rbounds(self):
-        return self._rbounds
+        return self._Bfield_model.r
 
     @property
     def Bfield_model(self):

@@ -13,9 +13,10 @@ class structured_field(object):
     they do not depend on anything else.'''
     alpha = 5.7634591968
     F_0 = (alpha * np.cos(alpha) - np.sin(alpha)) * alpha**2
+    '''norm calculated using simpy, lim_{r \to 0} of Bfield components and taking euclidian norm'''
     norm = np.sqrt((3 * F_0 + alpha**5)**2) * 2 / (3 * alpha**2)
 
-    def __init__(self, B_0, R, theta, radians=True, cell_num=100):
+    def __init__(self, B_0, R, theta, radians=True, cell_num=1000):
         '''B_0 in micro gauss, theta in radians, if not specified.'''
         if radians:
             self.theta = theta
@@ -50,7 +51,7 @@ class structured_field(object):
             if np.max(val) > self.R:
                 raise ValueError('You cannot choose r_i > R')
             else:
-                # print('You need to manually set dL_vec!')
+                print('You need to manually set dL_vec!')
                 self._r = val / self.R
 
     '''Not compatible with manually setting self.r!
@@ -70,13 +71,6 @@ class structured_field(object):
     @property
     def angle(self):
         return self._angle_b_trans(self.b_phi, self.b_theta)
-
-    @staticmethod
-    def bscale(nel, eta):
-        return np.power(nel / nel[0], eta)
-    # not sure if this is needed at all. B field is solution to some 
-    # set of differential equations, scaling violates that solution
-    # included for completeness? probably to be deleted
 
     '''@property (ies?...) return normalised and correctly scaled field values.
     Dividing by normalisation at r=0 is done in private classmethods,
@@ -113,9 +107,17 @@ class structured_field(object):
 
     @staticmethod
     def _angle_b_trans(b_phi, b_theta):
-        '''Calculates angle of transversal field component w.r.t.
-        theta direction (arbitrarily chosen). Returns angle in radians.'''
-        return np.arctan2(b_phi, b_theta)
+        '''Calculates angle of transversal field component (psi).
+        Conforms to psi definition of gammaALPs. See definition of
+        Bs, Bt, Bu in GMF environs and trafo.py.
+        In this case, B_b = -B_theta, B_l = -B_phi,
+        b=galactic latitude, l=galactic longitude.
+        To rotate jet axis around LOS, add or subtract some angle.
+        Using the value of 1908 paper (PA=147° in galactic coordinates)
+        subtract np.radians(147) from resulting angle.
+        PA is accounted for in transer object.
+        '''
+        return np.arctan2(-b_theta, -b_phi)
 
     '''Magnetic field expressions, see 1008.5353 and 1908.03084 for details.
     Field values at r=0 are evaluated seperately due the (numerical)
@@ -184,10 +186,10 @@ class structured_field(object):
                 + np.sin(cls.alpha * r) / r**2) \
                 - 2 * cls.F_0 * r / cls.alpha**2
 
-    def rotation_measure(self, nel, eta=0):
+    def rotation_measure(self, nel):
         '''Rotation measure (RM) = rad * m^-2 * 812 * integral nel * B dz,
         nel in 1/cm^3, B in muGauss, z in kpc.'''
-        return 812 * simp(self.b_par * self.bscale(nel, eta) * nel, self.r)
+        return 812 * simp(self.b_par * nel, self.r)
 
 
 if __name__ == "__main__":
