@@ -3,30 +3,62 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import warnings
 import logging
-from astropy import units as u
 from os import path
 from multiprocessing import Pool
 from functools import reduce
 from numba import jit
+from astropy import units as u
+from astropy import constants as c
+from astropy.cosmology import Planck15
 # ------------------------- #
+
+
+# --- Unit conversions factors as astropy quantities --- #
+kgGeV = (1. * u.kg * c.c**2.).to("J").to("GeV")
+sGeV = u.s / c.hbar.to("GeV s")
+gaussGeV = c.e.value  * 1e-4 / np.sqrt(c.alpha * 4. * np.pi) * kgGeV / sGeV
+GeV2kpc = (c.hbar * c.c).to("GeV kpc")
+cm2GeV = (u.cm / (c.hbar * c.c)).to("GeV-1")
+m_e_GeV = (c.m_e * c.c**2.).to("GeV")
+Bcrit_muGauss = m_e_GeV ** 2. / np.sqrt(4. * np.pi * c.alpha) / gaussGeV * u.G.to("1e-6 G") * u.Unit("1e-6 G")
+
+# --- chi CMB from Dobryina et al 2015
+chiCMB = ((Planck15.Tcmb0 * c.k_B).to("GeV") ** 4. * np.pi **2. / 15. / m_e_GeV ** 4. *
+          44. * c.alpha**2. / 135.).value
+
+# --- prefactors for Delta terms, all are in units kpc-1
+# these are astropy quantities
+# and assume:
+# B in 1e-6 G
+# g_ag in 1e-11 GeV-1
+# m_a in neV
+# n_e in cm-3
+# E is in GeV
+prefactor_Delta_ag = gaussGeV * 1e-6 / (1e11 * u.GeV) / GeV2kpc / 2.
+prefactor_Delta_a = u.neV.to("GeV") ** 2. * u.GeV**2. / u.GeV / GeV2kpc / 2.
+prefactor_Delta_pl = 4. * np.pi * c.alpha / m_e_GeV / u.GeV / cm2GeV**3. / GeV2kpc / 2.
+prefactor_Delta_CMB = chiCMB * u.GeV / GeV2kpc
+prefactor_Delta_QED = c.alpha / 45. / np.pi / Bcrit_muGauss.value**2. / GeV2kpc * u.GeV
+
 
 Bcrit = 4.414e13  # critical magnetic field in G
 
 # --- Momentum differences in kpc^-1 --- #
-Delta_ag = lambda g, B: 1.52e-2*g*B
-Delta_a = lambda m, E: -7.8e-2*m**2./E
-Delta_pl = lambda n, E: -1.1e-4*n/E
-Delta_CMB = lambda E: 0.8e-7*E
+Delta_ag = lambda g_11, B_muG: prefactor_Delta_ag.value * g_11 * B_muG
+Delta_a = lambda m_neV, E_GeV: -prefactor_Delta_a.value * m_neV ** 2. / E_GeV
+Delta_pl = lambda n_cm3, E_GeV: -prefactor_Delta_pl.value * n_cm3 / E_GeV
+Delta_CMB = lambda E_GeV: prefactor_Delta_CMB.value * E_GeV
 
-#Delta_QED = lambda B,E: 4.1e-9*E*B**2.
+# Delta_QED = lambda B,E: 4.1e-9*E*B**2.
 # with correction factors of Perna et al. 2012
-Delta_QED = lambda B,E: 4.1e-9*E*B**2. * (1. + 1.2e-6 * B / Bcrit) / \
-                                    (1. + 1.33e-6*B / Bcrit + 0.59e-6 * (B / Bcrit)**2.)
-chiCMB = 0.511e-42
+Delta_QED = lambda B_muG, E_GeV: prefactor_Delta_QED.value * E_GeV * B_muG ** 2. * \
+                                 (1. + 1.2 * B_muG / Bcrit_muGauss.value) / \
+                                 (1. + 1.33 * B_muG / Bcrit_muGauss.value + 0.56 * (B_muG / Bcrit_muGauss.value)**2.)
 # --------------------------------------- #
-#Plasma freq in 10^-9 eV
-#n is electron density in cm^-3
-w_pl_e9 = lambda n: 0.00117*np.sqrt(n/1e-3)
+# Plasma freq in 10^-9 eV
+# n is electron density in cm^-3
+prefactor_omega_pl = np.sqrt(4. * np.pi * c.alpha / m_e_GeV / cm2GeV**3.).to("neV")
+w_pl_e9 = lambda n_cm3: prefactor_omega_pl*np.sqrt(n_cm3)
 # --------------------------------------- #
 
 
@@ -453,7 +485,6 @@ class GammaALPTransfer(object):
         self._Tn = np.exp(-1.j * ew1ll) * self._T1 + \
                        np.exp(-1.j * ew2ll) * self._T2 + \
                        np.exp(-1.j * ew3ll) * self._T3
-        self._Tn = np.round(self._Tn, 8)
         return
 
     def write_environ(self, name, filepath ='./'):
