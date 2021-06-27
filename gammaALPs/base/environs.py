@@ -461,7 +461,7 @@ class MixICMStructured(trans.GammaALPTransfer):
     def __init__(self, alp, **kwargs):
         """
         Initialize mixing in the intracluster magnetic field,
-        assuming that it follows a structured field, see https://arxiv.org/pdf/1008.5353.pdf
+        assuming that it follows a structured field, see https://arxiv.org/pdf/1008.5353.pdf.
 
         Parameters
         ----------
@@ -485,9 +485,7 @@ class MixICMStructured(trans.GammaALPTransfer):
             Radius of cavity, B field vanishes at r=R, in kpc
 
         theta: float
-            Angle of B field symmetry axis w.r.t. line of sight in degrees
-            To get consistent results with 1908.03084 paper, add 180° to the
-            actual value you want to use, weird angle definition? I don't know.
+            Angle of B field symmetry axis w.r.t. line of sightm in degrees.
 
         radians: bool
             If True, theta is considered to be expressed in radians.
@@ -504,11 +502,6 @@ class MixICMStructured(trans.GammaALPTransfer):
         beta: float
             exponent of density profile (default: 1.)
 
-        eta: float
-            exponent for scaling of B field with electron density (default = 0.)
-            Not sure if this is actually applicable here, the B field solution
-            of the referenced paper does not specifiy this in any way!
-            Should use 0 for no scaling at all.
 
         n2: float
             if > 0., use profile with this second density component
@@ -518,12 +511,16 @@ class MixICMStructured(trans.GammaALPTransfer):
 
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
+
+        chi: `~scipy.interpolate.RectBivariateSpline`
+            Spline function in (E [GeV], r [kpc]) giving values of
+            photon-photon dispersion chi along the line of sight
+            through the cluster.
         """
+
         kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
-        # no useful definition of nsim, keep for consistency?
-        kwargs.setdefault('nsim', 1)
 
         # Bfield kwargs
         kwargs.setdefault('B0', 1.)
@@ -544,9 +541,10 @@ class MixICMStructured(trans.GammaALPTransfer):
         kwargs.setdefault('r_core2', 0.)
         kwargs.setdefault('beta2', 0.)
         kwargs.setdefault('seed', None)
+        kwargs.setdefault('chi', None)
+
 
         logger = logging.getLogger('gamma_alps')
-        # kwargs.setdefault('rbounds', np.arange(0., kwargs['r_abell'], kwargs['L0']))
 
         self._nelicm = icm.NelICM(**kwargs)
 
@@ -563,8 +561,15 @@ class MixICMStructured(trans.GammaALPTransfer):
             
             
             # init the transfer function
+            if type(kwargs['chi'])==RBSpline:
+                Chi = kwargs['chi'](kwargs['EGeV'], self._r)
+                logger.info("Using interpolated chi")
+            else:
+                Chi = kwargs['chi']
+                logger.info("Using inputted chi")
+            # init the transfer function with absorption
             super(MixICMStructured, self).__init__(kwargs['EGeV'], B, psi, self._nelicm(self._r),
-                                             dL, alp, Gamma=None, chi=None, Delta=None)
+                                                  dL, alp, Gamma=None, chi=Chi, Delta=None)
         else:
             tra = super(MixICMStructured,self).read_environ(kwargs['restore'], alp,
                                                       filepath=kwargs['restore_path'])

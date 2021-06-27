@@ -6,14 +6,13 @@ from scipy.integrate import simpson as simp
 class structured_field(object):
     """Class definition of structured magnetic field, see 1008.5353 and
     1908.03084 for details.
+    """
 
-    alpha is lowest positive, non-zero root of
-    tan(alpha)=3alpha/(3-alpha**2). Put F_0 and norm here as well,
-    they do not depend on anything else."""
-
+    #alpha is lowest positive, non-zero root of tan(alpha)=3alpha/(3-alpha**2).
     alpha = 5.7634591968
     F_0 = (alpha * np.cos(alpha) - np.sin(alpha)) * alpha**2
-    """norm calculated using simpy, :math:`lim_{r \to 0}` of Bfield components and taking euclidian norm."""
+
+    #orm calculated using simpy, :math:`lim_{r \to 0}` of Bfield components and taking euclidian norm.
     norm = np.sqrt((3 * F_0 + alpha**5)**2) * 2 / (3 * alpha**2)
 
     def __init__(self, B0, R, theta, theta_rad, pa, pa_rad, cell_num=1000):
@@ -60,7 +59,8 @@ class structured_field(object):
     @property
     def r(self):
         """r needs to be rescaled in field strength expressions to be smaller
-            than one, for "external" use _r is multiplied by R in this property wrapper."""
+            than one, for "external" use _r is multiplied by R in this property wrapper.
+        """
         return self._r * self.R
 
     @r.setter
@@ -70,17 +70,17 @@ class structured_field(object):
         Parameters
         ----------
         val: array-like
-            New points along line of sight. val=None resets to default values, val=np.array for different choice of points.
+            New points along line of sight. val=None resets to default values, val=np.ndarray for different choice of points.
         """
         if val is None:
-            # print('Resetting radial points and dL_vec')
+            print('Resetting radial points and dL_vec.')
             self._r = self._get_r_points() / self.R
             self.dL_vec = np.full(self.r.shape, self.dL)
         else:
             if np.max(val) > self.R:
                 raise ValueError('You cannot choose r_i > R')
             else:
-                print('You need to manually set dL_vec!')
+                #print('You need to manually set dL_vec!')
                 self._r = val / self.R
 
     
