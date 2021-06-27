@@ -553,13 +553,12 @@ class MixICMStructured(trans.GammaALPTransfer):
         if kwargs['restore'] is None:
             self._Bfield_model = struc.structured_field(kwargs['B0'], kwargs['R'],
                                                         kwargs['theta'], kwargs['theta_rad'],
-                                                        kwargs['cell_num'])
+                                                        kwargs['pa'], kwargs['pa_rad'], kwargs['cell_num'])
             dL = self._Bfield_model.dL_vec
             self._r = self._Bfield_model.r
             
             B = self._Bfield_model.b_trans # * self._Bfield_model.bscale(self._nelicm(self._r), kwargs['eta'])
             psi = self._Bfield_model.angle
-            psi -= kwargs['pa'] if kwargs['pa_rad'] else np.radians(kwargs['pa'])
             
             
             

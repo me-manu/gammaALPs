@@ -16,12 +16,12 @@ class structured_field(object):
     """norm calculated using simpy, :math:`lim_{r \to 0}` of Bfield components and taking euclidian norm."""
     norm = np.sqrt((3 * F_0 + alpha**5)**2) * 2 / (3 * alpha**2)
 
-    def __init__(self, B_0, R, theta, theta_rad, pa, pa_rad, cell_num=1000):
+    def __init__(self, B0, R, theta, theta_rad, pa, pa_rad, cell_num=1000):
         """Initializes structured B field model. Default values are reasonable for galaxy clusters.
 
         Parameters
         ----------
-        B_0: float
+        B0: float
             Total B field strength at cluster center r=0.
 
         R: float
@@ -45,7 +45,7 @@ class structured_field(object):
         
         self.theta = theta if theta_rad else np.radians(theta)
         self.pa = pa if pa_rad else np.radians(pa)
-        self.B_0 = B_0
+        self.B0 = B0
         self.R = R
         self.cell_num = cell_num
         self.dL = R / cell_num
@@ -102,23 +102,23 @@ class structured_field(object):
 
     @property
     def b_r(self):
-        return self.B_0 * self._b_r(self._r, self.theta)
+        return self.B0 * self._b_r(self._r, self.theta)
 
     @property
     def b_phi(self):
-        return self.B_0 * self._b_phi(self._r, self.theta)
+        return self.B0 * self._b_phi(self._r, self.theta)
 
     @property
     def b_theta(self):
-        return self.B_0 * self._b_theta(self._r, self.theta)
+        return self.B0 * self._b_theta(self._r, self.theta)
 
     @property
     def b_par(self):
-        return self.B_0 * self._b_par(self._r, self.theta)
+        return self.B0 * self._b_par(self._r, self.theta)
 
     @property
     def b_trans(self):
-        return self.B_0 * self._b_trans(self._r, self.theta)
+        return self.B0 * self._b_trans(self._r, self.theta)
 
     @classmethod
     def _b_par(cls, r, theta):
