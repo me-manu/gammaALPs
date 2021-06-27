@@ -15,11 +15,13 @@ Calculate photon-ALP mixing in different environments
     mixing_AGN_jet_simple.ipynb
     mixing_HelicalTangled_jet.ipynb
     mixing_gmf.ipynb
+    mixing_ICM_structured.ipynb
 
 These tutorials demonstrate the usage of gammaALPs for different astrophysical environments:
 
 - `Mixing in a homogeneous magnetic field <mixing_single_cell.html>`__ | *mixing_single_cell.ipynb*
 - `Mixing in Gaussian turbulence field: Perseus cluster and from NGC 1275 <mixing_ICM_Gaussian_Turbulence.html>`__ | *mixing_ICM_Gaussian_Turbulence.ipynb*
+- `Mixing in structured cavity field: Perseus cluster and from NGC 1275 <mixing_ICM_structured_field.html>`__ | *mixing_ICM_structured_field.ipynb*
 - `Mixing in the intergalactic magnetic field (IGMF) <mixing_IGMF.html>`__ | *mixing_IGMF.ipynb*
 - `Mixing in AGN jet with simple toroidal magnetic field <mixing_AGN_jet_simple.html>`__ | *mixing_AGN_jet_simple.ipynb*
 - `Mixing in AGN jet with helical and tangled magnetic field <mixing_HelicalTangled_jet.html>`__ | *mixing_HelicalTangled_jet.ipynb*

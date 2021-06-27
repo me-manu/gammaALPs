@@ -4,25 +4,47 @@ from scipy.integrate import simpson as simp
 
 
 class structured_field(object):
-    '''Class definition of structured magnetic field, see 1008.5353 and
+    """Class definition of structured magnetic field, see 1008.5353 and
     1908.03084 for details.
-    '''
 
-    '''alpha is lowest positive, non-zero root of
+    alpha is lowest positive, non-zero root of
     tan(alpha)=3alpha/(3-alpha**2). Put F_0 and norm here as well,
-    they do not depend on anything else.'''
+    they do not depend on anything else."""
+
     alpha = 5.7634591968
     F_0 = (alpha * np.cos(alpha) - np.sin(alpha)) * alpha**2
-    '''norm calculated using simpy, lim_{r \to 0} of Bfield components and taking euclidian norm'''
+    """norm calculated using simpy, :math:`lim_{r \to 0}` of Bfield components and taking euclidian norm."""
     norm = np.sqrt((3 * F_0 + alpha**5)**2) * 2 / (3 * alpha**2)
 
-    def __init__(self, B_0, R, theta, radians=True, cell_num=1000):
-        '''B_0 in micro gauss, theta in radians, if not specified.'''
-        if radians:
-            self.theta = theta
-        else:
-            self.theta = np.radians(theta)
-        print(self.theta)
+    def __init__(self, B_0, R, theta, theta_rad, pa, pa_rad, cell_num=1000):
+        """Initializes structured B field model. Default values are reasonable for galaxy clusters.
+
+        Parameters
+        ----------
+        B_0: float
+            Total B field strength at cluster center r=0.
+
+        R: float
+            Cavity radius, B field goes to zero at r=R.
+
+        theta: float
+            inclination of symmetry axis w.r.t. line of sight.
+
+        theta_rad: bool
+            True if theta given in radians.
+
+        pa: float
+            Position angle of symmetry axis in galactic coordinates.
+
+        pa_rad: bool
+            True if pa given in radians.
+
+        cell_num: int
+            Number of cells B field is divided into for propagation of polarization density matrix.
+        """
+        
+        self.theta = theta if theta_rad else np.radians(theta)
+        self.pa = pa if pa_rad else np.radians(pa)
         self.B_0 = B_0
         self.R = R
         self.cell_num = cell_num
@@ -34,17 +56,24 @@ class structured_field(object):
     def _get_r_points(self):
         return np.linspace(self.dL / 2, self.R - self.dL / 2, self.cell_num)
 
-    '''r needs to be rescaled in field strength expressions to be smaller
-    than one. this is done here. calling b.r multiplies with R, setting divides
-    by R.'''
+    
     @property
     def r(self):
+        """r needs to be rescaled in field strength expressions to be smaller
+            than one, for "external" use _r is multiplied by R in this property wrapper."""
         return self._r * self.R
 
     @r.setter
     def r(self, val=None):
+        """When manually setting r (val = some array) dL_vec needs to be set manually according to r.
+
+        Parameters
+        ----------
+        val: array-like
+            New points along line of sight. val=None resets to default values, val=np.array for different choice of points.
+        """
         if val is None:
-            print('Resetting radial points and dL_vec')
+            # print('Resetting radial points and dL_vec')
             self._r = self._get_r_points() / self.R
             self.dL_vec = np.full(self.r.shape, self.dL)
         else:
@@ -54,8 +83,7 @@ class structured_field(object):
                 print('You need to manually set dL_vec!')
                 self._r = val / self.R
 
-    '''Not compatible with manually setting self.r!
-    Only set self.r manually if you know what you are doing.'''
+    
     @property
     def rbounds(self):
         return np.linspace(0, self.R, self.cell_num, endpoint=True)
@@ -70,11 +98,8 @@ class structured_field(object):
 
     @property
     def angle(self):
-        return self._angle_b_trans(self.b_phi, self.b_theta)
+        return self._angle_b_trans(self.b_phi, self.b_theta) - self.pa
 
-    '''@property (ies?...) return normalised and correctly scaled field values.
-    Dividing by normalisation at r=0 is done in private classmethods,
-    scaling done in property definitions.'''
     @property
     def b_r(self):
         return self.B_0 * self._b_r(self._r, self.theta)
@@ -107,24 +132,14 @@ class structured_field(object):
 
     @staticmethod
     def _angle_b_trans(b_phi, b_theta):
-        '''Calculates angle of transversal field component (psi).
-        Conforms to psi definition of gammaALPs. See definition of
+        """Calculates angle of transversal field component (psi).
+        Conforms to psi definition of GMF models. See definition of
         Bs, Bt, Bu in GMF environs and trafo.py.
         In this case, B_b = -B_theta, B_l = -B_phi,
         b=galactic latitude, l=galactic longitude.
-        To rotate jet axis around LOS, add or subtract some angle.
-        Using the value of 1908 paper (PA=147° in galactic coordinates)
-        subtract np.radians(147) from resulting angle.
-        PA is accounted for in transer object.
-        '''
+        """
         return np.arctan2(-b_theta, -b_phi)
 
-    '''Magnetic field expressions, see 1008.5353 and 1908.03084 for details.
-    Field values at r=0 are evaluated seperately due the (numerical)
-    impossibility of dividing by zero. Values at r=0 evaluated by sympy.
-    Can be used for array, as well as floats (try-except statement).
-    Careful when calling from class, as no normalisation will be done.
-    '''
     @classmethod
     def _b_r(cls, r, theta):
         zero_val = - np.cos(theta) * (6 * cls.F_0 + 2 * cls.alpha**5) \
@@ -169,8 +184,6 @@ class structured_field(object):
             val = cls.alpha * np.sin(theta) * cls._f(r) / r
         return val / cls.norm
 
-    '''Unscaled versions of f, df/dr of referenced paper. Scaling done in
-    definitions of field values (properties and classmethods).'''
     @classmethod
     def _f(cls, r):
         # should maybe include special case of r=0 here as well.
@@ -187,8 +200,19 @@ class structured_field(object):
                 - 2 * cls.F_0 * r / cls.alpha**2
 
     def rotation_measure(self, nel):
-        '''Rotation measure (RM) = rad * m^-2 * 812 * integral nel * B dz,
-        nel in 1/cm^3, B in muGauss, z in kpc.'''
+        """Rotation measure (RM) = rad * m^-2 * 812 * integral nel * B dz,
+        nel in 1/cm^3, B in muGauss, z in kpc.
+
+        Parameters
+        ----------
+        nel: array-like
+            Array of electron density in cm^-3 along r.
+
+        Returns
+        -------
+        rm: float
+            Rotation measure in units of rad/m^2.
+        """
         return 812 * simp(self.b_par * nel, self.r)
 
 
