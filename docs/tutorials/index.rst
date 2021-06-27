@@ -11,11 +11,11 @@ Calculate photon-ALP mixing in different environments
 
     mixing_single_cell.ipynb
     mixing_ICM_Gaussian_Turbulence.ipynb
+    mixing_ICM_structured.ipynb
     mixing_IGMF.ipynb
     mixing_AGN_jet_simple.ipynb
     mixing_HelicalTangled_jet.ipynb
     mixing_gmf.ipynb
-    mixing_ICM_structured.ipynb
 
 These tutorials demonstrate the usage of gammaALPs for different astrophysical environments:
 
