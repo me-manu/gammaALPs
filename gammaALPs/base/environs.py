@@ -479,16 +479,25 @@ class MixICMStructured(trans.GammaALPTransfer):
             full path to environment files
 
         B0: float
-            ICM at r = 0 in muG
+            ICM at r = 0 in muG (default 1).
 
         R: float
-            Radius of cavity, B field vanishes at r=R, in kpc
+            Radius of cavity, B field vanishes at r=R, in kpc (default 100).
 
         theta: float
-            Angle of B field symmetry axis w.r.t. line of sightm in degrees.
+            Angle of B field symmetry axis w.r.t. line of sight in degrees (default 0).
 
         radians: bool
-            If True, theta is considered to be expressed in radians.
+            If True, theta is considered to be expressed in radians (default False).
+
+        pa: float
+            Position angle of symmetry axis in galactic coordinates (default 0).
+
+        pa_rad: bool
+            True if pa given in radians (default False).
+
+        cell_num: int
+            Number of cells B field is divided into for propagation of polarization density matrix (default 1000).
 
 
         ICM kwargs:
