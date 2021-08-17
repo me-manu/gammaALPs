@@ -60,7 +60,7 @@ def conv_struc_file(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('tmp')
 
     outfile = os.path.join(path, "conversion_prob_struc.npy")
-    url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/conversion_prob_struc.npy'
+    url = 'https://raw.githubusercontent.com/specktakel/gammaALPs/b_struc/data/conversion_prob_struc.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
 
@@ -320,7 +320,7 @@ class TestConversionModules:
                           pa=147,
                           pa_rad=False,
                           n0=3.9e-2,
-                          n2=4.0e-3,
+                          n2=4.05e-3,
                           r_abell=500.,
                           r_core=80.,
                           r_core2=280.,
