@@ -50,6 +50,34 @@ class TestConversionModules:
         assert_allclose(py, py2, rtol=1e-6)
         assert_allclose(pa, pa2, rtol=1e-6)
 
+    def test_icm_struc(self):
+        EGeV = np.logspace(1., 3.5, 50)
+        pin = np.diag((1., 1., 0.)) * 0.5
+        source = Source(z=0.017559, ra='03h19m48.1s', dec='+41d30m42s')
+        alp = ALP(1., 1.)
+        m = ModuleList(alp, source, pin=pin, EGeV=EGeV)
+
+        # test for Perseus B field
+        m.add_propagation("ICMStructured",
+                          0,
+                          B0=10.,
+                          n0=3.9e-2,
+                          n2=4.05e-3,
+                          r_abell=500.,
+                          r_core=80.,
+                          r_core2=280.,
+                          beta=1.2,
+                          beta2=0.58,
+                          eta=0.0
+                          )
+        # check access to module
+        assert m.modules['MixICMStructured'] == m.modules[0]
+
+        # check conversion prop
+        px, py, pa = m.run()
+
+        assert_allclose(px + py + pa, np.ones_like(px), rtol=1e-6)
+
     def test_jet_helical_tangled(self):
         EGeV = np.logspace(1., 3.5, 50)
         pin = np.diag((1., 1., 0.)) * 0.5
