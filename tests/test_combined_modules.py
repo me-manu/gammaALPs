@@ -54,6 +54,18 @@ def conv_prob_los_ebl_file(request, tmpdir_factory):
 
     return outfile
 
+
+@pytest.fixture(scope='module')
+def conv_struc_file(request, tmpdir_factory):
+    path = tmpdir_factory.mktemp('tmp')
+
+    outfile = os.path.join(path, "conversion_prob_struc.npy")
+    url = 'https://raw.githubusercontent.com/specktakel/gammaALPs/b_struc/data/conversion_prob_struc.npy'
+    os.system('curl -o %s -OL %s' % (outfile, url))
+    request.addfinalizer(lambda: path.remove(rec=1))
+
+    return outfile
+
 class TestConversionModules:
 
     def test_icm_gauss_ebl_gmf(self, conv_ngc1275_file):
@@ -291,4 +303,44 @@ class TestConversionModules:
         assert_allclose(py, compare_conv_prob['py'], rtol=1e-6)
         assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-6)
 
+    def test_icm_struc(self, conv_struc_file):
+        EGeV = np.logspace(1., 3.5, 50)
+        pin = np.diag((1., 1., 0.)) * 0.5
+        source = Source(z=0.017559, ra='03h19m48.1s', dec='+41d30m42s')
+        alp = ALP(1., 1.)
+        m = ModuleList(alp, source, pin=pin, EGeV=EGeV)
 
+        # test for Perseus B field
+        m.add_propagation("ICMStructured",
+                          0,
+                          B0=10.,
+                          R=93,
+                          theta=225,
+                          theta_rad=False,
+                          pa=147,
+                          pa_rad=False,
+                          n0=3.9e-2,
+                          n2=4.05e-3,
+                          r_abell=500.,
+                          r_core=80.,
+                          r_core2=280.,
+                          beta=1.2,
+                          beta2=0.58,
+                          eta=0.0
+                          )
+        m.add_propagation("EBL", 1, eblmodel="dominguez", eblnorm=1.)
+        m.add_propagation("GMF", 2, model="jansson12")
+
+        px, py, pa = m.run()
+
+        # uncomment these lines if you need to regenerate the files
+        #conv_struc_file = os.path.join(os.path.dirname(os.path.dirname(gammaALPs.__file__)),
+        #                                 "data/conversion_prob_struc.npy")
+        #np.save(conv_struc_file,
+        #        {"px": px, "py": py, "pa": pa})
+
+        compare_conv_prob = np.load(conv_struc_file, allow_pickle=True).flat[0]
+
+        assert_allclose(px, compare_conv_prob['px'], rtol=1e-5)
+        assert_allclose(py, compare_conv_prob['py'], rtol=1e-5)
+        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-5)
