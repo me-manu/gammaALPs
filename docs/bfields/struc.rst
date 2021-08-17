@@ -3,7 +3,7 @@
 Large scale structured magnetic field of Galaxy Clusters
 ----------------------------------------------------------
 
-This module implements the magnetic field derived by [Gourgouliatos2018]_ as a solution to the Grad-Shafranov equation.
+This module implements the magnetic field derived by [Gourgouliatos2010]_ as a solution to the Grad-Shafranov equation.
 The field strength vanishes on the cavity surface whose interior is otherwise filled by a large scale magnetic field.
 Field components are given in spherical coordinates. All components can be accessed with
 :py:meth:`gammaALPs.bfields.struc.structured_field.b_r`,

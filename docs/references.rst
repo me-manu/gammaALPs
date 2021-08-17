@@ -55,5 +55,5 @@ Publications
 .. [Dobrynina2015] `Dobrynina; Kartatsev; Raffelt (2015) <https://ui.adsabs.harvard.edu/abs/2015PhRvD..91h3003D/abstract>`_
     "Photon-photon dispersion of TeV gamma rays and its role for photon-ALP conversion"
 
-.. [Gourgouliatos2018] `Gourgouliatos; Braithwaite; Lyutikov (2010) <https://ui.adsabs.harvard.edu/abs/2010MNRAS.409.1660G/abstract>`_
+.. [Gourgouliatos2010] `Gourgouliatos; Braithwaite; Lyutikov (2010) <https://ui.adsabs.harvard.edu/abs/2010MNRAS.409.1660G/abstract>`_
     "Structure of magnetic fields in intracluster cavities"
