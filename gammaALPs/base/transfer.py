@@ -286,7 +286,6 @@ class GammaALPTransfer(object):
             self._EGeV = EGeV.to('GeV').value
         else:
             self._EGeV = EGeV
-        self.__init_transfer_matrices()
         self.__init_meshgrids()
         return
 
@@ -296,7 +295,6 @@ class GammaALPTransfer(object):
             self._B = B.to('10**-6G').value
         else:
             self._B = B
-        self.__init_transfer_matrices()
         self.__init_meshgrids()
         return
 
@@ -304,7 +302,6 @@ class GammaALPTransfer(object):
     def Bn(self, Bn):
         self._Bn = Bn
         self._B = Bn[0]
-        self.__init_transfer_matrices()
         self.__init_meshgrids()
         return
 
@@ -317,7 +314,6 @@ class GammaALPTransfer(object):
     @psi.setter
     def psi(self, psi):
         self._psi = psi
-        self.__init_transfer_matrices()
         self.__init_meshgrids()
         return
 
@@ -326,7 +322,6 @@ class GammaALPTransfer(object):
         self._psin = psin
         self._nsim = psin.shape[0]
         self._psi = psin[0]
-        self.__init_transfer_matrices()
         self.__init_meshgrids()
         return
 
@@ -336,7 +331,6 @@ class GammaALPTransfer(object):
             self._nel = nel.to('cm**-3').value
         else:
             self._nel = nel
-        self.__init_transfer_matrices()
         self.__init_meshgrids()
         return
 
@@ -346,7 +340,6 @@ class GammaALPTransfer(object):
             self._dL = dL.to('kpc').value
         else:
             self._dL = dL
-        self.__init_transfer_matrices()
         self.__init_meshgrids()
         return
 
@@ -371,12 +364,6 @@ class GammaALPTransfer(object):
         self._chi = chi
         return
 
-    def __init_transfer_matrices(self):
-        self._T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
-        self._T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
-        self._T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
-        return
-
     def __init_meshgrids(self):
         self._ee, self._bb = np.meshgrid(self._EGeV, self._B, indexing = 'ij')
         self._ll = np.meshgrid(self._EGeV, self._dL, indexing = 'ij')[1]
@@ -389,102 +376,107 @@ class GammaALPTransfer(object):
     def __set_deltas(self):
         """Set Deltas and eigenvalues of mixing matrix for each domain"""
 
-        self._DQED = Delta_QED(self._bb,self._ee)
+        DQED = Delta_QED(self._bb,self._ee)
 
-        self._Dperp = Delta_pl(self._nn,self._ee) + 0.j + 2.*self._DQED
-        self._Dpar = Delta_pl(self._nn,self._ee) + 0.j + 3.5*self._DQED
+        Dperp = Delta_pl(self._nn,self._ee) + 0.j + 2.*DQED
+        Dpar = Delta_pl(self._nn,self._ee) + 0.j + 3.5*DQED
 
-        self._Dpl = Delta_pl(self._nn,self._ee)
-        self._Dag = Delta_ag(self.alp.g,self._bb)
-        self._Da = Delta_a(self.alp.m,self._ee)
+        Dpl = Delta_pl(self._nn,self._ee)
+        Dag = Delta_ag(self.alp.g,self._bb)
+        Da = Delta_a(self.alp.m,self._ee)
 
         # add additional terms if absorption rate or dispersion are defined
         # absorption
         if isinstance(self._Gamma, np.ndarray):
-            self._Dperp -= 0.5j * self._Gamma
-            self._Dpar -= 0.5j * self._Gamma
+            Dperp -= 0.5j * self._Gamma
+            Dpar -= 0.5j * self._Gamma
 
         if isinstance(self._Delta, np.ndarray):
-            self._Dperp += self._Delta
-            self._Dpar += self._Delta
+            Dperp += self._Delta
+            Dpar += self._Delta
 
         if isinstance(self._chi, np.ndarray):
-            self._Dperp += Delta_CMB(self._ee) / chiCMB * self._chi
-            self._Dpar += Delta_CMB(self._ee) / chiCMB * self._chi
-            
+            Dperp += Delta_CMB(self._ee) / chiCMB * self._chi
+            Dpar += Delta_CMB(self._ee) / chiCMB * self._chi
+
         # no CMB: comment out next three lines
         else:
             # add CMB term
-            self._Dperp += Delta_CMB(self._ee)
-            self._Dpar += Delta_CMB(self._ee)
+            Dperp += Delta_CMB(self._ee)
+            Dpar += Delta_CMB(self._ee)
 
-        self._Dosc = ((self._Dpar - self._Da)**2.  + 4.*self._Dag**2.)
-        self._Dosc = np.sqrt(self._Dosc)
+        Dosc = ((Dpar - Da)**2.  + 4.*Dag**2.)
+        Dosc = np.sqrt(Dosc)
 
-        self._saca = self._Dag / self._Dosc # = 0.5 * sin(2. * alpha)
+        self._saca = Dag / Dosc # = 0.5 * sin(2. * alpha)
 
         # cosine^2 of mixing angle
-        self._caca = 0.5 * (1. +  (self._Dpar - self._Da) / self._Dosc)
+        self._caca = 0.5 * (1. +  (Dpar - Da) / Dosc)
 
         # sin^2 of mixing angle
-        self._sasa = 0.5 * (1. -  (self._Dpar - self._Da) / self._Dosc)
+        self._sasa = 0.5 * (1. -  (Dpar - Da) / Dosc)
 
-        self._EW1 = self._Dperp
-        self._EW2 = 0.5 * (self._Dpar + self._Da - self._Dosc)
-        self._EW3 = 0.5 * (self._Dpar + self._Da + self._Dosc)
-
+        self._EW1 = Dperp
+        self._EW2 = 0.5 * (Dpar + Da - Dosc)
+        self._EW3 = 0.5 * (Dpar + Da + Dosc)
         return
 
-    def __setT1n(self):
-        """Set T1 in all domains and at all energies"""
-        self._T1[..., 0, 0] = self._cpp * self._cpp
-        self._T1[..., 0, 1] = -1. * self._cpp * self._spp
-        self._T1[..., 1, 0] = self._T1[...,0,1]
-        self._T1[..., 1, 1] = self._spp * self._spp
-        return
+    def __getT1n(self):
+        """Get T1 in all domains and at all energies"""
+        T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+        T1[..., 0, 0] = self._cpp * self._cpp
+        T1[..., 0, 1] = -1. * self._cpp * self._spp
+        T1[..., 1, 0] = T1[...,0,1]
+        T1[..., 1, 1] = self._spp * self._spp
+        return T1
 
-    def __setT2n(self):
-        """Set T2 in all domains and at all energies"""
-        self._T2[..., 0, 0] = self._spp * self._spp * self._sasa
-        self._T2[..., 0, 1] = self._spp * self._cpp * self._sasa
-        self._T2[..., 0, 2] = -1. * self._spp * self._saca
+    def __getT2n(self):
+        """Get T2 in all domains and at all energies"""
+        T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+        T2[..., 0, 0] = self._spp * self._spp * self._sasa
+        T2[..., 0, 1] = self._spp * self._cpp * self._sasa
+        T2[..., 0, 2] = -1. * self._spp * self._saca
 
-        self._T2[..., 1, 0] = self._T2[...,0,1]
-        self._T2[..., 1, 1] = self._cpp * self._cpp * self._sasa
-        self._T2[..., 1, 2] = -1. * self._cpp * self._saca
+        T2[..., 1, 0] = T2[...,0,1]
+        T2[..., 1, 1] = self._cpp * self._cpp * self._sasa
+        T2[..., 1, 2] = -1. * self._cpp * self._saca
 
-        self._T2[..., 2, 0] = self._T2[...,0,2]
-        self._T2[..., 2, 1] = self._T2[...,1,2]
-        self._T2[..., 2, 2] = self._caca
+        T2[..., 2, 0] = T2[...,0,2]
+        T2[..., 2, 1] = T2[...,1,2]
+        T2[..., 2, 2] = self._caca
+        return T2
 
-        return
+    def __getT3n(self):
+         """Get T3 in all domains and at all energies"""
+         T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+         T3[..., 0, 0] = self._spp * self._spp * self._caca
+         T3[..., 0, 1] = self._spp * self._cpp * self._caca
+         T3[..., 0, 2] = self._spp * self._saca
 
-    def __setT3n(self):
-         """Set T3 in all domains and at all energies"""
+         T3[..., 1, 0] = T3[...,0,1]
+         T3[..., 1, 1] = self._cpp * self._cpp * self._caca
+         T3[..., 1, 2] = self._cpp * self._saca
 
-         self._T3[..., 0, 0] = self._spp * self._spp * self._caca
-         self._T3[..., 0, 1] = self._spp * self._cpp * self._caca
-         self._T3[..., 0, 2] = self._spp * self._saca
+         T3[..., 2, 0] = T3[...,0,2]
+         T3[..., 2, 1] = T3[...,1,2]
+         T3[..., 2, 2] = self._sasa
 
-         self._T3[..., 1, 0] = self._T3[...,0,1]
-         self._T3[..., 1, 1] = self._cpp * self._cpp * self._caca
-         self._T3[..., 1, 2] = self._cpp * self._saca
-
-         self._T3[..., 2, 0] = self._T3[...,0,2]
-         self._T3[..., 2, 1] = self._T3[...,1,2]
-         self._T3[..., 2, 2] = self._sasa
-
-         return
+         del self._spp
+         del self._caca
+         del self._cpp
+         del self._saca
+         del self._sasa
+         return T3
 
     def __setTn(self):
         """Set total Transfer Matrix in all domains and at all energies"""
-        ew1ll = (self._EW1 * self._ll)[..., np.newaxis, np.newaxis]
-        ew2ll = (self._EW2 * self._ll)[..., np.newaxis, np.newaxis]
-        ew3ll = (self._EW3 * self._ll)[..., np.newaxis, np.newaxis]
-
-        self._Tn = np.exp(-1.j * ew1ll) * self._T1 + \
-                       np.exp(-1.j * ew2ll) * self._T2 + \
-                       np.exp(-1.j * ew3ll) * self._T3
+        self._Tn = np.exp(-1.j * (self._EW1 * self._ll)[..., np.newaxis, np.newaxis]) * self.__getT1n()
+        del self._EW1
+        self._Tn +=  np.exp(-1.j * (self._EW2 * self._ll)[..., np.newaxis, np.newaxis]) * self.__getT2n()
+        del self._EW2
+        self._Tn +=  np.exp(-1.j * (self._EW3 * self._ll)[..., np.newaxis, np.newaxis]) * self.__getT3n()
+        del self._EW3
+        del self._ll
         return
 
     def write_environ(self, name, filepath ='./'):
@@ -595,9 +587,6 @@ class GammaALPTransfer(object):
                  pass
 
         self.__set_deltas()
-        self.__setT1n()
-        self.__setT2n()
-        self.__setT3n()
         self.__setTn()
         return
 
