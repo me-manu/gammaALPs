@@ -28,6 +28,10 @@ gammaALPs
    :target: https://zenodo.org/badge/latestdoi/96319590
    :alt: DOI
 
+.. image:: https://img.shields.io/badge/ascl-2109.001-blue.svg?colorB=262255
+   :target: https://ascl.net/2109.001
+   :alt: ascl:2109.001
+
 Python packages to calculate the conversion probability between photons and axions / axion-like particles in
 various astrophysical magnetic fields.
 

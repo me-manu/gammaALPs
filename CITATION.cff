@@ -1,0 +1,15 @@
+cff-version: 0.1.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Meyer
+    given-names: Manuel
+    orcid: https://orcid.org/0000-0002-0738-7581
+  - family-names: Davies
+    given-names: James
+    orcid: https://orcid.org/0000-0002-4275-6506
+  - family-names: Kuhlmann
+    given-names: Julian
+title: "gammALPs"
+version: 0.2.0
+doi: 10.5281/zenodo.4973513
+date-released: 2021-06-17
