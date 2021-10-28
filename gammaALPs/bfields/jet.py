@@ -494,8 +494,7 @@ class BjetHelicalTangled(object):
         else:
             self._rfrom = self._rvhe
 
-        Bs = self.jet_bfield_scaled(z,self._rvhe,self._r0,self._B0)  # r0 and rvhe in pc, b0 in G
-        # gammas = self.jet_gammas_scaled(z,self._r0,self._g0,self._rjet)
+        # Bs = self.jet_bfield_scaled(z,self._rvhe,self._r0,self._B0)  # r0 and rvhe in pc, b0 in G
         gammas = self.jet_gammas_scaled_gg(z,self._rvhe,self._rjet,self._gmin,self._gmax)
 
         theta_m1_interp = USpline(np.log10(z),gammas)
@@ -510,6 +509,19 @@ class BjetHelicalTangled(object):
 
         self._widths = jw_func(z,self._rvhe,1./gammas)
         self._width_rvhe = jw_func(self._rvhe,self._rvhe,1./gammas)
+
+        Bs_not_smooth = self.jet_bfield_scaled(z,self._rvhe,self._r0,self._B0)*(z<=self._rvhe) + \
+                        self._B0 * (jw_func(self._r0,self._rvhe,1./gammas)/self._widths) * (self._gmax/gammas)**2 * (z>self._rvhe)
+
+        # smoothing is done with a spline interpolation
+        # linking B(r < (1-smfl)r_vhe) and B(r > (1+smfu)r_vhe)
+        smfl = 0.03 # lower smoothing fraction
+        smfu = 0. # upper smoothing fraction (=0 to make B(r_vhe) the input value)
+        mask = (np.log10(z)<(1.-smfl)*np.log10(self._rvhe)) | (np.log10(z)>(1.+smfu)*np.log10(self._rvhe))
+        xs = z[mask] # zs to include in smoother
+        ys = Bs_not_smooth[mask] # Bs to include in smoother
+        Bs_smoother = USpline(np.log10(xs),np.log10(ys),k=2,s=0)
+        Bs = 10.**Bs_smoother(np.log10(z))
 
         if not tdoms_done:
             # t2 = time.time()
