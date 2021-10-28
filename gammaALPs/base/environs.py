@@ -563,12 +563,12 @@ class MixICMStructured(trans.GammaALPTransfer):
                                                         kwargs['pa'], kwargs['pa_rad'], kwargs['cell_num'])
             dL = self._Bfield_model.dL_vec
             self._r = self._Bfield_model.r
-            
+
             B = self._Bfield_model.b_trans # * self._Bfield_model.bscale(self._nelicm(self._r), kwargs['eta'])
             psi = self._Bfield_model.angle
-            
-            
-            
+
+
+
             # init the transfer function
             if type(kwargs['chi'])==RBSpline:
                 Chi = kwargs['chi'](kwargs['EGeV'], self._r)
@@ -897,6 +897,10 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         chi: `~scipy.interpolate.RectBivariateSpline`
             Spline function in (E [GeV], r [pc]) giving values of
             photon-photon dispersion chi down the jet
+
+        Gamma: <class 'scipy.interpolate.fitpack2.RectBivariateSpline'>
+            Spline function in (E [GeV], r [pc]) giving values of
+            absorption rate Gamma in kpc^-1 down the jet
         """
         kwargs.setdefault('EGeV', np.logspace(0.,5.,400))
         kwargs.setdefault('restore', None)
@@ -922,6 +926,7 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
         kwargs.setdefault('rvhe', 0.3)
         kwargs.setdefault('rem', None)
         kwargs.setdefault('chi', None)
+        kwargs.setdefault('Gamma', None)
 
         logger = logging.getLogger('gamma_alps')
 
@@ -995,9 +1000,16 @@ class MixJetHelicalTangled(trans.GammaALPTransfer):
             Chi = kwargs['chi']
             logger.info("Using inputted chi")
 
+        if type(kwargs['Gamma'])==RBSpline:
+            Gamma = kwargs['Gamma'](kwargs['EGeV'], self._r)
+            logger.info("Using interpolated chi")
+        else:
+            Gamma = kwargs['Gamma']
+            logger.info("Using inputted chi")
+
         # init the transfer function with absorption
         super(MixJetHelicalTangled, self).__init__(kwargs['EGeV'], B * 1e6, psi, self._neljet(self._r, self._widths),
-                                                   dL * 1e-3, alp, Gamma=None, chi=Chi, Delta=None)
+                                                   dL * 1e-3, alp, Gamma=Gamma, chi=Chi, Delta=None)
 
         # transform energies to stationary frame
         self._gammas = self.jet_gammas_scaled_gg(self._r,
