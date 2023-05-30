@@ -414,6 +414,9 @@ class ModuleList(object):
                 self._atten = np.exp(-self._eblnorm * m.opt_depth(self.source.z,EGeV / 1e3))
             elif type(m) == env.MixIGMFCell or type(m) == env.MixGMF:
                 m.EGeV = EGeV
+            elif type(m) == env.MixJet:
+                m.EGeV = EGeV * (1. + self.source.z)
+                m._ee /= m._source._doppler
             elif type(m) == env.MixJetHelicalTangled:
                 m.EGeV = EGeV * (1. + self.source.z)
                 m._ee /= m._gammas

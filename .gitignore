@@ -19,6 +19,8 @@ notebooks/.DS_Store
 .idea/dictionaries
 .idea/vcs.xml
 .idea/jsLibraryMappings.xml
+.idea/*.xml
+.idea/*.iml
 
 # Distribution / packaging
 .Python

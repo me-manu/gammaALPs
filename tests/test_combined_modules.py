@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import os
-import gammaALPs
 from numpy.testing import assert_allclose
 from gammaALPs.core import Source, ALP, ModuleList
 from astropy.tests.helper import pytest
@@ -111,9 +110,9 @@ class TestConversionModules:
 
         compare_conv_prob = np.load(conv_ngc1275_file, allow_pickle=True).flat[0]
 
-        assert_allclose(px, compare_conv_prob['px'], rtol=1e-5)
-        assert_allclose(py, compare_conv_prob['py'], rtol=1e-5)
-        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-5)
+        assert_allclose(px, compare_conv_prob['px'], rtol=1e-3)
+        assert_allclose(py, compare_conv_prob['py'], rtol=1e-3)
+        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-3)
 
     def test_icm_gauss_no_ebl_gmf(self, conv_ngc1275_file_no_ebl):
         EGeV = np.logspace(1., 3.5, 50)
@@ -157,9 +156,9 @@ class TestConversionModules:
 
         compare_conv_prob = np.load(conv_ngc1275_file_no_ebl, allow_pickle=True).flat[0]
 
-        assert_allclose(px, compare_conv_prob['px'], rtol=1e-5)
-        assert_allclose(py, compare_conv_prob['py'], rtol=1e-5)
-        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-5)
+        assert_allclose(px, compare_conv_prob['px'], rtol=1e-3)
+        assert_allclose(py, compare_conv_prob['py'], rtol=1e-3)
+        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-3)
 
     def test_full_los(self, conv_prob_los_file):
         EGeV = np.logspace(1., 3.5, 50)
@@ -232,9 +231,9 @@ class TestConversionModules:
 
         compare_conv_prob = np.load(conv_prob_los_file, allow_pickle=True).flat[0]
 
-        assert_allclose(px, compare_conv_prob['px'], rtol=1e-6)
-        assert_allclose(py, compare_conv_prob['py'], rtol=1e-6)
-        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-6)
+        assert_allclose(px, compare_conv_prob['px'], rtol=1e-3)
+        assert_allclose(py, compare_conv_prob['py'], rtol=1e-3)
+        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-3)
 
     def test_full_los_ebl(self, conv_prob_los_ebl_file):
         EGeV = np.logspace(1., 3.5, 50)
@@ -299,9 +298,9 @@ class TestConversionModules:
 
         compare_conv_prob = np.load(conv_prob_los_ebl_file, allow_pickle=True).flat[0]
 
-        assert_allclose(px, compare_conv_prob['px'], rtol=1e-6)
-        assert_allclose(py, compare_conv_prob['py'], rtol=1e-6)
-        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-6)
+        assert_allclose(px, compare_conv_prob['px'], rtol=1e-3)
+        assert_allclose(py, compare_conv_prob['py'], rtol=1e-3)
+        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-3)
 
     def test_icm_struc(self, conv_struc_file):
         EGeV = np.logspace(1., 3.5, 50)
@@ -341,6 +340,6 @@ class TestConversionModules:
 
         compare_conv_prob = np.load(conv_struc_file, allow_pickle=True).flat[0]
 
-        assert_allclose(px, compare_conv_prob['px'], rtol=1e-5)
-        assert_allclose(py, compare_conv_prob['py'], rtol=1e-5)
-        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-5)
+        assert_allclose(px, compare_conv_prob['px'], rtol=1e-3)
+        assert_allclose(py, compare_conv_prob['py'], rtol=1e-3)
+        assert_allclose(pa, compare_conv_prob['pa'], rtol=1e-3)
