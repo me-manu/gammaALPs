@@ -641,8 +641,6 @@ class BjetHelicalTangled(object):
             #     t8 = time.time()
             #     print("getting tangled angles for 1 domain out of {} took {}s".format(len(z),t8-t7))
 
-
-
             h_phi = np.pi/2.
             h_the = np.pi/2. # in r-05 section theta is included in B_fact term ^ otherwise = pi/2 by def
             B_tang_t = B_tang * np.sin(t_the)

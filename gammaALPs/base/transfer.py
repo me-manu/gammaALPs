@@ -210,9 +210,9 @@ class GammaALPTransfer(object):
             self._nel = nel
 
         # init transfer matrices
-        self._T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), np.complex)
-        self._T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), np.complex)
-        self._T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), np.complex)
+        self._T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), complex)
+        self._T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), complex)
+        self._T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), complex)
         self._Tn = None
 
         # init meshgrid arrays
@@ -423,7 +423,7 @@ class GammaALPTransfer(object):
 
     def __getT1n(self):
         """Get T1 in all domains and at all energies"""
-        T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+        T1 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), complex)
         T1[..., 0, 0] = self._cpp * self._cpp
         T1[..., 0, 1] = -1. * self._cpp * self._spp
         T1[..., 1, 0] = T1[...,0,1]
@@ -432,7 +432,7 @@ class GammaALPTransfer(object):
 
     def __getT2n(self):
         """Get T2 in all domains and at all energies"""
-        T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+        T2 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), complex)
         T2[..., 0, 0] = self._spp * self._spp * self._sasa
         T2[..., 0, 1] = self._spp * self._cpp * self._sasa
         T2[..., 0, 2] = -1. * self._spp * self._saca
@@ -448,7 +448,7 @@ class GammaALPTransfer(object):
 
     def __getT3n(self):
          """Get T3 in all domains and at all energies"""
-         T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3),np.complex)
+         T3 = np.zeros(self._EGeV.shape + self._B.shape + (3,3), complex)
          T3[..., 0, 0] = self._spp * self._spp * self._caca
          T3[..., 0, 1] = self._spp * self._cpp * self._caca
          T3[..., 0, 2] = self._spp * self._saca
@@ -715,12 +715,12 @@ def dot_prod(T):
     """Calculate dot product over last two axis of a multi dimensional matrix"""
     # reverse along domain axis, see comment in next function
     dfT = T[:, ::-1, ...]
-    prod_ar = np.zeros((dfT.shape[0], dfT.shape[-2], dfT.shape[-1]), dtype=np.complex_)
+    prod_ar = np.zeros((dfT.shape[0], dfT.shape[-2], dfT.shape[-1]), dtype=np.complex128)
     for e in range(dfT.shape[0]):
         prod = dfT[e][0]
         for di in range(dfT[e].shape[0]-1):
             d = dfT[e][1+di]
-            subprod = np.zeros(d.shape,dtype=np.complex_)
+            subprod = np.zeros(d.shape, dtype=np.complex128)
             for i in range(d.shape[0]):
                 for j in range(d.shape[1]):
                     for k in range(d.shape[1]):

@@ -10,6 +10,8 @@ notebooks/*.pdf
 notebooks/*.fits
 notebooks/.DS_Store
 
+.idea/
+
 # C extensions
 *.so
 
@@ -19,6 +21,8 @@ notebooks/.DS_Store
 .idea/dictionaries
 .idea/vcs.xml
 .idea/jsLibraryMappings.xml
+.idea/*.xml
+.idea/*.iml
 
 # Distribution / packaging
 .Python

@@ -48,7 +48,7 @@ setup(
         'scipy >= 1.5',
         'numba >= 0.51',
         'astropy>=4.0',
-        'ebltable >=0.2'
+        'ebltable >=0.5'
     ]
 
 )

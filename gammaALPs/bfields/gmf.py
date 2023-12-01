@@ -233,6 +233,7 @@ class GMF(object):
 
         result = np.tensordot(self.rx, np.exp((phi - 3.*pi*ones) / np.tan(pi/2. - self.idisk)),
                               axes=0)
+
         result = np.vstack((result,
                             np.tensordot(self.rx, np.exp((phi - pi*ones) / np.tan(pi/2. - self.idisk)),
                                          axes=0)))
@@ -271,7 +272,7 @@ class GMF(object):
 
         # Bdisk vector in rho, phi, z
         # rows: rho, phi and z component
-        Bdisk = np.zeros((3,rho.shape[0]))
+        Bdisk = np.zeros((3, rho.shape[0]))
 
         ones = np.ones(rho.shape[0])
 
@@ -292,7 +293,7 @@ class GMF(object):
             Bdisk[0, m_disk] = np.sin(self.idisk) * self.b[narm] * (5. / rho[m_disk])
             Bdisk[1, m_disk] = np.cos(self.idisk) * self.b[narm] * (5. / rho[m_disk])
 
-        Bdisk *= (ones - self.L(z,self.hdisk,self.wdisk))
+        Bdisk *= (ones - self.L(z, self.hdisk, self.wdisk))
 
         return Bdisk, np.sqrt(np.sum(Bdisk**2., axis=0))
 
@@ -366,7 +367,9 @@ class GMF(object):
         m = np.sqrt(rho**2. + z**2.) >= 1.
 
         bx = lambda rho_p: self.BX0 * np.exp(-rho_p / self.rhoX)
-        tx = lambda rho, z, rho_p: np.arctan2(np.abs(z), (rho - rho_p))
+        #tx = lambda rho, z, rho_p: np.arctan2(np.abs(z), (rho - rho_p))
+        tx = lambda rho_p: np.arctan2(self.rhoXc * np.tan(self.ThetaX0),
+                                      rho_p)  # Another experssion that handle the z=0 (rho=rho_p) case
 
         rho_p = rho[m] * self.rhoXc/(self.rhoXc + np.abs(z[m] ) / np.tan(self.ThetaX0))
 
@@ -376,19 +379,23 @@ class GMF(object):
         theta = np.zeros(z[m].shape[0])
         b = np.zeros(z[m].shape[0])
 
-        rho_p0 = (rho[m])[m_rho_b]  - np.abs( (z[m])[m_rho_b] ) / np.tan(self.ThetaX0)
-        b[m_rho_b] = bx(rho_p0) * rho_p0/ (rho[m])[m_rho_b]
+        rho_p0 = (rho[m])[m_rho_b] - np.abs( (z[m])[m_rho_b] ) / np.tan(self.ThetaX0)
+        b[m_rho_b] = bx(rho_p0) * rho_p0 / (rho[m])[m_rho_b]
         theta[m_rho_b] = self.ThetaX0 * np.ones(theta.shape[0])[m_rho_b]
 
-        b[m_rho_l] = bx(rho_p[m_rho_l]) * (rho_p[m_rho_l]/(rho[m])[m_rho_l] )**2.
-        theta[m_rho_l] = tx((rho[m])[m_rho_l], (z[m])[m_rho_l], rho_p[m_rho_l])
-        mz = (z[m] == 0.)
-        theta[mz] = np.pi/2.
+        b[m_rho_l] = bx(rho_p[m_rho_l]) * (rho_p[m_rho_l] / (rho[m])[m_rho_l])**2.
+        theta[m_rho_l] = tx(rho_p[m_rho_l])
+        #theta[m_rho_l] = tx((rho[m])[m_rho_l], (z[m])[m_rho_l], rho_p[m_rho_l])
+        mr = (rho[m] == 0.)
+        theta[mr] = np.pi/2.
 
-        BX[0, m] = b * (np.cos(theta) * (z[m] >= 0) + np.cos(pi*np.ones(theta.shape[0]) - theta) * (z[m] < 0))
-        BX[2, m] = b * (np.sin(theta) * (z[m] >= 0) + np.sin(pi*np.ones(theta.shape[0]) - theta) * (z[m] < 0))
+        #BX[0, m] = b * (np.cos(theta) * (z[m] >= 0) + np.cos(pi*np.ones(theta.shape[0]) - theta) * (z[m] < 0))
+        #BX[2, m] = b * (np.sin(theta) * (z[m] >= 0) + np.sin(pi*np.ones(theta.shape[0]) - theta) * (z[m] < 0))
 
-        return BX, np.sqrt(np.sum(BX**2.,axis=0))
+        BX[0, m] = b * np.cos(theta) * (-1) ** (z[m] < 0)#BX_rho points outward for z>0 and inward for z<0
+        BX[2, m] = b * np.sin(theta) #BX_z points to north
+
+        return BX, np.sqrt(np.sum(BX**2., axis=0))
 
 
 class GMFPshirkov(object):
