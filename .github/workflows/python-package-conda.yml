@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: Unit Tests for gammaALPs Python Package using Conda
 
 on:
   push:
