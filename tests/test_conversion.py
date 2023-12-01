@@ -5,6 +5,7 @@ from gammaALPs.core import Source, ALP, ModuleList
 from astropy import units as u
 from ebltable.tau_from_model import OptDepth
 
+rtol = 1e-6
 
 class TestConversionModules:
 
@@ -39,16 +40,16 @@ class TestConversionModules:
         # check conversion prop
         px, py, pa = m.run(multiprocess=1)
 
-        assert_allclose(px + py + pa, np.ones_like(px), rtol=1e-6)
+        assert_allclose(px + py + pa, np.ones_like(px), rtol=rtol)
 
         # check conversion prop for multiprocess
         # and check that random seed is working correctly
         px2, py2, pa2 = m.run(multiprocess=2)
-        assert_allclose(px2 + py2 + pa2, np.ones_like(px), rtol=1e-6)
+        assert_allclose(px2 + py2 + pa2, np.ones_like(px), rtol=rtol)
 
-        assert_allclose(px, px2, rtol=1e-6)
-        assert_allclose(py, py2, rtol=1e-6)
-        assert_allclose(pa, pa2, rtol=1e-6)
+        assert_allclose(px, px2, rtol=rtol)
+        assert_allclose(py, py2, rtol=rtol)
+        assert_allclose(pa, pa2, rtol=rtol)
 
     def test_icm_struc(self):
         EGeV = np.logspace(1., 3.5, 50)
@@ -76,7 +77,7 @@ class TestConversionModules:
         # check conversion prop
         px, py, pa = m.run()
 
-        assert_allclose(px + py + pa, np.ones_like(px), rtol=1e-6)
+        assert_allclose(px + py + pa, np.ones_like(px), rtol=rtol)
 
     def test_jet_helical_tangled(self):
         EGeV = np.logspace(1., 3.5, 50)
@@ -107,7 +108,7 @@ class TestConversionModules:
         # check conversion prop
         px, py, pa = m.run(multiprocess=2)
 
-        assert_allclose(px + py + pa, np.ones_like(px), rtol=1e-6)
+        assert_allclose(px + py + pa, np.ones_like(px), rtol=rtol)
 
     def test_jet(self):
         EGeV = np.logspace(1., 3.5, 50)
@@ -145,7 +146,7 @@ class TestConversionModules:
         # check conversion prop
         px, py, pa = m.run(multiprocess=2)
 
-        assert_allclose(px + py + pa, np.ones_like(px), rtol=1e-6)
+        assert_allclose(px + py + pa, np.ones_like(px), rtol=rtol)
 
     def test_icm_cell(self):
         EGeV = np.logspace(1., 3.5, 50)
@@ -164,7 +165,7 @@ class TestConversionModules:
         # check conversion prop
         px, py, pa = m.run(multiprocess=2)
 
-        assert_allclose(px + py + pa, np.ones_like(px), rtol=1e-5)
+        assert_allclose(px + py + pa, np.ones_like(px), rtol=rtol)
 
     def test_gmf(self):
         EGeV = np.logspace(1., 3.5, 50)
@@ -209,11 +210,11 @@ class TestConversionModules:
         px4, py4, pa4 = m4.run(multiprocess=2)
         px5, py5, pa5 = m5.run(multiprocess=2)
 
-        assert_allclose(px1 + py1 + pa1, np.ones_like(px1), rtol=1e-5)
-        assert_allclose(px2 + py2 + pa2, np.ones_like(px2), rtol=1e-5)
-        assert_allclose(px3 + py3 + pa3, np.ones_like(px3), rtol=1e-5)
-        assert_allclose(px4 + py4 + pa4, np.ones_like(px4), rtol=1e-5)
-        assert_allclose(px5 + py5 + pa5, np.ones_like(px5), rtol=1e-5)
+        assert_allclose(px1 + py1 + pa1, np.ones_like(px1), rtol=rtol)
+        assert_allclose(px2 + py2 + pa2, np.ones_like(px2), rtol=rtol)
+        assert_allclose(px3 + py3 + pa3, np.ones_like(px3), rtol=rtol)
+        assert_allclose(px4 + py4 + pa4, np.ones_like(px4), rtol=rtol)
+        assert_allclose(px5 + py5 + pa5, np.ones_like(px5), rtol=rtol)
 
     def test_igmf(self):
         EGeV = np.logspace(1., 3.5, 50)
@@ -246,9 +247,7 @@ class TestConversionModules:
         # these numbers are pretty high,
         # this is reported in a github issue
         # and needs to be investigated further
-        rtol = 0.2
-        atol = 0.03
         for p in pgg:
-            assert_allclose(p, np.exp(-tau.opt_depth(source.z, EGeV / 1e3)), rtol=rtol, atol=atol)
+            assert_allclose(p, np.exp(-tau.opt_depth(source.z, EGeV / 1e3)), rtol=rtol)
 
 # TODO add tests for modules initialized from files / arrays
