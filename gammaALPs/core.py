@@ -412,8 +412,11 @@ class ModuleList(object):
         for m in self.modules:
             if type(m) == OptDepth:
                 self._atten = np.exp(-self._eblnorm * m.opt_depth(self.source.z,EGeV / 1e3))
-            elif type(m) == env.MixIGMFCell or type(m) == env.MixGMF:
+            elif type(m) == env.MixGMF:
                 m.EGeV = EGeV
+            elif type(m) == env.MixIGMFCell:
+                m.EGeV = EGeV
+                m._ee *= (1. + m._z_mean)
             elif type(m) == env.MixJet:
                 m.EGeV = EGeV * (1. + self.source.z)
                 m._ee /= m._source._doppler
