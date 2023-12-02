@@ -2,7 +2,7 @@ numpy>=1.19
 scipy>=1.5
 numba>=0.51
 astropy>=4.0
-ebltable>=0.2
+ebltable>=0.5
 nbsphinx>=0.8.5
 sphinx
 sphinx-astropy
