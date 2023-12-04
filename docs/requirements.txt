@@ -6,4 +6,5 @@ ebltable>=0.5
 nbsphinx>=0.8.5
 sphinx
 sphinx-astropy
+sphinx-rtd-theme
 ipython
