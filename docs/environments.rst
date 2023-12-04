@@ -16,8 +16,8 @@ A minimal example for initializing mixing in the intergalactic magnetic field (I
 .. code-block:: python
 
     from gammaALPs.core import Source, ALP, ModuleList
-    src = Source(z=0.859)  # initialize a source with redshift z=0.536
-    alp = ALP(m = 1., g = 1.)
+    src = Source(z=0.536)  # initialize a source with redshift z=0.536
+    alp = ALP(m=1., g=1.)
     ml = ModuleList(alp, src)
     ml.add_propagaion('IGMF')
     px, py, pa = ml.run()
@@ -40,10 +40,10 @@ The other supported environments are listed in the table below.
 |                   |                                                                   | with growing distance from cluster center  |                                                              |                                                     |
 |                   |                                                                   | following :math:`n_\mathrm{el}(r)`         |                                                              |                                                     |
 +-------------------+-------------------------------------------------------------------+--------------------------------------------+--------------------------------------------------------------+-----------------------------------------------------+
-| ICMStructured     | :py:class:`~gammaALPs.base.environs.MixICMStructured              | Mixing in an intra-cluster cavity field. | :py:class:`~gammaALPs.bfields.struc.structured_field         | :py:class:`~gammaALPs.nel.icm.NelICM`               |
-|                   |                                                                   |  |                                                              |                                                     |
-|                   |                                                                   |  |                                                              |                                                     |
-|                   |                                                                   | |                                                              |                                                     |
+| ICMStructured     | :py:class:`~gammaALPs.base.environs.MixICMStructured`             | Mixing in an intra-cluster cavity field.   | :py:class:`~gammaALPs.bfields.struc.structured_field         | :py:class:`~gammaALPs.nel.icm.NelICM`               |
+|                   |                                                                   |                                            |                                                              |                                                     |
+|                   |                                                                   |                                            |                                                              |                                                     |
+|                   |                                                                   |                                            |                                                              |                                                     |
 +-------------------+-------------------------------------------------------------------+--------------------------------------------+--------------------------------------------------------------+-----------------------------------------------------+
 | Jet               | :py:class:`~gammaALPs.base.environs.MixJet`                       | Mixing in the toroidal magnet field of an  | :py:class:`~gammaALPs.bfields.jet.Bjet`                      | :py:class:`~gammaALPs.nel.jet.NelJet`               |
 |                   |                                                                   | AGN jet, where the B field and             |                                                              |                                                     |
