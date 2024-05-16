@@ -11,6 +11,38 @@ def signum(x):
     return (x < 0.) * -1. + (x >= 0) * 1.
 
 
+def sigmoid(x, x0, w):
+    """
+    Calculates the logistic sigmoid function.
+    Arguments:
+    x : float
+        The input value
+    x0 : float
+        The midpoint of the sigmoid
+    w : float
+        The width of the sigmoid
+    
+    Returns:
+    The result of the sigmoid function
+    """
+    return 1 / (1 + np.exp(-(x - x0) / w))
+
+
+def delta_phi(phi0, phi1):
+    """
+    Calculates the angle between v0 = (cos(phi0), sin(phi0)) and v1 = (cos(phi1), sin(phi1)).
+    Arguments:
+    phi0 : float
+        First angle in radians
+    phi1 : float
+        Second angle in radians
+    
+    Returns:
+    The angle between v0 and v1 in radians.
+    """
+    return np.arccos(np.cos(phi1) * np.cos(phi0) + np.sin(phi1) * np.sin(phi0))
+
+
 class GMF(object):
     """
     Class with analytical functions that describe the 
@@ -606,3 +638,229 @@ class GMFPshirkov(object):
             * np.exp(1. - rho[m_zs1] / self.Rs)  # the minus sign gives the right rotation direction
 
         return Bhalo, np.sqrt(np.sum(Bhalo**2.,axis = 0))
+
+
+class UF23():
+    """
+    Docstring
+    """
+    
+    kPi = np.pi
+    kTwoPi = 2 * kPi
+    degree = kPi / 180.
+    kpc = 1
+    microgauss = 1
+    megayear = 1
+    Gpc = 1e6 * kpc
+    pc = 1e-3 * kpc
+    second = megayear / (1e6 * 60 * 60 * 24 * 365.25)
+    kilometer = kpc / 3.0856775807e+16
+    models = ['base', 'expX', 'neCl', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
+    
+    def __init__(self, model_type='base'):
+        
+        self.fModelType = model_type
+        self.fPoloidalA = 1
+        
+        if model_type == 'base':
+            self.fDiskB1 = 1.0878565e+00 * microgauss
+            self.fDiskB2 = 2.6605034e+00 * microgauss
+            self.fDiskB3 = 3.1166311e+00 * microgauss
+            self.fDiskH = 7.9408965e-01 * kpc
+            self.fDiskPhase1 = 2.6316589e+02 * degree
+            self.fDiskPhase2 = 9.7782269e+01 * degree
+            self.fDiskPhase3 = 3.5112281e+01 * degree
+            self.fDiskPitch = 1.0106900e+01 * degree
+            self.fDiskW = 1.0720909e-01 * kpc
+            self.fPoloidalB = 9.7775487e-01 * microgauss
+            self.fPoloidalP = 1.4266186e+00 * kpc
+            self.fPoloidalR = 7.2925417e+00 * kpc
+            self.fPoloidalW = 1.1188158e-01 * kpc
+            self.fPoloidalZ = 4.4597373e+00 * kpc
+            self.fStriation = 3.4557571e-01
+            self.fToroidalBN = 3.2556760e+00 * microgauss
+            self.fToroidalBS = -3.0914569e+00 * microgauss
+            self.fToroidalR = 1.0193815e+01 * kpc
+            self.fToroidalW = 1.6936993e+00 * kpc
+            self.fToroidalZ = 4.0242749e+00 * kpc
+        elif model_type == 'expX':
+            self.fDiskB1 = 9.9258148e-01 * microgauss
+            self.fDiskB2 = 2.1821124e+00 * microgauss
+            self.fDiskB3 = 3.1197345e+00 * microgauss
+            self.fDiskH = 7.1508681e-01 * kpc
+            self.fDiskPhase1 = 2.4745741e+02 * degree
+            self.fDiskPhase2 = 9.8578879e+01 * degree
+            self.fDiskPhase3 = 3.4884485e+01 * degree
+            self.fDiskPitch = 1.0027070e+01 * degree
+            self.fDiskW = 9.8524736e-02 * kpc
+            self.fPoloidalA = 6.1938701e+00 * kpc
+            self.fPoloidalB = 5.8357990e+00 * microgauss
+            self.fPoloidalP = 1.9510779e+00 * kpc
+            self.fPoloidalR = 2.4994376e+00 * kpc
+            self.fPoloidalZ = 2.3684453e+00 * kpc
+            self.fStriation = 5.1440500e-01
+            self.fToroidalBN = 2.7077434e+00 * microgauss
+            self.fToroidalBS = -2.5677104e+00 * microgauss
+            self.fToroidalR = 1.0134022e+01 * kpc
+            self.fToroidalW = 2.0956159e+00 * kpc
+            self.fToroidalZ = 5.4564991e+00 * kpc
+        elif model_type == 'neCL':
+            self.fDiskB1 = 1.4259645e+00 * microgauss
+            self.fDiskB2 = 1.3543223e+00 * microgauss
+            self.fDiskB3 = 3.4390669e+00 * microgauss
+            self.fDiskH = 6.7405199e-01 * kpc
+            self.fDiskPhase1 = 1.9961898e+02 * degree
+            self.fDiskPhase2 = 1.3541461e+02 * degree
+            self.fDiskPhase3 = 6.4909767e+01 * degree
+            self.fDiskPitch = 1.1867859e+01 * degree
+            self.fDiskW = 6.1162799e-02 * kpc
+            self.fPoloidalB = 9.8387831e-01 * microgauss
+            self.fPoloidalP = 1.6773615e+00 * kpc
+            self.fPoloidalR = 7.4084361e+00 * kpc
+            self.fPoloidalW = 1.4168192e-01 * kpc
+            self.fPoloidalZ = 3.6521188e+00 * kpc
+            self.fStriation = 3.3600213e-01
+            self.fToroidalBN = 2.6256593e+00 * microgauss
+            self.fToroidalBS = -2.5699466e+00 * microgauss
+            self.fToroidalR = 1.0134257e+01 * kpc
+            self.fToroidalW = 1.1547728e+00 * kpc
+            self.fToroidalZ = 4.5585463e+00 * kpc
+        elif model_type == 'twistX':
+            self.fDiskB1 = 1.3741995e+00 * microgauss
+            self.fDiskB2 = 2.0089881e+00 * microgauss
+            self.fDiskB3 = 1.5212463e+00 * microgauss
+            self.fDiskH = 9.3806180e-01 * kpc
+            self.fDiskPhase1 = 2.3560316e+02 * degree
+            self.fDiskPhase2 = 1.0189856e+02 * degree
+            self.fDiskPhase3 = 5.6187572e+01 * degree
+            self.fDiskPitch = 1.2100979e+01 * degree
+            self.fDiskW = 1.4933338e-01 * kpc
+            self.fPoloidalB = 6.2793114e-01 * microgauss
+            self.fPoloidalP = 2.3292519e+00 * kpc
+            self.fPoloidalR = 7.9212358e+00 * kpc
+            self.fPoloidalW = 2.9056201e-01 * kpc
+            self.fPoloidalZ = 2.6274437e+00 * kpc
+            self.fStriation = 7.7616317e-01
+            self.fTwistingTime = 5.4733549e+01 * megayear
+        elif model_type == 'nebCor':
+            self.fDiskB1 = 1.4081935e+00 * microgauss
+            self.fDiskB2 = 3.5292400e+00 * microgauss
+            self.fDiskB3 = 4.1290147e+00 * microgauss
+            self.fDiskH = 8.1151971e-01 * kpc
+            self.fDiskPhase1 = 2.6447529e+02 * degree
+            self.fDiskPhase2 = 9.7572660e+01 * degree
+            self.fDiskPhase3 = 3.6403798e+01 * degree
+            self.fDiskPitch = 1.0151183e+01 * degree
+            self.fDiskW = 1.1863734e-01 * kpc
+            self.fPoloidalB = 1.3485916e+00 * microgauss
+            self.fPoloidalP = 1.3414395e+00 * kpc
+            self.fPoloidalR = 7.2473841e+00 * kpc
+            self.fPoloidalW = 1.4318227e-01 * kpc
+            self.fPoloidalZ = 4.8242603e+00 * kpc
+            self.fStriation = 3.8610837e-10
+            self.fToroidalBN = 4.6491142e+00 * microgauss
+            self.fToroidalBS = -4.5006610e+00 * microgauss
+            self.fToroidalR = 1.0205288e+01 * kpc
+            self.fToroidalW = 1.7004868e+00 * kpc
+            self.fToroidalZ = 3.5557767e+00 * kpc
+        elif model_type == 'cre10':
+            self.fDiskB1 = 1.2035697e+00 * microgauss
+            self.fDiskB2 = 2.7478490e+00 * microgauss
+            self.fDiskB3 = 3.2104342e+00 * microgauss
+            self.fDiskH = 8.0844932e-01 * kpc
+            self.fDiskPhase1 = 2.6515882e+02 * degree
+            self.fDiskPhase2 = 9.8211313e+01 * degree
+            self.fDiskPhase3 = 3.5944588e+01 * degree
+            self.fDiskPitch = 1.0162759e+01 * degree
+            self.fDiskW = 1.0824003e-01 * kpc
+            self.fPoloidalB = 9.6938453e-01 * microgauss
+            self.fPoloidalP = 1.4150957e+00 * kpc
+            self.fPoloidalR = 7.2987296e+00 * kpc
+            self.fPoloidalW = 1.0923051e-01 * kpc
+            self.fPoloidalZ = 4.5748332e+00 * kpc
+            self.fStriation = 2.4950386e-01
+            self.fToroidalBN = 3.7308133e+00 * microgauss
+            self.fToroidalBS = -3.5039958e+00 * microgauss
+            self.fToroidalR = 1.0407507e+01 * kpc
+            self.fToroidalW = 1.7398375e+00 * kpc
+            self.fToroidalZ = 2.9272800e+00 * kpc
+        elif model_type == 'synCG':
+            self.fDiskB1 = 8.1386878e-01 * microgauss
+            self.fDiskB2 = 2.0586930e+00 * microgauss
+            self.fDiskB3 = 2.9437335e+00 * microgauss
+            self.fDiskH = 6.2172353e-01 * kpc
+            self.fDiskPhase1 = 2.2988551e+02 * degree
+            self.fDiskPhase2 = 9.7388282e+01 * degree
+            self.fDiskPhase3 = 3.2927367e+01 * degree
+            self.fDiskPitch = 9.9034844e+00 * degree
+            self.fDiskW = 6.6517521e-02 * kpc
+            self.fPoloidalB = 8.0883734e-01 * microgauss
+            self.fPoloidalP = 1.5820957e+00 * kpc
+            self.fPoloidalR = 7.4625235e+00 * kpc
+            self.fPoloidalW = 1.5003765e-01 * kpc
+            self.fPoloidalZ = 3.5338550e+00 * kpc
+            self.fStriation = 6.3434763e-01
+            self.fToroidalBN = 2.3991193e+00 * microgauss
+            self.fToroidalBS = -2.0919944e+00 * microgauss
+            self.fToroidalR = 9.4227834e+00 * kpc
+            self.fToroidalW = 9.1608418e-01 * kpc
+            self.fToroidalZ = 5.5844594e+00 * kpc
+        elif model_type == 'spur':
+            self.fDiskB1 = -4.2993328e+00 * microgauss
+            self.fDiskH = 7.5019749e-01 * kpc
+            self.fDiskPhase1 = 1.5589875e+02 * degree
+            self.fDiskPitch = 1.2074432e+01 * degree
+            self.fDiskW = 1.2263120e-01 * kpc
+            self.fPoloidalB = 9.9302987e-01 * microgauss
+            self.fPoloidalP = 1.3982374e+00 * kpc
+            self.fPoloidalR = 7.1973387e+00 * kpc
+            self.fPoloidalW = 1.2262244e-01 * kpc
+            self.fPoloidalZ = 4.4853270e+00 * kpc
+            self.fSpurCenter = 1.5718686e+02 * degree
+            self.fSpurLength = 3.1839577e+01 * degree
+            self.fSpurWidth = 1.0318114e+01 * degree
+            self.fStriation = 3.3022369e-01
+            self.fToroidalBN = 2.9286724e+00 * microgauss
+            self.fToroidalBS = -2.5979895e+00 * microgauss
+            self.fToroidalR = 9.7536425e+00 * kpc
+            self.fToroidalW = 1.4210055e+00 * kpc
+            self.fToroidalZ = 6.0941229e+00 * kpc
+        else:
+            raise ValueError(f'model must be one of: {models}, not {model_type}')
+
+        self.fSinPitch = np.sin(self.fDiskPitch)
+        self.fCosPitch = np.cos(self.fDiskPitch)
+        self.fTanPitch = np.tan(self.fDiskPitch)
+
+    def Bdisk(self, rho, phi, z):
+        if self.fModelType == 'spur':
+            return self.spur_field(rho, phi, z)
+        else:
+            return self.spiral_field(rho, phi, z)
+
+    def Bhalo(self, rho, z):
+        if self.fModelType == 'twistX':
+            return self.twisted_halo_field(rho, z)
+        else:
+            return self.toroidal_halo_field(rho, z) + self.poloidal_halo_field(rho, z)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
