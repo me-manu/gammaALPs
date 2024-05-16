@@ -640,7 +640,7 @@ class GMFPshirkov(object):
         return Bhalo, np.sqrt(np.sum(Bhalo**2.,axis = 0))
 
 
-class UF23():
+class UF23(object):
     """
     Docstring
     """
@@ -833,12 +833,19 @@ class UF23():
         self.fTanPitch = np.tan(self.fDiskPitch)
 
     def Bdisk(self, rho, phi, z):
+        if (not rho.shape[0] == phi.shape[0]) or (not z.shape[0] == phi.shape[0]):
+            raise ValueError("List do not have equal shape!")
+
+
         if self.fModelType == 'spur':
             return self.spur_field(rho, phi, z)
         else:
             return self.spiral_field(rho, phi, z)
 
     def Bhalo(self, rho, z):
+        if not rho.shape[0] == z.shape[0]:
+            raise ValueError("List do not have equal shape! returning -1")
+
         if self.fModelType == 'twistX':
             return self.twisted_halo_field(rho, z)
         else:
