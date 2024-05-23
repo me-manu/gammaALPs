@@ -640,28 +640,29 @@ class GMFPshirkov(object):
         return Bhalo, np.sqrt(np.sum(Bhalo**2.,axis = 0))
 
 
+kPi = np.pi
+kTwoPi = 2 * kPi
+degree = kPi / 180.
+kpc = 1
+microgauss = 1
+megayear = 1
+Gpc = 1e6 * kpc
+pc = 1e-3 * kpc
+second = megayear / (1e6 * 60 * 60 * 24 * 365.25)
+kilometer = kpc / 3.0856775807e+16
+models = ['base', 'expX', 'neCl', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
+
+
 class UF23(object):
     """
     Docstring
     """
-    
-    kPi = np.pi
-    kTwoPi = 2 * kPi
-    degree = kPi / 180.
-    kpc = 1
-    microgauss = 1
-    megayear = 1
-    Gpc = 1e6 * kpc
-    pc = 1e-3 * kpc
-    second = megayear / (1e6 * 60 * 60 * 24 * 365.25)
-    kilometer = kpc / 3.0856775807e+16
-    models = ['base', 'expX', 'neCl', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
-    
+
     def __init__(self, model_type='base'):
-        
+
         self.fModelType = model_type
         self.fPoloidalA = 1
-        
+
         if model_type == 'base':
             self.fDiskB1 = 1.0878565e+00 * microgauss
             self.fDiskB2 = 2.6605034e+00 * microgauss
@@ -836,7 +837,6 @@ class UF23(object):
         if (not rho.shape[0] == phi.shape[0]) or (not z.shape[0] == phi.shape[0]):
             raise ValueError("List do not have equal shape!")
 
-
         if self.fModelType == 'spur':
             return self.spur_field(rho, phi, z)
         else:
@@ -844,20 +844,196 @@ class UF23(object):
 
     def Bhalo(self, rho, z):
         if not rho.shape[0] == z.shape[0]:
-            raise ValueError("List do not have equal shape! returning -1")
+            raise ValueError("List do not have equal shape!")
 
         if self.fModelType == 'twistX':
             return self.twisted_halo_field(rho, z)
         else:
             return self.toroidal_halo_field(rho, z) + self.poloidal_halo_field(rho, z)
 
+    def spiral_field(self, rho, phi, z):
+        # reference radius
+        r_ref = 5 * kpc
+        # inner boundary of spiral field, w = transition width
+        r_inner = 5 * kpc
+        w_inner = 0.5 * kpc
+        # outer boundary of spiral field
+        r_outer = 20 * kpc
+        w_outer = 0.5 * kpc
+
+        # Avoid division by zero
+        rho_safe = np.where(rho == 0, 1e-12 * kpc, rho)
+
+        # Eq. (13)
+        hdz = 1 - sigmoid(np.abs(z), self.fDiskH, self.fDiskW)
+
+        # Eq. (14) time r_ref divided by r
+        r_fac_i = sigmoid(rho_safe, r_inner, w_inner)
+        r_fac_o = 1 - sigmoid(rho_safe, r_outer, w_outer)
+
+        # Lim r--> 0 (replace small values of rho for avoiding numerical issues)
+        r_fac = np.where(rho_safe > 1e-5 * kpc, (1 - np.exp(-rho_safe * rho_safe)) / rho_safe, rho_safe * (1 - rho_safe**2 / 2))
+
+        gdr_times_rref_by_r = r_ref * r_fac * r_fac_o * r_fac_i
+
+        # Eq. (12)
+        phi0 = phi - np.log(rho_safe / r_ref) / self.fTanPitch
+
+        # Eq. (10)
+        b = (self.fDiskB1 * np.cos(1 * (phi0 - self.fDiskPhase1)) +
+            self.fDiskB2 * np.cos(2 * (phi0 - self.fDiskPhase2)) +
+            self.fDiskB3 * np.cos(3 * (phi0 - self.fDiskPhase3)))
+
+        # Eq. (11)
+        fac = hdz * gdr_times_rref_by_r
+        b_cyl = np.array([b * fac * self.fSinPitch,
+                        b * fac * self.fCosPitch,
+                        np.zeros_like(b)])
+        b_cyl = np.where(rho==0, np.array([[0], [0], [0]]), b_cyl)
+
+        return b_cyl
+
+    def spur_field(self, rho, phi, z):
+
+        rho = np.where(rho == 0, 1e-12 * kpc, rho)
+
+        # Adjust phi values
+        phi = np.where(phi < 0, phi + kTwoPi, phi)
+
+        # reference approximately at solar radius
+        phi_ref = self.fDiskPhase1
+        r_ref = 8.2 * kpc
+
+        # Logarithmic spiral comparison
+        P = phi - phi_ref + np.array([-1, 0, 1])[:, np.newaxis] * kTwoPi
+        R = r_ref * np.exp(P * self.fTanPitch)
+        abs_diff = np.abs(rho - R)
+        i_best = np.argmin(abs_diff, axis=0)
+
+        has_spur = i_best == 1
+
+        # Eq. 12
+        phi0 = phi - np.log(rho / r_ref) / self.fTanPitch
+
+        # Eq. (16)
+        delta_phi0 = delta_phi(phi_ref, phi0)
+        delta = delta_phi0 / self.fSpurWidth
+        b = np.where(has_spur, self.fDiskB1 * np.exp(-0.5 * delta ** 2), 0)
+
+        # Eq. (18)
+        w_s = 5 * degree
+        phi_c = self.fSpurCenter
+        delta_phi_c = delta_phi(phi_c, phi)
+        l_c = self.fSpurLength
+        g_s = 1 - np.where(has_spur, sigmoid(np.abs(delta_phi_c), l_c, w_s), 0)
+
+        # Eq. (13)
+        hd = 1 - sigmoid(np.abs(z), self.fDiskH, self.fDiskW)
+
+        # Eq. (17)
+        b_s = np.where(has_spur, r_ref / rho * b * hd * g_s, 0)
+
+        b_cyl = np.vstack((b_s * self.fSinPitch, b_s * self.fCosPitch, np.zeros_like(b_s)))
+        b_cyl = np.where(rho==0, np.array([[0], [0], [0]]), b_cyl)
+
+        return b_cyl
+
+    def toroidal_halo_field(self, rho, z):
+
+        b0 = np.where(z>=0, self.fToroidalBN, self.fToroidalBS)
+        rh = self.fToroidalR
+        z0 = self.fToroidalZ
+        fwh = self.fToroidalW
+        sigmoid_r = sigmoid(rho, rh, fwh)
+        sigmoid_z = sigmoid(np.abs(z), self.fDiskH, self.fDiskW)
+
+        # Eq. (21)
+        b_phi = b0 * (1 - sigmoid_r) * sigmoid_z * np.exp(-np.abs(z) / z0)
+
+        b_cyl = np.zeros((3, len(rho)))
+        b_cyl[1, :] = b_phi
+
+        return b_cyl
+
+    def poloidal_halo_field(self, rho, z):
+
+        c = np.power((self.fPoloidalA / self.fPoloidalZ), self.fPoloidalP)
+        a0p = np.power(self.fPoloidalA, self.fPoloidalP)
+        rp = np.power(rho, self.fPoloidalP)
+        abszp = np.power(np.abs(z), self.fPoloidalP)
+        cabszp = c * abszp
+
+        t0 = a0p + cabszp - rp
+        t1 = np.sqrt(t0**2 + 4 * a0p * rp)
+        ap = 2 * a0p * rp / (t1 + t0)
+
+        if np.any(ap < 0) and np.any(rho > np.finfo(float).eps):
+            # This should never happen
+            raise ValueError("ap = {}".format(ap))
+
+        a = np.power(np.maximum(ap, 0), 1 / self.fPoloidalP)
+
+        # Eq. 29 and Eq. 32
+        if self.fModelType == 'expX':
+            radial_dependence = np.exp(-a / self.fPoloidalR)
+        else:
+            radial_dependence = 1 - sigmoid(a, self.fPoloidalR, self.fPoloidalW)
+
+        # Eq. 28
+        bzz = self.fPoloidalB * radial_dependence
+
+        # r / a
+        r_over_a = 1 / np.power((2 * a0p / (t1 + t0)), (1 / self.fPoloidalP))
+
+        # Eq. 35 for p=n
+        sign_z = np.where(z < 0, -1, 1)
+        br = bzz * c * a / r_over_a * sign_z * np.abs(z)**(self.fPoloidalP - 1) / t1
+
+        # Eq. 36 for p=n
+        bz = bzz * r_over_a**(self.fPoloidalP - 2) * (ap + a0p) / t1
+
+        small_rho = rho < np.finfo(float).eps
+        br[small_rho] = 0  # Set radial component to zero where rho is small
+
+        b_cyl = np.zeros((3, rho.size))
+        b_cyl[0, :] = br  # Radial component
+        b_cyl[2, :] = bz  # Vertical component
+
+        return b_cyl
+
+    def twisted_halo_field(self, rho, z):
+
+        b_x_cyl = self.poloidal_halo_field(rho, z)
+
+        b_r, b_phi, b_z = b_x_cyl
+
+        if self.fTwistingTime != 0:
+            # radial rotation curve parameters (fit to Reid et al 2014)
+            v0 = -240 * kilometer / second
+            r0 = 1.6 * kpc
+            # vertical gradient (Levine+08)
+            z0 = 10 * kpc
+
+            # Eq. 43
+            fr = 1 - np.exp(-rho / r0)
+            # Eq. 44
+            t0 = np.exp(2 * np.abs(z) / z0)
+            gz = 2 / (1 + t0)
+
+            # Eq. 46
+            sign_z = np.where(z < 0, -1, 1)
+            delta_z = -sign_z * v0 * fr / z0 * t0 * np.power(gz, 2)
+            # Eq. 47
+            delta_r = v0 * ((1 - fr) / r0 - fr / np.where(rho == 0, np.inf, rho)) * gz  # vermeide Division durch Null
+
+            # Eq. 45
+            b_phi = (b_z * delta_z + b_r * delta_r) * self.fTwistingTime
 
 
+        b_cyl_x = np.vstack((b_r, b_phi, b_z))
+        b_cyl_x = np.where(rho==0, b_x_cyl, b_cyl_x)
 
-
-
-
-
+        return b_cyl_x
 
 
 
