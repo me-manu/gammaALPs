@@ -650,7 +650,7 @@ pc = 1e-3 * kpc
 second = megayear / (1e6 * 60 * 60 * 24 * 365.25)
 kilometer = kpc / 3.0856775807e+16
 
-models = ['base', 'expX', 'neCl', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
+models = ['base', 'expX', 'neCL', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
 
 
 class UF23(object):
