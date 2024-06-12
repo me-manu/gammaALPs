@@ -1247,7 +1247,7 @@ class UF23(object):
         -----
         See Unger & Farrar (2023) Section 5.3.3, p. 14
         """
-        b_x_cyl = self.poloidal_halo_field(rho, z)
+        b_x_cyl = self.poloidal_halo_field(rho, z)[0]
 
         b_r, b_phi, b_z = b_x_cyl
 
