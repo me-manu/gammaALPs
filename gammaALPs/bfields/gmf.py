@@ -988,7 +988,8 @@ class UF23(object):
         if self.model_type == 'twistX':
             return self.twisted_halo_field(rho, z)
         else:
-            return self.toroidal_halo_field(rho, z) + self.poloidal_halo_field(rho, z)
+            return (self.toroidal_halo_field(rho, z)[0] + self.poloidal_halo_field(rho, z)[0],
+                   self.toroidal_halo_field(rho, z)[1] + self.poloidal_halo_field(rho, z)[1])
 
     def spiral_field(self, rho, phi, z):
         """
