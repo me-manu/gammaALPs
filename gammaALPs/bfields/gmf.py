@@ -668,6 +668,9 @@ class UF23(object):
     
     Attributes
     ----------
+    Rsun: float
+        distance of sun from center of milky way in kpc
+
     poloidal_A: float
         coasting radius for poloidal halo (a_c)
 
@@ -760,6 +763,7 @@ class UF23(object):
             see https://arxiv.org/abs/2311.12120
         """
         self.model_type = model_type
+        self.Rsun = 8.178 * kpc
         self.poloidal_A = 1 * Gpc
         self.r_ref = 5 * kpc
         self.r_inner = 5 * kpc
