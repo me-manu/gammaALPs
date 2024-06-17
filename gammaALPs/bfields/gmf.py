@@ -752,17 +752,17 @@ class UF23(object):
     Unger & Farrar (2023)
     """
 
-    def __init__(self, model_type='base'):
+    def __init__(self, model='base'):
         """
         Initialize the UF23 class for 8 different models
         
         Parameters
         ----------
-        model_type: str
+        model: str
             one of ['base', 'expX', 'neCl', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
             see https://arxiv.org/abs/2311.12120
         """
-        self.model_type = model_type
+        self.model = model
         self.Rsun = 8.178 * kpc
         self.poloidal_A = 1 * Gpc
         self.r_ref = 5 * kpc
@@ -771,7 +771,7 @@ class UF23(object):
         self.r_outer = 20 * kpc
         self.w_outer = 0.5 * kpc
 
-        if model_type == 'base':
+        if model == 'base':
             self.disk_b1 = 1.0878565e+00 * microgauss
             self.disk_b2 = 2.6605034e+00 * microgauss
             self.disk_b3 = 3.1166311e+00 * microgauss
@@ -792,7 +792,7 @@ class UF23(object):
             self.toroidal_R = 1.0193815e+01 * kpc
             self.toroidal_W = 1.6936993e+00 * kpc
             self.toroidal_Z = 4.0242749e+00 * kpc
-        elif model_type == 'expX':
+        elif model == 'expX':
             self.disk_b1 = 9.9258148e-01 * microgauss
             self.disk_b2 = 2.1821124e+00 * microgauss
             self.disk_b3 = 3.1197345e+00 * microgauss
@@ -813,7 +813,7 @@ class UF23(object):
             self.toroidal_R = 1.0134022e+01 * kpc
             self.toroidal_W = 2.0956159e+00 * kpc
             self.toroidal_Z = 5.4564991e+00 * kpc
-        elif model_type == 'neCL':
+        elif model == 'neCL':
             self.disk_b1 = 1.4259645e+00 * microgauss
             self.disk_b2 = 1.3543223e+00 * microgauss
             self.disk_b3 = 3.4390669e+00 * microgauss
@@ -834,7 +834,7 @@ class UF23(object):
             self.toroidal_R = 1.0134257e+01 * kpc
             self.toroidal_W = 1.1547728e+00 * kpc
             self.toroidal_Z = 4.5585463e+00 * kpc
-        elif model_type == 'twistX':
+        elif model == 'twistX':
             self.disk_b1 = 1.3741995e+00 * microgauss
             self.disk_b2 = 2.0089881e+00 * microgauss
             self.disk_b3 = 1.5212463e+00 * microgauss
@@ -851,7 +851,7 @@ class UF23(object):
             self.poloidal_Z = 2.6274437e+00 * kpc
             self.striation = 7.7616317e-01
             self.twisting_time = 5.4733549e+01 * megayear
-        elif model_type == 'nebCor':
+        elif model == 'nebCor':
             self.disk_b1 = 1.4081935e+00 * microgauss
             self.disk_b2 = 3.5292400e+00 * microgauss
             self.disk_b3 = 4.1290147e+00 * microgauss
@@ -872,7 +872,7 @@ class UF23(object):
             self.toroidal_R = 1.0205288e+01 * kpc
             self.toroidal_W = 1.7004868e+00 * kpc
             self.toroidal_Z = 3.5557767e+00 * kpc
-        elif model_type == 'cre10':
+        elif model == 'cre10':
             self.disk_b1 = 1.2035697e+00 * microgauss
             self.disk_b2 = 2.7478490e+00 * microgauss
             self.disk_b3 = 3.2104342e+00 * microgauss
@@ -893,7 +893,7 @@ class UF23(object):
             self.toroidal_R = 1.0407507e+01 * kpc
             self.toroidal_W = 1.7398375e+00 * kpc
             self.toroidal_Z = 2.9272800e+00 * kpc
-        elif model_type == 'synCG':
+        elif model == 'synCG':
             self.disk_b1 = 8.1386878e-01 * microgauss
             self.disk_b2 = 2.0586930e+00 * microgauss
             self.disk_b3 = 2.9437335e+00 * microgauss
@@ -914,7 +914,7 @@ class UF23(object):
             self.toroidal_R = 9.4227834e+00 * kpc
             self.toroidal_W = 9.1608418e-01 * kpc
             self.toroidal_Z = 5.5844594e+00 * kpc
-        elif model_type == 'spur':
+        elif model == 'spur':
             self.disk_b1 = -4.2993328e+00 * microgauss
             self.disk_h = 7.5019749e-01 * kpc
             self.disk_phase1 = 1.5589875e+02 * degree
@@ -936,7 +936,7 @@ class UF23(object):
             self.toroidal_Z = 6.0941229e+00 * kpc
             self.r_ref = 8.2 * kpc
         else:
-            raise ValueError(f'model must be one of: {models}, not {model_type}')
+            raise ValueError(f'model must be one of: {models}, not {model}')
 
     def Bdisk(self, rho, phi, z):
         """
@@ -962,7 +962,7 @@ class UF23(object):
         if (not rho.shape[0] == phi.shape[0]) or (not z.shape[0] == phi.shape[0]):
             raise ValueError("List do not have equal shape!")
 
-        if self.model_type == 'spur':
+        if self.model == 'spur':
             return self.spur_field(rho, phi, z)
         else:
             return self.spiral_field(rho, phi, z)
@@ -989,7 +989,7 @@ class UF23(object):
         if not rho.shape[0] == z.shape[0]:
             raise ValueError("List do not have equal shape!")
 
-        if self.model_type == 'twistX':
+        if self.model == 'twistX':
             return self.twisted_halo_field(rho, z)
         else:
             return (self.toroidal_halo_field(rho, z)[0] + self.poloidal_halo_field(rho, z)[0],
@@ -1201,7 +1201,7 @@ class UF23(object):
         a = np.power(np.maximum(ap, 0), 1 / self.poloidal_P)
 
         # Eq. 29 and Eq. 32
-        if self.model_type == 'expX':
+        if self.model == 'expX':
             radial_dependence = np.exp(-a / self.poloidal_R)
         else:
             radial_dependence = 1 - sigmoid(a, self.poloidal_R, self.poloidal_W)
