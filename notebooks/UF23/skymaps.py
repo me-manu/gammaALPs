@@ -25,20 +25,21 @@ try:
     model = sys.argv[1]
 except:
     model = 'base'
-print(model)
 
 try:
     NSIDE = int(sys.argv[2])
 except:
     NSIDE = 30
-print(NSIDE)
 
 pix = np.arange(hp.nside2npix(NSIDE))  # get the pixels
 ll, bb = hp.pixelfunc.pix2ang(NSIDE, pix, lonlat=True)  #  get the galactic coordinates for each pixel
 # model = 'jansson12'
-filename = f'notebooks/UF23/data/tpgg_halo_{model}_{NSIDE}.txt'
-with open(filename, 'w') as file:
-    pass
+
+print(model)
+print(NSIDE)
+filename = f'notebooks/UF23/data/pgg_halo_{model}_{NSIDE}.npy'
+#with open(filename, 'w') as file:
+#    pass
 
 
 pa_in = np.diag([0., 0., 1.])
@@ -60,26 +61,15 @@ for i, l in enumerate(ll):
     ml.add_propagation("GMF", 0, model="UF23", UF23_model=model)
     px, py, pa = ml.run()  # run the code
 
-    with open(filename, 'a') as outf:
-        outf.write(str(px[0]+py[0])+'\n')
-    # pgg[i] = px + py  # save the result
+    #with open(filename, 'a') as outf:
+    #    outf.write(str(px[0]+py[0])+'\n')
+    pgg[i] = px + py  # save the result
     
     if i < ll.size - 1:
         del ml
-        
+
+np.save(filename, pgg)
+
 t2 = time.time()
 print ("It took", t2-t1, "seconds")
 
-'''
-hpmap = hp.mollview(pgg[:,0], 
-                    norm='linear',
-                    title = f'{model} model', 
-                    unit= r'$P_{a\gamma}$', 
-                    min=0e-7,
-                    max=5e-2, 
-                    cmap = 'Spectral_r'
-                    )
-hp.graticule()
-
-plt.show()
-'''
