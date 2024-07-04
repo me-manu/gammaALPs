@@ -1311,7 +1311,7 @@ class MixGMF(trans.GammaALPTransfer):
 
         # Single components for debugging ###
         # B = self.Bgmf.Bdisk(rho,phi,z)[0]
-        # B = self.Bgmf.Bhalo(rho,z)[0]
+        # B = self._Bgmf.Bhalo(rho,z)[0]
         # B = self.Bgmf.BX(rho,z)[0]
 
         Babs = np.sqrt(np.sum(B**2., axis=0))         # compute overall field strength

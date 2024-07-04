@@ -35,12 +35,11 @@ print(NSIDE)
 
 pix = np.arange(hp.nside2npix(NSIDE))  # get the pixels
 ll, bb = hp.pixelfunc.pix2ang(NSIDE, pix, lonlat=True)  #  get the galactic coordinates for each pixel
-model = 'jansson12'
-filename = f'notebooks/UF23/pgg_{model}_{NSIDE}.txt'
+# model = 'jansson12'
+filename = f'notebooks/UF23/data/tpgg_halo_{model}_{NSIDE}.txt'
 with open(filename, 'w') as file:
     pass
 
-nm = 9
 
 pa_in = np.diag([0., 0., 1.])
 EGeV = np.array([1000.])  # energy
@@ -58,7 +57,7 @@ for i, l in enumerate(ll):
 
     ml = ModuleList(ALP(m=m, g=g), src, pin=pa_in, EGeV=EGeV, log_level='warning')
 
-    ml.add_propagation("GMF", 0, model=model)
+    ml.add_propagation("GMF", 0, model="UF23", UF23_model=model)
     px, py, pa = ml.run()  # run the code
 
     with open(filename, 'a') as outf:
