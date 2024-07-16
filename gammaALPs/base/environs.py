@@ -1157,8 +1157,9 @@ class MixGMF(trans.GammaALPTransfer):
         kwargs.setdefault('model_sym','ASS')
         kwargs.setdefault('UF23_model','base')
         self._model = kwargs['model']
+        self._UF23_model = kwargs['UF23_model']
         self._galactic = kwargs['galactic']
-
+        
         logger = logging.getLogger('gamma_alps')
 
         # Nel kwargs
@@ -1310,9 +1311,14 @@ class MixGMF(trans.GammaALPTransfer):
             B += self._Bgmf.BX(rho,z)[0]
 
         # Single components for debugging ###
-        # B = self.Bgmf.Bdisk(rho,phi,z)[0]
+        # B = self._Bgmf.Bdisk(rho,phi,z)[0]
         # B = self._Bgmf.Bhalo(rho,z)[0]
         # B = self.Bgmf.BX(rho,z)[0]
+        # if self._UF23_model == 'twistX':
+            # B = self._Bgmf.twisted_halo_field(rho, z)[0]
+        # else:
+            # B = self._Bgmf.toroidal_halo_field(rho, z)[0]
+            # B = self._Bgmf.poloidal_halo_field(rho, z)[0]
 
         Babs = np.sqrt(np.sum(B**2., axis=0))         # compute overall field strength
         # Bs, Bt, Bu         = trafo.GC2HCproj(B, self._r, self._l, self._b, d = -1. * np.abs(self._Bgmf.Rsun))
