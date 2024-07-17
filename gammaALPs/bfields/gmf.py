@@ -763,7 +763,7 @@ class UF23(object):
             see https://arxiv.org/abs/2311.12120
         """
         self.model = model
-        self.Rsun = 8.178 * kpc
+        self.Rsun = -8.178 * kpc
         self.poloidal_A = 1 * Gpc
         self.r_ref = 5 * kpc
         self.r_inner = 5 * kpc
