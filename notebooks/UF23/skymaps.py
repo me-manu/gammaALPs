@@ -4,22 +4,14 @@ sys.path.append('../notebooks')
 sys.path.append('../gammaALPs')
 
 from gammaALPs.core import Source, ALP, ModuleList
-from gammaALPs.base import environs, transfer
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patheffects import withStroke
-from mpl_toolkits.mplot3d import Axes3D
-import mpl_toolkits.mplot3d.art3d as art3d
-from matplotlib.patches import Circle, PathPatch
-from matplotlib.text import TextPath
-from matplotlib.transforms import Affine2D
 
 import healpy as hp
 import time
 
-effect  = dict(path_effects=[withStroke(foreground="w", linewidth=2)])  # used for plotting
 
-models = ['base', 'expX', 'spur', 'neCL', 'twistX', 'nebCor', 'cre10', 'synCG', "jansson12"]
+models = ['base', 'expX', 'spur', 'neCL', 'twistX', 'nebCor', 'cre10', 'synCG', 'jansson12']
 
 try:
     model = sys.argv[1]
@@ -37,9 +29,9 @@ ll, bb = hp.pixelfunc.pix2ang(NSIDE, pix, lonlat=True)  #  get the galactic coor
 
 print(model)
 print(NSIDE)
-filename = f'notebooks/UF23/data/pgg_halo_{model}_{NSIDE}.npy'
-#with open(filename, 'w') as file:
-#    pass
+filename = f'notebooks/UF23/data/pggnew/new_pgg_{model}_{NSIDE}.npy'
+# with open(filename, 'w') as file:
+#     pass
 
 
 pa_in = np.diag([0., 0., 1.])
@@ -61,8 +53,6 @@ for i, l in enumerate(ll):
     ml.add_propagation("GMF", 0, model="UF23", UF23_model=model)
     px, py, pa = ml.run()  # run the code
 
-    #with open(filename, 'a') as outf:
-    #    outf.write(str(px[0]+py[0])+'\n')
     pgg[i] = px + py  # save the result
     
     if i < ll.size - 1:
