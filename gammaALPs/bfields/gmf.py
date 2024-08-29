@@ -748,8 +748,12 @@ class UF23(object):
 
     Notes
     -----
-    see https://arxiv.org/abs/2311.12120
-    Unger & Farrar (2023)
+    see:
+    Michael Unger and Glennys R. Farrar
+    Astrophys.J. 970 (2024) 95
+    https://doi.org/10.3847/1538-4357/ad4a54
+    and
+    https://doi.org/10.5281/zenodo.11321212
     """
 
     def __init__(self, model='base'):
@@ -760,7 +764,6 @@ class UF23(object):
         ----------
         model: str
             one of ['base', 'expX', 'neCl', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
-            see https://arxiv.org/abs/2311.12120
         """
         self.model = model
         self.Rsun = -8.178 * kpc
@@ -1020,7 +1023,7 @@ class UF23(object):
 
         Notes
         -----
-        See Unger & Farrar (2023) Section 5.2.2, p. 10
+        See Unger & Farrar (2024) Section 5.2.2, p. 9
         """
         # Avoid division by zero
         rho_safe = np.where(rho == 0, 1e-12 * kpc, rho)
@@ -1079,7 +1082,7 @@ class UF23(object):
 
         Notes
         -----
-        See Unger & Farrar (2023) Section 5.2.3, p. 12
+        See Unger & Farrar (2024) Section 5.2.3, p. 9
         """
         rho = np.where(rho == 0, 1e-12 * kpc, rho)
 
@@ -1144,7 +1147,7 @@ class UF23(object):
 
         Notes
         -----
-        See Unger & Farrar (2023) Section 5.3.1, p. 13
+        See Unger & Farrar (2024) Section 5.3.1, p. 11
         """
         b0 = np.where(z>=0, self.toroidal_BN, self.toroidal_BS)
         rh = self.toroidal_R
@@ -1182,7 +1185,7 @@ class UF23(object):
 
         Notes
         -----
-        See Unger & Farrar (2023) Section 5.3.2, p. 13
+        See Unger & Farrar (2024) Section 5.3.2, p. 11
         """
         c = np.power((self.poloidal_A / self.poloidal_Z), self.poloidal_P)
         a0p = np.power(self.poloidal_A, self.poloidal_P)
@@ -1249,7 +1252,7 @@ class UF23(object):
 
         Notes
         -----
-        See Unger & Farrar (2023) Section 5.3.3, p. 14
+        See Unger & Farrar (2024) Section 5.3.3, p. 12
         """
         b_x_cyl = self.poloidal_halo_field(rho, z)[0]
 
@@ -1282,21 +1285,3 @@ class UF23(object):
         b_cyl_x = np.where(rho==0, b_x_cyl, b_cyl_x)
 
         return b_cyl_x, np.sqrt(np.sum(b_cyl_x**2., axis=0))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
