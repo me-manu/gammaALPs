@@ -36,7 +36,8 @@ def uf23_file(request, tmpdir_factory):
     path = tmpdir_factory.mktemp('tmp')
 
     outfile = os.path.join(path, "uf23_field_test.npy")
-    url = 'https://raw.githubusercontent.com/FriedL12/gammaALPs/gmf-unger-farrar/data/uf23_field_test.npy'
+    # url = 'https://raw.githubusercontent.com/FriedL12/gammaALPs/gmf-unger-farrar/data/uf23_field_test.npy'
+    url = 'https://raw.githubusercontent.com/me-manu/gammaALPs/master/data/uf23_field_test.npy'
     os.system('curl -o %s -OL %s' % (outfile, url))
     request.addfinalizer(lambda: path.remove(rec=1))
 
