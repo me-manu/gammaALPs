@@ -16,6 +16,7 @@ Calculate photon-ALP mixing in different environments
     mixing_AGN_jet_simple.ipynb
     mixing_HelicalTangled_jet.ipynb
     mixing_gmf.ipynb
+    mixing_gmf_uf23.ipynb
 
 These tutorials demonstrate the usage of gammaALPs for different astrophysical environments:
 
@@ -26,6 +27,7 @@ These tutorials demonstrate the usage of gammaALPs for different astrophysical e
 - `Mixing in AGN jet with simple toroidal magnetic field <mixing_AGN_jet_simple.html>`__ | *mixing_AGN_jet_simple.ipynb*
 - `Mixing in AGN jet with helical and tangled magnetic field <mixing_HelicalTangled_jet.html>`__ | *mixing_HelicalTangled_jet.ipynb*
 - `Mixing in the Galactic magnetic field using the Jansson & Farrar model <mixing_gmf.html>`__ | *mixing_gmf.ipynb*
+- `Mixing in the Galactic magnetic field using the Unger & Farrar model <mixing_gmf_uf23.html>`__ | *mixing_gmf_uf23.ipynb*
 
 Additional features for magnetic-field environments
 ---------------------------------------------------

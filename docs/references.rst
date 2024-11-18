@@ -57,3 +57,6 @@ Publications
 
 .. [Gourgouliatos2010] `Gourgouliatos; Braithwaite; Lyutikov (2010) <https://ui.adsabs.harvard.edu/abs/2010MNRAS.409.1660G/abstract>`_
     "Structure of magnetic fields in intracluster cavities"
+
+.. [Unger2024] `Unger; Farrar (2024) <https://ui.adsabs.harvard.edu/abs/2024ApJ...970...95U/abstract>`_
+    "The Coherent Magnetic Field of the Milky Way"

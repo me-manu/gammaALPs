@@ -1122,14 +1122,21 @@ class MixGMF(trans.GammaALPTransfer):
         model: str
             (default = jansson)
             GMF model that is used. Currently the model by Jansson & Farrar (2012)
-            (also with updates from Planck measurements)
-            and Pshirkov et al. (2011) are implemented.
-            Usage: model=[jansson12, jansson12b, jansson12c, pshirkov]
+            (also with updates from Planck measurements),
+            Pshirkov et al. (2011)
+            and Unger & Farrar (2023) (with 8 model types (UF23_model)) are implemented.
+            Usage: model=[jansson12, jansson12b, jansson12c, pshirkov, UF23]
 
         model_sym: str
             (default = ASS)
             Only applies if pshirkov model is chosen:
             you can choose between the axis- and bisymmetric version by setting model_sym to ASS or BSS.
+
+        UF23_model: str
+            (default = base)
+            Only applies if UF23 model is chosen:
+            you can choose between 8 models that differ in the fitted data
+            ['base', 'expX', 'neCL', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
 
         Electron density parameters:
 
@@ -1148,9 +1155,11 @@ class MixGMF(trans.GammaALPTransfer):
         kwargs.setdefault('zmax',50.)
         kwargs.setdefault('model','jansson12')
         kwargs.setdefault('model_sym','ASS')
+        kwargs.setdefault('UF23_model','base')
         self._model = kwargs['model']
+        self._UF23_model = kwargs['UF23_model']
         self._galactic = kwargs['galactic']
-
+        
         logger = logging.getLogger('gamma_alps')
 
         # Nel kwargs
@@ -1166,6 +1175,8 @@ class MixGMF(trans.GammaALPTransfer):
             self._Bgmf = gmf.GMF(model=kwargs['model'])  # Initialize the Bfield class
         elif kwargs['model'] == 'pshirkov':
             self._Bgmf = gmf.GMFPshirkov(model=kwargs['model_sym'])
+        elif kwargs['model'] == 'UF23':
+            self._Bgmf = gmf.UF23(model=kwargs['UF23_model'])
         else:
             raise ValueError("Unknown GMF model chosen")
 
@@ -1300,9 +1311,14 @@ class MixGMF(trans.GammaALPTransfer):
             B += self._Bgmf.BX(rho,z)[0]
 
         # Single components for debugging ###
-        # B = self.Bgmf.Bdisk(rho,phi,z)[0]
-        # B = self.Bgmf.Bhalo(rho,z)[0]
+        # B = self._Bgmf.Bdisk(rho,phi,z)[0]
+        # B = self._Bgmf.Bhalo(rho,z)[0]
         # B = self.Bgmf.BX(rho,z)[0]
+        # if self._UF23_model == 'twistX':
+        #     B = self._Bgmf.twisted_halo_field(rho, z)[0]
+        # else:
+        #     B = self._Bgmf.toroidal_halo_field(rho, z)[0]
+        #     B = self._Bgmf.poloidal_halo_field(rho, z)[0]
 
         Babs = np.sqrt(np.sum(B**2., axis=0))         # compute overall field strength
         # Bs, Bt, Bu         = trafo.GC2HCproj(B, self._r, self._l, self._b, d = -1. * np.abs(self._Bgmf.Rsun))
