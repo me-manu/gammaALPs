@@ -196,6 +196,8 @@ class BjetHelicalTangled(object):
         self._r0 = r0
         self._gmax = gmax
         self._gmin = gmin
+        if gmin >= gmax:
+            raise ValueError('gmin must be less than gmax')
         self._rvhe = rvhe
         self._rjet = rjet
         self._rem = rem
