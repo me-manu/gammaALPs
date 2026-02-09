@@ -6,7 +6,7 @@ import sys
 from numpy.random import rand, seed, randint
 from numpy import log, log10, pi, meshgrid, cos, sum, sqrt, array, isscalar, logspace
 from math import ceil
-from scipy.integrate import simps
+from scipy.integrate import simpson
 from astropy import units as u
 # --------------------------------- #
 
@@ -477,7 +477,7 @@ class Bgaussian(object):
             kernel = self.Fq(tt) * cos(tt * zz * self._kH)
 
         # the self._kH factor comes from the substitution t = k / _kH
-        corr = self._B * self._B / 4. * simps(kernel * tt, log(tt), axis=1) * self._kH
+        corr = self._B * self._B / 4. * simpson(kernel * tt, log(tt), axis=1) * self._kH
         return corr
 
     def rotation_measure(self, z, n_el, Bscale=None, nsim=1):
@@ -530,6 +530,6 @@ class Bgaussian(object):
         if seeds is not None:
             self.seed = copy.deepcopy(seed_old)
 
-        rm = 812. * simps(kernel, z, axis=1)
+        rm = 812. * simpson(kernel, z, axis=1)
         return rm
 

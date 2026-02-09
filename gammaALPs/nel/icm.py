@@ -36,6 +36,10 @@ class NelICM(object):
 
         beta2: float
             if > 0., use profile with this second beta value as for NGC1275
+
+        r_exp: float
+            if > 0., use an exponential scaling for the magnetic field strength
+            independent of the electron density, i.e., B = B0 * exp(-r / r_exp)
         """
         kwargs.setdefault('n0', 1e-3)
         kwargs.setdefault('r_core', 10.)
@@ -44,6 +48,7 @@ class NelICM(object):
         kwargs.setdefault('n2', 0.)
         kwargs.setdefault('r_core2', 0.)
         kwargs.setdefault('beta2', 0.)
+        kwargs.setdefault('r_exp', 0.)
 
         self._n0 = kwargs['n0']
         self._r_core = kwargs['r_core']
@@ -54,7 +59,9 @@ class NelICM(object):
         self._beta2 = kwargs['beta2']
         self._n2 = kwargs['n2']
 
-        return 
+        self._r_exp = kwargs['r_exp']
+
+        return
 
     @property
     def n0(self):
@@ -83,6 +90,10 @@ class NelICM(object):
     @property
     def eta(self):
         return self._eta
+
+    @property
+    def r_exp(self):
+        return self._r_exp
 
     @n0.setter
     def n0(self, n0):
@@ -119,7 +130,15 @@ class NelICM(object):
             self._r_core2 = r_core2.to('kpc').value
         else:
             self._r_core2 = r_core2
-        return 
+        return
+
+    @r_exp.setter
+    def r_exp(self, r_exp):
+        if type(r_exp) == u.Quantity:
+            self._r_exp = r_exp.to('kpc').value
+        else:
+            self._r_exp = r_exp
+        return
 
     @beta2.setter
     def beta2(self, beta2):
@@ -191,6 +210,8 @@ class NelICM(object):
             return (self.__call__(r) / (self._n0 + self._n2) )**self._eta
         elif self._r_core2 > 0. and self._n2 > 0:
             return (self.__call__(r) / np.sqrt(self._n0**2. +self._n2**2.) )**self._eta
+        elif self._r_exp > 0.:
+            return np.exp(-r / self._r_exp)
         else:
             return (self.__call__(r) / self._n0)**self._eta
 

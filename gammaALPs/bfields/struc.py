@@ -1,6 +1,6 @@
 import numpy as np
 import sys
-from scipy.integrate import simpson as simp
+from scipy.integrate import simpson
 
 
 class structured_field(object):
@@ -213,7 +213,7 @@ class structured_field(object):
         rm: float
             Rotation measure in units of rad/m^2.
         """
-        return 812. * simp(self.b_par * nel, self.r)
+        return 812. * simpson(self.b_par * nel, self.r)
 
 
 if __name__ == "__main__":

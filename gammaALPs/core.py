@@ -525,12 +525,23 @@ class ModuleList(object):
                                                    EGeV=self.EGeV * (1. + self.source.z),
                                                    **kwargs))
         elif environ == 'JetHelicalTangled':
-            self._modules.insert(order, env.MixJetHelicalTangled(self.alp, self.source,
+            self._modules.insert(order, env.MixJetHelicalTangled(self.alp,
+                                                                 self.source,
                                                                  EGeV=self.EGeV * (1. + self.source.z),
                                                                  **kwargs))
         elif environ == 'GMF':
-            self._modules.insert(order, env.MixGMF(self.alp, self.source,
+            self._modules.insert(order, env.MixGMF(self.alp,
+                                                   self.source,
                                                    EGeV=self.EGeV,
+                                                   **kwargs))
+
+        elif environ == 'SpiralHost':
+            _ = kwargs.pop("observer", False)
+            source_in_host = kwargs.pop("source", self.source)
+            self._modules.insert(order, env.MixGMF(self.alp,
+                                                   source_in_host,
+                                                   EGeV=self.EGeV * (1. + self.source.z),
+                                                   observer=False,
                                                    **kwargs))
         elif environ == 'File':
             self._modules.insert(order, env.MixFromFile(self.alp,

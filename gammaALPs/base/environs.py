@@ -1138,24 +1138,30 @@ class MixGMF(trans.GammaALPTransfer):
             you can choose between 8 models that differ in the fitted data
             ['base', 'expX', 'neCL', 'twistX', 'nebCor', 'cre10', 'synCG', 'spur']
 
+        observer: bool
+            If true (default), assume that the observer is within the magnetic field.
+            If false, assume that the source is within the magnetic field. This is important for the
+            ordering of the magnetic field along the line of sight.
+
         Electron density parameters:
 
         n0: float
             Electron density in cm^-3 (default: 10). NE2001 code implementation still missing.
         """
-        kwargs.setdefault('EGeV', np.logspace(0.,4.,100))
+        kwargs.setdefault('EGeV', np.logspace(0., 4., 100))
         kwargs.setdefault('restore', None)
         kwargs.setdefault('restore_path', './')
         kwargs.setdefault('int_steps', 100)
         kwargs.setdefault('chi', None)
 
         # Bfield kwargs
-        kwargs.setdefault('galactic',-1.)
-        kwargs.setdefault('rho_max',20.)
-        kwargs.setdefault('zmax',50.)
-        kwargs.setdefault('model','jansson12')
-        kwargs.setdefault('model_sym','ASS')
-        kwargs.setdefault('UF23_model','base')
+        kwargs.setdefault('galactic', -1.)
+        kwargs.setdefault('rho_max', 20.)
+        kwargs.setdefault('zmax', 50.)
+        kwargs.setdefault('model', 'jansson12')
+        kwargs.setdefault('model_sym', 'ASS')
+        kwargs.setdefault('UF23_model', 'base')
+        kwargs.setdefault('observer', True)
         self._model = kwargs['model']
         self._UF23_model = kwargs['UF23_model']
         self._galactic = kwargs['galactic']
@@ -1175,25 +1181,23 @@ class MixGMF(trans.GammaALPTransfer):
             self._Bgmf = gmf.GMF(model=kwargs['model'])  # Initialize the Bfield class
         elif kwargs['model'] == 'pshirkov':
             self._Bgmf = gmf.GMFPshirkov(model=kwargs['model_sym'])
+        elif kwargs['model'] == 'pshirkov-modified':
+            self._Bgmf = gmf.GMFPshirkovModified(theta0=kwargs.get("theta0", 0.),
+                                                 Rsun=kwargs.get("Rsun", 0.65)
+                                                 )
         elif kwargs['model'] == 'UF23':
             self._Bgmf = gmf.UF23(model=kwargs['UF23_model'])
         else:
             raise ValueError("Unknown GMF model chosen")
 
         # set coordinates
-        self.set_coordinates() # sets self._l, self._b and self._smax
+        self.set_coordinates()  # sets self._l, self._b and self._smax
 
-        # step length
-        kwargs.setdefault('rbounds' , np.linspace(self._smax,0., kwargs['int_steps'],endpoint = False))
-        self._rbounds = kwargs['rbounds']
-
+        self._rbounds = None
+        dL = self.set_radial_coord(int_steps=kwargs['int_steps'], observer=kwargs['observer'])
         self._r = 0.5 * (self._rbounds[1:] + self._rbounds[:-1])
 
-        # use other way round since we are beginning from
-        # max distance and propagate to Earth
-        dL = self._rbounds[:-1] - self._rbounds[1:]
-
-        # NE2001 code missing!
+    # NE2001 code missing!
         self._nelgmf = kwargs['n0'] * np.ones(self._r.shape)
 
         if kwargs['restore'] is None:
@@ -1219,9 +1223,30 @@ class MixGMF(trans.GammaALPTransfer):
                                          chi=tra.chi,
                                          Delta=tra.Delta)
 
+    def set_radial_coord(self, int_steps=100, observer=True):
+        # step length
+        if observer:
+            self._rbounds = np.linspace(self._smax, 0., int_steps, endpoint=False)
+            # calculate dL, we are beginning from
+            # max distance and propagate to Earth
+            dL = self._rbounds[:-1] - self._rbounds[1:]
+        else:
+            # assume a source within the magnetic field
+            # and not an observer
+            # i.e., we assume a GMF like host galaxy
+            self._rbounds = np.linspace(self._smax, 0., int_steps, endpoint=True)
+            self._rbounds = self._rbounds[::-1]
+            dL = self._rbounds[1:] - self._rbounds[:-1]
+
+        return dL
+
     @property
     def galactic(self):
         return self._galactic
+
+    @property
+    def Rsun(self):
+        return self._Bgmf.Rsun
 
     @galactic.setter
     def galactic(self, galactic):
@@ -1305,10 +1330,10 @@ class MixGMF(trans.GammaALPTransfer):
         phi = trafo.phi_HC2GC(self._r, l, b, -1. * np.abs(self._Bgmf.Rsun))
         z = trafo.z_HC2GC(self._r, b)  # compute z in GC coordinates for s,l,b
 
-        B = self._Bgmf.Bdisk(rho,phi,z)[0]  # add all field components
-        B += self._Bgmf.Bhalo(rho,z)[0]
-        if self._model.find('jansson') >= 0:
-            B += self._Bgmf.BX(rho,z)[0]
+        B = self._Bgmf.Bdisk(rho, phi, z)[0]  # add all field components
+        B += self._Bgmf.Bhalo(rho, z)[0]
+        if self._model.find('jansson') >= 0 or self._model.find('modified') >= 0:
+            B += self._Bgmf.BX(rho, z)[0]
 
         # Single components for debugging ###
         # B = self._Bgmf.Bdisk(rho,phi,z)[0]
@@ -1323,7 +1348,7 @@ class MixGMF(trans.GammaALPTransfer):
         Babs = np.sqrt(np.sum(B**2., axis=0))         # compute overall field strength
         # Bs, Bt, Bu         = trafo.GC2HCproj(B, self._r, self._l, self._b, d = -1. * np.abs(self._Bgmf.Rsun))
         # TODO: what is correct for the Pshirkov model?
-        Bs, Bt, Bu = trafo.GC2HCproj(B, self._r, self._l, self._b, d = self._Bgmf.Rsun)
+        Bs, Bt, Bu = trafo.GC2HCproj(B, self._r, self._l, self._b, d=self._Bgmf.Rsun)
 
         Btrans = np.sqrt(Bt**2. + Bu**2.)         # Abs value of transverse component in all domains
         Psin = np.arctan2(Bt, Bu)         # arctan2 selects the right quadrant

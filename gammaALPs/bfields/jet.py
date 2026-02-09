@@ -174,9 +174,6 @@ class BjetHelicalTangled(object):
             distance of gamma-ray emission region from BH in pc
         rjet: float
             jet length in pc
-        rem: float
-            distance of gamma-ray emission region from BH if different
-            from large-scale jet transition region
         alpha: float
             power-law index of electron energy distribution function
         l_tcor: float
@@ -188,6 +185,9 @@ class BjetHelicalTangled(object):
             calculating l_tcor = jwf*jetwidth
         tseed: float
             seed for random tangled domains
+        rem: float
+            distance of gamma-ray emission region from BH if different
+            from large-scale jet transition region
         """
         self._ft = ft
         self._r_T = r_T
